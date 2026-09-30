@@ -7,15 +7,19 @@ Horse-industry platform: booking services, horse transport (with ride-sharing), 
 ```
 Ashwa-India/
 ├── backend/     # Shared Express + MongoDB API (auth, bookings, marketplace, transport, sockets)
-├── frontend/    # MERN web panels (React + Vite)
-│   ├── AdminPanel/
-│   ├── HorseMarketplacePanel/      # seller panel: horse buy/sell
-│   └── AccessoriesStorePanel/      # seller panel: e-commerce accessories
+├── frontend/    # Single React (Vite) web app — role-based views for Admin, Horse Seller, Store Seller
 └── Apps/        # React Native CLI apps
     ├── UserApp/
     ├── ProviderApp/                # service providers (vets, trainers, farriers...)
     └── TransporterApp/             # horse transport + shared rides
 ```
+
+`frontend/` is one app that serves three roles from the same codebase, routed by URL prefix:
+- `/admin/*` — platform admin (users, providers, transporters, horse/accessory sellers, bookings, finance)
+- `/seller/horses/*` — horse marketplace seller (listings, inquiries, orders)
+- `/seller/store/*` — accessories store seller (products, inventory, orders)
+
+A dev-only role switcher in the navbar lets you preview all three until real per-role login exists.
 
 ## Getting started
 
@@ -27,9 +31,9 @@ npm install
 npm run dev
 ```
 
-### Web panels
+### Web panel
 ```
-cd frontend/<PanelName>
+cd frontend
 npm install
 npm run dev
 ```
