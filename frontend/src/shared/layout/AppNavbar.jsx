@@ -39,7 +39,12 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
 
   const handleLogout = () => {
     localStorage.removeItem("app_accessToken")
-    navigate("/", { replace: true })
+    localStorage.removeItem("ashwa_seller_role")
+    if (role === "horse-seller" || role === "store-seller") {
+      navigate(`/seller/login?type=${role}`, { replace: true })
+    } else {
+      navigate("/", { replace: true })
+    }
   }
 
   return (

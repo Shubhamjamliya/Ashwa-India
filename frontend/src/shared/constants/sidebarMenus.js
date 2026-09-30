@@ -68,9 +68,33 @@ const adminMenu = [
   },
   {
     type: "section",
-    label: "Settings",
+    label: "System Settings",
     items: [
-      { type: "link", label: "General Settings", icon: "Settings", path: "/admin/settings" },
+      { type: "link", label: "Broadcast Notification", icon: "Bell", path: "/admin/system/broadcast-notification" },
+      { type: "link", label: "Sub-Admins", icon: "UserCog", path: "/admin/system/sub-admins" },
+      { type: "link", label: "Business Setup", icon: "Settings", path: "/admin/system/business-setup" },
+      { type: "link", label: "Customization Settings", icon: "Zap", path: "/admin/system/customization" },
+      { type: "link", label: "Archived Accounts", icon: "UserX", path: "/admin/system/archived-accounts" },
+    ],
+  },
+  {
+    type: "section",
+    label: "Pages & Social Media",
+    items: [
+      { type: "link", label: "About Us", icon: "Globe", path: "/admin/pages/about" },
+      { type: "link", label: "Landing Page Support", icon: "Phone", path: "/admin/pages/contact" },
+      { type: "link", label: "Terms & Conditions", icon: "FileText", path: "/admin/pages/terms" },
+      { type: "link", label: "Privacy Policy", icon: "Lock", path: "/admin/pages/privacy" },
+      { type: "link", label: "Support", icon: "Headset", path: "/admin/pages/support" },
+      { type: "link", label: "Refund Policy", icon: "Receipt", path: "/admin/pages/refund" },
+      { type: "link", label: "Shipping Policy", icon: "Truck", path: "/admin/pages/shipping" },
+      { type: "link", label: "Cancellation Policy", icon: "X", path: "/admin/pages/cancellation" },
+    ],
+  },
+  {
+    type: "section",
+    label: "Account",
+    items: [
       { type: "link", label: "Admin Profile", icon: "User", path: "/admin/profile" },
     ],
   },

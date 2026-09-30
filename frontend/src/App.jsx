@@ -3,12 +3,15 @@ import AppLayout from "@/shared/layout/AppLayout"
 import { adminRoutes } from "@/modules/admin/routes"
 import { horseSellerRoutes } from "@/modules/horseSeller/routes"
 import { storeSellerRoutes } from "@/modules/storeSeller/routes"
+import SellerLogin from "@/modules/sellerAuth/pages/SellerLogin"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/admin" replace />} />
+
+        <Route path="/seller/login" element={<SellerLogin />} />
 
         <Route path="/admin" element={<AppLayout />}>
           {adminRoutes}
