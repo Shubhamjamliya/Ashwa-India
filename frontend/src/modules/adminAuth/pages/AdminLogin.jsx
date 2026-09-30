@@ -4,12 +4,14 @@ import { Mail, Lock } from "lucide-react"
 import { Input } from "@/shared/components/ui/input"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/context/AuthContext"
+import { useBranding } from "@/shared/context/BrandingContext"
 import { apiFetch } from "@/shared/lib/api"
 
 export default function AdminLogin() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
+  const { logoUrl, companyName } = useBranding()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -44,10 +46,14 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-neutral-100 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center font-bold text-white text-lg mb-3">
-            A
-          </div>
-          <h1 className="text-xl font-bold text-neutral-900">Ashwa India</h1>
+          {logoUrl ? (
+            <img src={logoUrl} alt={companyName} className="h-14 max-w-[220px] object-contain mb-3" />
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center font-bold text-white text-lg mb-3">
+              A
+            </div>
+          )}
+          <h1 className="text-xl font-bold text-neutral-900">{companyName}</h1>
           <p className="text-sm text-neutral-500">Admin Login</p>
         </div>
 

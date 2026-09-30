@@ -8,8 +8,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { Input } from "@/shared/components/ui/input"
-import { apiFetch } from "@/shared/lib/api"
-import { getMediaUrl } from "@/shared/lib/media"
+import { useBranding } from "@/shared/context/BrandingContext"
 
 const iconMap = {
   LayoutDashboard, Users, UserCog, Truck, Heart, Store, MessageSquare, Package,
@@ -28,22 +27,7 @@ export default function AppSidebar({
   const location = useLocation()
   const itemRefs = useRef({})
   const [searchQuery, setSearchQuery] = useState("")
-  const [logoUrl, setLogoUrl] = useState(null)
-  const [companyName, setCompanyName] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-    apiFetch("/admin/system-settings/business-setup")
-      .then((data) => {
-        if (cancelled) return
-        if (data.businessSetup?.logo?.url) setLogoUrl(getMediaUrl(data.businessSetup.logo.url))
-        if (data.businessSetup?.companyName) setCompanyName(data.businessSetup.companyName)
-      })
-      .catch(() => {}) // non-admin roles can't read this; fall back to the default badge
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { logoUrl, companyName } = useBranding()
 
   const getInitialStates = () => {
     try {

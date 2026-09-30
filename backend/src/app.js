@@ -18,6 +18,7 @@ const subAdminRoutes = require('./routes/subAdmin.routes');
 const archivedAccountRoutes = require('./routes/archivedAccount.routes');
 const cmsPageRoutes = require('./routes/cmsPage.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const brandingRoutes = require('./routes/branding.routes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use(
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+app.use('/api/branding', brandingRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
