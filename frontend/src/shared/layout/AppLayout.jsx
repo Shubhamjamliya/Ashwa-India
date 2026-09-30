@@ -40,7 +40,7 @@ export default function AppLayout() {
 
       <div
         className={`flex-1 flex min-h-0 flex-col transition-all duration-300 ease-in-out min-w-0 ${
-          isSidebarCollapsed ? "lg:ml-20" : "lg:ml-72"
+          isSidebarCollapsed ? "lg:ml-20" : "lg:ml-80"
         }`}
       >
         <AppNavbar onMenuClick={() => setSidebarOpen((prev) => !prev)} role={role} />

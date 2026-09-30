@@ -14,17 +14,23 @@ const adminMenu = [
   { type: "link", label: "Dashboard", icon: "LayoutDashboard", path: "/admin" },
   {
     type: "section",
-    label: "Users & People",
+    label: "Users",
     items: [
       { type: "link", label: "Users", icon: "Users", path: "/admin/users" },
+    ],
+  },
+  {
+    type: "section",
+    label: "Service Providers",
+    items: [
       { type: "link", label: "Service Providers", icon: "UserCog", path: "/admin/providers" },
-      { type: "link", label: "Transporters", icon: "Truck", path: "/admin/transporters" },
     ],
   },
   {
     type: "section",
     label: "Horse Marketplace",
     items: [
+      { type: "link", label: "Horse Category", icon: "FolderTree", path: "/admin/horses/categories" },
       { type: "link", label: "Horse Listings", icon: "Heart", path: "/admin/horses/listings" },
       { type: "link", label: "Horse Sellers", icon: "Store", path: "/admin/horses/sellers" },
       { type: "link", label: "Inquiries", icon: "MessageSquare", path: "/admin/horses/inquiries" },
@@ -43,6 +49,7 @@ const adminMenu = [
     type: "section",
     label: "Transport",
     items: [
+      { type: "link", label: "Transporters", icon: "Truck", path: "/admin/transporters" },
       { type: "link", label: "Transport Requests", icon: "FileText", path: "/admin/transport/requests" },
       { type: "link", label: "Shared Rides", icon: "Route", path: "/admin/transport/shared" },
       { type: "link", label: "Live Tracking", icon: "MapPin", path: "/admin/transport/tracking" },
@@ -93,9 +100,9 @@ const adminMenu = [
   },
   {
     type: "section",
-    label: "Account",
+    label: "Developer Settings",
     items: [
-      { type: "link", label: "Admin Profile", icon: "User", path: "/admin/profile" },
+      { type: "link", label: "Settings Page", icon: "Code", path: "/admin/developer/settings" },
     ],
   },
 ]
@@ -106,8 +113,8 @@ const horseSellerMenu = [
     type: "section",
     label: "Listings",
     items: [
-      { type: "link", label: "My Horses", icon: "Heart", path: "/seller/horses/listings" },
-      { type: "link", label: "Add Horse", icon: "Package", path: "/seller/horses/add" },
+      { type: "link", label: "Horse Category", icon: "FolderTree", path: "/seller/horses/categories" },
+      { type: "link", label: "Horses", icon: "Heart", path: "/seller/horses/listings" },
     ],
   },
   {

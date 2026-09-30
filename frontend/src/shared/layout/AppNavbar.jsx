@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Menu, Search, User, ChevronDown, LogOut, Settings, Bell, BellOff, Repeat } from "lucide-react"
+import { Menu, Search, User, ChevronDown, LogOut, Settings, Bell, BellOff } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup,
   DropdownMenuItem, DropdownMenuSeparator,
@@ -9,16 +9,21 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/shared/components/ui/
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
 import { Input } from "@/shared/components/ui/input"
 import { roles } from "@/shared/constants/sidebarMenus"
+import { useAuth } from "@/shared/context/AuthContext"
 
 export default function AppNavbar({ onMenuClick, role = "admin" }) {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const searchInputRef = useRef(null)
 
   const roleInfo = roles[role]
-  const userData = { name: `${roleInfo.label} User`, email: `${role.replace("-", ".")}@ashwaindia.com` }
+  const userData = {
+    name: user?.name || user?.businessName || roleInfo.label,
+    email: user?.email || user?.phone || "",
+  }
   const notifications = []
 
   useEffect(() => {
@@ -37,13 +42,12 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100)
   }, [searchOpen])
 
-  const handleLogout = () => {
-    localStorage.removeItem("app_accessToken")
-    localStorage.removeItem("ashwa_seller_role")
+  const handleLogout = async () => {
+    await logout()
     if (role === "horse-seller" || role === "store-seller") {
       navigate(`/seller/login?type=${role}`, { replace: true })
     } else {
-      navigate("/", { replace: true })
+      navigate("/admin/login", { replace: true })
     }
   }
 
@@ -73,27 +77,6 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Dev-only role switcher — remove once real per-role auth/login exists */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="hidden sm:flex items-center gap-1.5 h-10 px-3 rounded-full border border-dashed border-neutral-300 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 text-xs font-medium"
-                  title="Dev: switch role view"
-                >
-                  <Repeat className="w-3.5 h-3.5" />
-                  {roleInfo.label}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {Object.entries(roles).map(([key, info]) => (
-                  <DropdownMenuItem key={key} onClick={() => navigate(info.homePath)}>
-                    <span>{info.label}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <PopoverTrigger asChild>
                 <button
@@ -140,7 +123,7 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
                     <span>Profile</span>
                   </DropdownMenuItem>
                   {role === "admin" && (
-                    <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
+                    <DropdownMenuItem onClick={() => navigate("/admin/system/business-setup")}>
                       <Settings className="w-4 h-4" />
                       <span>Settings</span>
                     </DropdownMenuItem>

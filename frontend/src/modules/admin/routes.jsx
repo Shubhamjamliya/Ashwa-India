@@ -1,6 +1,17 @@
 import { Route } from "react-router-dom"
 import Dashboard from "./pages/Dashboard"
+import Profile from "./pages/Profile"
 import PlaceholderPage from "@/shared/components/PlaceholderPage"
+
+import HorseSellers from "./pages/horses/Sellers"
+import HorseListings from "./pages/horses/Listings"
+import HorseCategories from "./pages/horses/Categories"
+import StoreSellers from "./pages/store/Sellers"
+import StoreProducts from "./pages/store/Products"
+import StoreOrders from "./pages/store/Orders"
+import UsersList from "./pages/users/List"
+import ProvidersList from "./pages/providers/List"
+import TransportersList from "./pages/transporters/List"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
 import CustomizationSettings from "./pages/system/CustomizationSettings"
@@ -17,16 +28,10 @@ import RefundPolicy from "./pages/pages-social-media/RefundPolicy"
 import ShippingPolicy from "./pages/pages-social-media/ShippingPolicy"
 import CancellationPolicy from "./pages/pages-social-media/CancellationPolicy"
 
+import DeveloperSettings from "./pages/developer/Settings"
+
 const placeholderRoutes = [
-  ["users", "Users"],
-  ["providers", "Service Providers"],
-  ["transporters", "Transporters"],
-  ["horses/listings", "Horse Listings"],
-  ["horses/sellers", "Horse Sellers"],
   ["horses/inquiries", "Inquiries"],
-  ["store/products", "Products"],
-  ["store/sellers", "Store Sellers"],
-  ["store/orders", "Orders"],
   ["transport/requests", "Transport Requests"],
   ["transport/shared", "Shared Rides"],
   ["transport/tracking", "Live Tracking"],
@@ -36,12 +41,21 @@ const placeholderRoutes = [
   ["reviews", "Reviews"],
   ["notifications", "Notifications"],
   ["support", "Support Tickets"],
-  ["profile", "Admin Profile"],
 ]
 
 export const adminRoutes = (
   <>
     <Route index element={<Dashboard />} />
+
+    <Route path="users" element={<UsersList />} />
+    <Route path="providers" element={<ProvidersList />} />
+    <Route path="transporters" element={<TransportersList />} />
+    <Route path="horses/sellers" element={<HorseSellers />} />
+    <Route path="horses/listings" element={<HorseListings />} />
+    <Route path="horses/categories" element={<HorseCategories />} />
+    <Route path="store/sellers" element={<StoreSellers />} />
+    <Route path="store/products" element={<StoreProducts />} />
+    <Route path="store/orders" element={<StoreOrders />} />
 
     {/* System Settings */}
     <Route path="system/broadcast-notification" element={<NotificationBroadcast />} />
@@ -59,6 +73,11 @@ export const adminRoutes = (
     <Route path="pages/refund" element={<RefundPolicy />} />
     <Route path="pages/shipping" element={<ShippingPolicy />} />
     <Route path="pages/cancellation" element={<CancellationPolicy />} />
+
+    {/* Developer Settings */}
+    <Route path="developer/settings" element={<DeveloperSettings />} />
+
+    <Route path="profile" element={<Profile />} />
 
     {placeholderRoutes.map(([path, title]) => (
       <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
