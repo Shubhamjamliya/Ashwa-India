@@ -4,14 +4,40 @@ export type AuthStackParamList = {
   Register: { phone: string; registrationToken: string };
 };
 
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type MainTabParamList = {
-  Home: undefined;
-  Bookings: undefined;
+  Home: NavigatorScreenParams<HomeStackParamList> | undefined;
+  Booking: undefined;
+  Orders: undefined;
   Profile: undefined;
 };
 
 export type HomeStackParamList = {
   HomeMain: undefined;
-  HorseMarketplace: undefined;
+  HorseMarketplace: { category?: string; location?: string } | undefined;
   HorseDetail: { horseId: string };
+  Store: { categoryId?: string } | undefined;
+  ProductDetail: { productId: string };
+  Cart: undefined;
+  Checkout: undefined;
+  SelectAddress: undefined;
+  AddressForm:
+    | {
+        editId?: string;
+        presetLat?: number;
+        presetLng?: number;
+        presetLine1?: string;
+        presetCity?: string;
+        presetState?: string;
+        presetPincode?: string;
+        selectOnSave?: boolean;
+      }
+    | undefined;
+  Wishlist: undefined;
+  Notifications: undefined;
+  SavedAddresses: undefined;
+  HelpSupport: undefined;
+  About: undefined;
+  Settings: undefined;
 };

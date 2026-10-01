@@ -14,6 +14,7 @@ exports.list = asyncHandler(async (req, res) => {
   }
   if (req.query.status && req.role === 'admin') filter.status = req.query.status;
   if (req.query.category) filter.category = req.query.category;
+  if (req.query.location) filter.location = new RegExp(req.query.location.trim(), 'i');
 
   const horses = await Horse.find(filter)
     .populate('seller', 'name businessName phone')

@@ -1,22 +1,28 @@
-// Mirrors the web panel's design tokens (frontend/src/index.css) so the
-// mobile app and web panels feel like the same product.
+// Ashwa India brand theme: navy + gold equestrian look, matching the web
+// marketplace and admin panel branding.
 export const colors = {
-  background: '#faf8f5',
-  foreground: '#211a12',
+  background: '#FAF7F1',
+  foreground: '#0F2238',
   card: '#ffffff',
 
-  primary: '#92400e',
+  primary: '#C28D2E',
   primaryForeground: '#ffffff',
-  secondary: '#fdf1de',
-  secondaryForeground: '#7c2d12',
+  secondary: '#F3E8D2',
+  secondaryForeground: '#8A6416',
 
-  muted: '#f2ede4',
-  mutedForeground: '#6b5d4d',
-  accent: '#fef3c7',
-  accentForeground: '#78350f',
+  muted: '#F1EEE6',
+  mutedForeground: '#64748B',
+  accent: '#F6E9C9',
+  accentForeground: '#8A6416',
   destructive: '#ef4444',
 
-  border: '#e7dfd1',
+  border: '#E4E1D8',
+
+  // Navy — the brand's dark surface (headers, footers, hero sections).
+  navy: '#0B1C33',
+  navyLight: '#132B4A',
+  navyForeground: '#ffffff',
+  navyMuted: '#A9B8CC',
 
   success: '#16a34a',
   warning: '#f59e0b',

@@ -1,19 +1,33 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar, StyleSheet, View, ViewStyle } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 
 export function Screen({
   children,
   style,
+  topColor,
 }: {
   children: React.ReactNode;
   style?: ViewStyle;
+  topColor?: string;
 }) {
+  const insets = useSafeAreaInsets();
+  // Tab screens stay mounted when inactive, so without this every tab's
+  // StatusBar would fight for control — only the focused screen may set it.
+  const isFocused = useIsFocused();
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={[styles.container, style]}>{children}</View>
-    </SafeAreaView>
+    <View style={styles.safe}>
+      {isFocused && <StatusBar barStyle={topColor ? 'light-content' : 'dark-content'} />}
+      {topColor ? (
+        <View style={{ height: insets.top, backgroundColor: topColor }} />
+      ) : null}
+      <SafeAreaView style={styles.safe} edges={topColor ? ['bottom'] : ['top', 'bottom']}>
+        <View style={[styles.container, style]}>{children}</View>
+      </SafeAreaView>
+    </View>
   );
 }
 

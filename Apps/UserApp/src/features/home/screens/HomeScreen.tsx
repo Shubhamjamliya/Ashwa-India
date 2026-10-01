@@ -1,48 +1,92 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Heart, Truck, Stethoscope, ShoppingBag } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../../../components/Screen';
-import { colors, radius, spacing } from '../../../theme/colors';
-import { useAuth } from '../../../context/AuthContext';
+import { HeroSection } from '../components/HeroSection';
+import { SearchFilterCard } from '../components/SearchFilterCard';
+import { QuickActionsList } from '../components/QuickActionsList';
+import { FeaturedHorses } from '../components/FeaturedHorses';
+import { FeaturedProducts } from '../components/FeaturedProducts';
+import { colors, spacing } from '../../../theme/colors';
+import { apiFetch } from '../../../services/api';
+import { useCart } from '../../../context/CartContext';
+import { useWishlist } from '../../../context/WishlistContext';
+import { useNotifications } from '../../../context/NotificationContext';
+import type { Banner } from '../types';
+import type { Horse, HorseCategory } from '../../marketplace/types';
+import type { Product } from '../../store/types';
 import type { HomeStackParamList } from '../../../navigation/types';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
 
-const quickLinks = [
-  { key: 'providers', label: 'Service Providers', icon: Stethoscope, route: null },
-  { key: 'transport', label: 'Horse Transport', icon: Truck, route: null },
-  { key: 'horses', label: 'Horse Marketplace', icon: Heart, route: 'HorseMarketplace' as const },
-  { key: 'store', label: 'Accessories Store', icon: ShoppingBag, route: null },
-];
-
 export function HomeScreen() {
-  const { user } = useAuth();
   const navigation = useNavigation<Nav>();
+  const { totalCount: cartCount } = useCart();
+  const { horses: savedHorses } = useWishlist();
+  const { unreadCount: notificationCount } = useNotifications();
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [categories, setCategories] = useState<HorseCategory[]>([]);
+  const [horses, setHorses] = useState<Horse[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const loadData = useCallback(async () => {
+    const [bannersRes, categoriesRes, horsesRes, productsRes] = await Promise.allSettled([
+      apiFetch<{ banners: Banner[] }>('/banners', { auth: false }),
+      apiFetch<{ categories: HorseCategory[] }>('/marketplace/categories'),
+      apiFetch<{ horses: Horse[] }>('/marketplace/horses'),
+      apiFetch<{ products: Product[] }>('/store/products'),
+    ]);
+    if (bannersRes.status === 'fulfilled') setBanners(bannersRes.value.banners);
+    if (categoriesRes.status === 'fulfilled') setCategories(categoriesRes.value.categories);
+    if (horsesRes.status === 'fulfilled') setHorses(horsesRes.value.horses);
+    if (productsRes.status === 'fulfilled') setProducts(productsRes.value.products);
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSearch = (filters: { categoryId?: string; location?: string }) => {
+    navigation.navigate('HorseMarketplace', {
+      category: filters.categoryId,
+      location: filters.location,
+    });
+  };
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Hi, {user?.name || 'there'} 👋</Text>
-          <Text style={styles.subtitle}>What would you like to do today?</Text>
-        </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <HeroSection
+          heroImage={banners[0]?.image}
+          horsesCount={horses.length}
+          cartCount={cartCount}
+          wishlistCount={savedHorses.length}
+          notificationCount={notificationCount}
+          onBrowsePress={() => navigation.navigate('HorseMarketplace', undefined)}
+          onCartPress={() => navigation.navigate('Cart', undefined)}
+          onWishlistPress={() => navigation.navigate('Wishlist', undefined)}
+          onBellPress={() => navigation.navigate('Notifications', undefined)}
+        />
 
-        <View style={styles.grid}>
-          {quickLinks.map(({ key, label, icon: Icon, route }) => (
-            <Pressable
-              key={key}
-              style={styles.card}
-              disabled={!route}
-              onPress={() => route && navigation.navigate(route)}>
-              <View style={styles.cardIcon}>
-                <Icon color={colors.primary} size={22} />
-              </View>
-              <Text style={styles.cardLabel}>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <QuickActionsList
+          onHorsesPress={() => navigation.navigate('HorseMarketplace', undefined)}
+          onStorePress={() => navigation.navigate('Store', undefined)}
+        />
+
+        <FeaturedHorses
+          horses={horses}
+          onViewAll={() => navigation.navigate('HorseMarketplace', undefined)}
+          onPressHorse={horseId => navigation.navigate('HorseDetail', { horseId })}
+        />
+
+        <FeaturedProducts
+          products={products}
+          onViewAll={() => navigation.navigate('Store', undefined)}
+          onPressProduct={productId => navigation.navigate('ProductDetail', { productId })}
+        />
+
+        <SearchFilterCard categories={categories} onSearch={handleSearch} />
 
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No active bookings</Text>
@@ -56,56 +100,19 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  noPadding: {
+    padding: 0,
+  },
   content: {
-    padding: spacing.md,
     paddingBottom: spacing.xl,
   },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.mutedForeground,
-    marginTop: 4,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  card: {
-    width: '47%',
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-  },
-  cardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  cardLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
   emptyState: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
+    marginHorizontal: spacing.md,
     alignItems: 'center',
     padding: spacing.lg,
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },

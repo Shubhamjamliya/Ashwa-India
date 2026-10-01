@@ -1,12 +1,19 @@
 import { useState, useEffect, useMemo } from "react"
 import {
-  Search, Download, Eye, Heart, Check, X, MapPin, Calendar as CalendarIcon, User,
+  Search, Download, Eye, Heart, Check, X, MapPin, Calendar as CalendarIcon, User, Pencil,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
 import { Button } from "@/shared/components/ui/button"
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import { exportToCSV } from "@/shared/lib/csvExport"
+
+const editStatusOptions = ["draft", "pending", "listed", "sold", "removed"]
+const genderOptions = ["mare", "stallion", "gelding"]
+
+const defaultEditForm = {
+  breed: "", price: "", age: "", gender: "", color: "", height: "", location: "", description: "", status: "listed",
+}
 
 const INR = "₹"
 const fmt = (n) => `${INR}${Number(n || 0).toLocaleString("en-IN")}`
@@ -39,6 +46,10 @@ export default function HorseListings() {
   const [selected, setSelected] = useState(null)
   const [showDetails, setShowDetails] = useState(false)
   const [actingId, setActingId] = useState(null)
+  const [editingHorse, setEditingHorse] = useState(null)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editForm, setEditForm] = useState(defaultEditForm)
+  const [saving, setSaving] = useState(false)
 
   const tabs = [
     { key: "", label: "All" },
@@ -94,6 +105,59 @@ export default function HorseListings() {
   const handleViewDetails = (horse) => {
     setSelected(horse)
     setShowDetails(true)
+  }
+
+  const handleEdit = (horse) => {
+    setEditingHorse(horse)
+    setEditForm({
+      breed: horse.breed || "",
+      price: String(horse.price ?? ""),
+      age: String(horse.age ?? ""),
+      gender: horse.gender || "",
+      color: horse.color || "",
+      height: String(horse.height ?? ""),
+      location: horse.location || "",
+      description: horse.description || "",
+      status: horse.status || "listed",
+    })
+    setShowEdit(true)
+  }
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault()
+    if (!editForm.breed.trim()) {
+      setError("Breed is required")
+      return
+    }
+    if (!editForm.price || Number(editForm.price) <= 0) {
+      setError("Enter a valid price")
+      return
+    }
+    setError("")
+    setSaving(true)
+    try {
+      await apiFetch(`/marketplace/horses/${editingHorse._id}`, {
+        method: "PUT",
+        body: {
+          breed: editForm.breed.trim(),
+          price: Number(editForm.price),
+          age: editForm.age ? Number(editForm.age) : undefined,
+          gender: editForm.gender || undefined,
+          color: editForm.color.trim() || undefined,
+          height: editForm.height ? Number(editForm.height) : undefined,
+          location: editForm.location.trim() || undefined,
+          description: editForm.description.trim() || undefined,
+          status: editForm.status,
+        },
+      })
+      setShowEdit(false)
+      setEditingHorse(null)
+      await load()
+    } catch (err) {
+      setError(err.message || "Failed to update listing")
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleExport = () => {
@@ -219,23 +283,32 @@ export default function HorseListings() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {horse.status === "pending" ? (
-                          <div className="flex justify-center gap-2">
-                            <Button size="sm" disabled={actingId === horse._id} onClick={() => updateStatus(horse._id, "listed")}>
-                              <Check className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="sm" variant="outline" disabled={actingId === horse._id} onClick={() => updateStatus(horse._id, "removed")}>
-                              <X className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
+                        <div className="flex items-center justify-center gap-1">
+                          {horse.status === "pending" && (
+                            <>
+                              <Button size="sm" disabled={actingId === horse._id} onClick={() => updateStatus(horse._id, "listed")}>
+                                <Check className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button size="sm" variant="outline" disabled={actingId === horse._id} onClick={() => updateStatus(horse._id, "removed")}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </>
+                          )}
                           <button
                             onClick={() => handleViewDetails(horse)}
                             className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors"
+                            title="View"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                        )}
+                          <button
+                            onClick={() => handleEdit(horse)}
+                            className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -299,20 +372,159 @@ export default function HorseListings() {
                 <p className="text-sm text-neutral-600 bg-neutral-50 rounded-lg p-3">{selected.description}</p>
               )}
 
-              {selected.status === "pending" && (
-                <div className="flex gap-2">
-                  <Button className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "listed")}>
-                    <Check className="w-4 h-4" />
-                    Approve
-                  </Button>
-                  <Button variant="outline" className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "removed")}>
-                    <X className="w-4 h-4" />
-                    Reject
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                {selected.status === "pending" && (
+                  <>
+                    <Button className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "listed")}>
+                      <Check className="w-4 h-4" />
+                      Approve
+                    </Button>
+                    <Button variant="outline" className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "removed")}>
+                      <X className="w-4 h-4" />
+                      Reject
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowDetails(false)
+                    handleEdit(selected)
+                  }}
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </Button>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEdit} onOpenChange={setShowEdit}>
+        <DialogContent className="max-w-lg mx-auto p-0 gap-0 max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="pr-12 text-xl font-bold text-neutral-900">Edit Horse Listing</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4 px-6 py-5">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Breed</label>
+              <input
+                type="text"
+                required
+                value={editForm.breed}
+                onChange={(e) => setEditForm((p) => ({ ...p, breed: e.target.value }))}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Price (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={editForm.price}
+                  onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Age (years)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editForm.age}
+                  onChange={(e) => setEditForm((p) => ({ ...p, age: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Gender</label>
+                <select
+                  value={editForm.gender}
+                  onChange={(e) => setEditForm((p) => ({ ...p, gender: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                >
+                  <option value="">—</option>
+                  {genderOptions.map((g) => (
+                    <option key={g} value={g} className="capitalize">{g}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Color</label>
+                <input
+                  type="text"
+                  value={editForm.color}
+                  onChange={(e) => setEditForm((p) => ({ ...p, color: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Height (hh)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={editForm.height}
+                  onChange={(e) => setEditForm((p) => ({ ...p, height: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">Location</label>
+                <input
+                  type="text"
+                  value={editForm.location}
+                  onChange={(e) => setEditForm((p) => ({ ...p, location: e.target.value }))}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Description</label>
+              <textarea
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                className="w-full resize-none rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Status</label>
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value }))}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-neutral-900"
+              >
+                {editStatusOptions.map((s) => (
+                  <option key={s} value={s} className="capitalize">{statusLabel[s]}</option>
+                ))}
+              </select>
+            </div>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEdit(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

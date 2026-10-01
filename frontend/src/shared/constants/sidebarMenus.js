@@ -14,6 +14,13 @@ const adminMenu = [
   { type: "link", label: "Dashboard", icon: "LayoutDashboard", path: "/admin" },
   {
     type: "section",
+    label: "Manage User App",
+    items: [
+      { type: "link", label: "Banners", icon: "Image", path: "/admin/user-app/banners" },
+    ],
+  },
+  {
+    type: "section",
     label: "Users",
     items: [
       { type: "link", label: "Users", icon: "Users", path: "/admin/users" },
@@ -40,6 +47,7 @@ const adminMenu = [
     type: "section",
     label: "Accessories Store",
     items: [
+      { type: "link", label: "Product Categories", icon: "FolderTree", path: "/admin/store/categories" },
       { type: "link", label: "Products", icon: "Package", path: "/admin/store/products" },
       { type: "link", label: "Store Sellers", icon: "Building2", path: "/admin/store/sellers" },
       { type: "link", label: "Orders", icon: "ShoppingBag", path: "/admin/store/orders" },
@@ -142,6 +150,7 @@ const storeSellerMenu = [
     type: "section",
     label: "Catalog",
     items: [
+      { type: "link", label: "Product Categories", icon: "FolderTree", path: "/seller/store/categories" },
       { type: "link", label: "Products", icon: "Package", path: "/seller/store/products" },
       { type: "link", label: "Inventory", icon: "Building2", path: "/seller/store/inventory" },
     ],

@@ -9,34 +9,43 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, MapPin } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { ArrowLeft, Heart, MapPin } from 'lucide-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { Screen } from '../../../components/Screen';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { getMediaUrl } from '../../../services/media';
+import { useWishlist } from '../../../context/WishlistContext';
 import type { Horse } from '../types';
 import type { HomeStackParamList } from '../../../navigation/types';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, 'HorseMarketplace'>;
+type Rt = RouteProp<HomeStackParamList, 'HorseMarketplace'>;
 
 export function HorseMarketplaceScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Rt>();
   const [horses, setHorses] = useState<Horse[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isSaved, toggle } = useWishlist();
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await apiFetch<{ horses: Horse[] }>('/marketplace/horses');
+      const query = new URLSearchParams();
+      if (params?.category) query.set('category', params.category);
+      if (params?.location) query.set('location', params.location);
+      const qs = query.toString();
+      const data = await apiFetch<{ horses: Horse[] }>(`/marketplace/horses${qs ? `?${qs}` : ''}`);
       setHorses(data.horses);
     } catch (e: any) {
       setError(e.message || 'Failed to load listings');
     }
-  }, []);
+  }, [params?.category, params?.location]);
 
   useEffect(() => {
     setLoading(true);
@@ -81,11 +90,23 @@ export function HorseMarketplaceScreen() {
             <Pressable
               style={styles.card}
               onPress={() => navigation.navigate('HorseDetail', { horseId: item._id })}>
-              {item.photos?.[0] ? (
-                <Image source={{ uri: getMediaUrl(item.photos[0]) }} style={styles.thumb} />
-              ) : (
-                <View style={[styles.thumb, styles.thumbPlaceholder]} />
-              )}
+              <View style={styles.thumbWrap}>
+                {item.photos?.[0] ? (
+                  <Image source={{ uri: getMediaUrl(item.photos[0]) }} style={styles.thumb} />
+                ) : (
+                  <View style={[styles.thumb, styles.thumbPlaceholder]} />
+                )}
+                <Pressable
+                  style={styles.heartBtn}
+                  hitSlop={8}
+                  onPress={() => toggle(item)}>
+                  <Heart
+                    color={colors.white}
+                    size={14}
+                    fill={isSaved(item._id) ? colors.white : 'transparent'}
+                  />
+                </Pressable>
+              </View>
               <View style={styles.cardBody}>
                 <Text style={styles.breed}>{item.breed}</Text>
                 <Text style={styles.category}>{item.category?.name}</Text>
@@ -155,12 +176,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: spacing.sm,
   },
+  thumbWrap: {
+    width: 96,
+    height: 96,
+  },
   thumb: {
     width: 96,
     height: 96,
   },
   thumbPlaceholder: {
     backgroundColor: colors.muted,
+  },
+  heartBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(15,34,56,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardBody: {
     flex: 1,

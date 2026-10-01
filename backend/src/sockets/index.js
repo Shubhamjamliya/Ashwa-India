@@ -1,8 +1,22 @@
+const jwt = require('jsonwebtoken');
+
 module.exports = function registerSockets(io) {
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 
-    // booking status updates, ride-share matching, chat events go here
+    const token = socket.handshake.auth?.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        if (decoded.role === 'store-seller') {
+          socket.join(`seller:${decoded.id}`);
+        } else if (decoded.role === 'admin') {
+          socket.join('admin');
+        }
+      } catch (err) {
+        // invalid/expired token — socket just won't receive role-scoped events
+      }
+    }
 
     socket.on('disconnect', () => {
       console.log('Socket disconnected:', socket.id);

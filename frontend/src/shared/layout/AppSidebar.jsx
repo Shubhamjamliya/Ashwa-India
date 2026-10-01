@@ -4,7 +4,7 @@ import {
   Search, LayoutDashboard, Users, UserCog, Truck, Heart, Store, MessageSquare,
   Package, Building2, ShoppingBag, FileText, Route, MapPin, Calendar, CreditCard,
   DollarSign, Star, Bell, Headset, Settings, User, ChevronDown, ChevronRight,
-  ChevronLeft, X, Zap, UserX, Globe, Phone, Lock, Receipt, Code, FolderTree,
+  ChevronLeft, X, Zap, UserX, Globe, Phone, Lock, Receipt, Code, FolderTree, Image, Tag,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { Input } from "@/shared/components/ui/input"
@@ -13,7 +13,7 @@ import { useBranding } from "@/shared/context/BrandingContext"
 const iconMap = {
   LayoutDashboard, Users, UserCog, Truck, Heart, Store, MessageSquare, Package,
   Building2, ShoppingBag, FileText, Route, MapPin, Calendar, CreditCard,
-  DollarSign, Star, Bell, Headset, Settings, User, Zap, UserX, Globe, Phone, Lock, Receipt, X, Code, FolderTree,
+  DollarSign, Star, Bell, Headset, Settings, User, Zap, UserX, Globe, Phone, Lock, Receipt, X, Code, FolderTree, Image, Tag,
 }
 
 export default function AppSidebar({

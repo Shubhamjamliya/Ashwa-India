@@ -19,6 +19,7 @@ const archivedAccountRoutes = require('./routes/archivedAccount.routes');
 const cmsPageRoutes = require('./routes/cmsPage.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const brandingRoutes = require('./routes/branding.routes');
+const bannerRoutes = require('./routes/banner.routes');
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use(
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use('/api/branding', brandingRoutes);
+app.use('/api/banners', bannerRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -55,6 +57,7 @@ app.use('/api/admin/sub-admins', subAdminRoutes);
 app.use('/api/admin/archived-accounts', archivedAccountRoutes);
 app.use('/api/admin/pages', cmsPageRoutes);
 app.use('/api/admin/notifications', notificationRoutes);
+app.use('/api/notifications', require('./routes/userNotification.routes'));
 
 app.use((req, res) => res.status(404).json({ message: 'Not found' }));
 

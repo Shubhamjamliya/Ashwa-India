@@ -9,7 +9,9 @@ import HorseCategories from "./pages/horses/Categories"
 import StoreSellers from "./pages/store/Sellers"
 import StoreProducts from "./pages/store/Products"
 import StoreOrders from "./pages/store/Orders"
+import StoreCategories from "./pages/store/Categories"
 import UsersList from "./pages/users/List"
+import Banners from "./pages/userApp/Banners"
 import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
 
@@ -47,12 +49,14 @@ export const adminRoutes = (
   <>
     <Route index element={<Dashboard />} />
 
+    <Route path="user-app/banners" element={<Banners />} />
     <Route path="users" element={<UsersList />} />
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
     <Route path="horses/listings" element={<HorseListings />} />
     <Route path="horses/categories" element={<HorseCategories />} />
+    <Route path="store/categories" element={<StoreCategories />} />
     <Route path="store/sellers" element={<StoreSellers />} />
     <Route path="store/products" element={<StoreProducts />} />
     <Route path="store/orders" element={<StoreOrders />} />

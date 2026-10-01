@@ -33,7 +33,7 @@ async function refreshAccessToken(): Promise<string> {
   });
   if (!res.ok) throw new Error('Session expired');
 
-  const data = await res.json();
+  const data: any = await res.json();
   await setSession({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
@@ -73,7 +73,7 @@ export async function apiFetch<T = any>(
     }
   }
 
-  const data = await res.json().catch(() => ({}));
+  const data: any = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new ApiError(data.message || 'Request failed', res.status);
   }

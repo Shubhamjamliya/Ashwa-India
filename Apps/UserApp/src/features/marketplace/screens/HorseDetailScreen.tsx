@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, MapPin, Phone } from 'lucide-react-native';
+import { ArrowLeft, Heart, MapPin, Phone } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -18,6 +18,7 @@ import { Input } from '../../../components/Input';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { getMediaUrl } from '../../../services/media';
+import { useWishlist } from '../../../context/WishlistContext';
 import type { Horse } from '../types';
 import type { HomeStackParamList } from '../../../navigation/types';
 
@@ -34,6 +35,7 @@ export function HorseDetailScreen() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const { isSaved, toggle } = useWishlist();
 
   useEffect(() => {
     apiFetch<{ horse: Horse }>(`/marketplace/horses/${params.horseId}`)
@@ -67,6 +69,18 @@ export function HorseDetailScreen() {
           <ArrowLeft color={colors.foreground} size={20} />
         </Pressable>
         <Text style={styles.title}>Horse Details</Text>
+        {horse && (
+          <Pressable
+            style={styles.wishlistBtn}
+            hitSlop={12}
+            onPress={() => toggle(horse)}>
+            <Heart
+              color={colors.primary}
+              size={18}
+              fill={isSaved(horse._id) ? colors.primary : 'transparent'}
+            />
+          </Pressable>
+        )}
       </View>
 
       {loading ? (
@@ -176,9 +190,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   title: {
+    flex: 1,
     fontSize: 18,
     fontWeight: '700',
     color: colors.foreground,
+  },
+  wishlistBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   center: {
     flex: 1,
