@@ -25,10 +25,10 @@ exports.updateStatus = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { businessName, vehicleTypes, serviceArea, name, email } = req.body;
+  const { businessName, vehicleTypes, serviceArea, serviceType, location, name, email } = req.body;
   const transporter = await Transporter.findByIdAndUpdate(
     req.user._id,
-    { businessName, vehicleTypes, serviceArea, name, email },
+    { businessName, vehicleTypes, serviceArea, serviceType, location, name, email },
     { new: true }
   );
   res.json({ transporter });

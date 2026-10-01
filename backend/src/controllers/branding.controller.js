@@ -10,5 +10,8 @@ exports.getPublicBranding = asyncHandler(async (req, res) => {
     companyName: b.companyName || 'Ashwa India',
     logo: b.logo || null,
     favicon: b.favicon || null,
+    userLogo: b.userLogo || null,
+    providerLogo: b.providerLogo || null,
+    transporterLogo: b.transporterLogo || null,
   });
 });

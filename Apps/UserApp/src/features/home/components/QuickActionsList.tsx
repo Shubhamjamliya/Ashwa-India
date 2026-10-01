@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowUpRight, Heart, ShoppingBag, Stethoscope, Truck } from 'lucide-react-native';
+import { Heart, ShoppingBag, Stethoscope, Truck } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
 
 type Action = {
@@ -15,13 +15,14 @@ type Action = {
 type Props = {
   onHorsesPress: () => void;
   onStorePress: () => void;
+  onTransportPress: () => void;
 };
 
-export function QuickActionsList({ onHorsesPress, onStorePress }: Props) {
+export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress }: Props) {
   const actions: Action[] = [
     {
       key: 'horses',
-      label: 'Horse Marketplace',
+      label: 'Horse\nMarketplace',
       icon: Heart,
       iconBg: '#FBEFD6',
       iconColor: colors.primary,
@@ -29,21 +30,22 @@ export function QuickActionsList({ onHorsesPress, onStorePress }: Props) {
     },
     {
       key: 'providers',
-      label: 'Service Providers',
+      label: 'Service\nProviders',
       icon: Stethoscope,
       iconBg: '#E1ECFC',
       iconColor: '#2563EB',
     },
     {
       key: 'transport',
-      label: 'Horse Transport',
+      label: 'Horse\nTransport',
       icon: Truck,
       iconBg: '#E0F4E7',
       iconColor: '#16A34A',
+      onPress: onTransportPress,
     },
     {
       key: 'store',
-      label: 'Accessories Store',
+      label: 'Accessories\nStore',
       icon: ShoppingBag,
       iconBg: '#F0E4FB',
       iconColor: '#7C3AED',
@@ -58,20 +60,15 @@ export function QuickActionsList({ onHorsesPress, onStorePress }: Props) {
         <Text style={styles.sectionTitle}>Explore Ashwa India</Text>
       </View>
 
-      <View style={styles.grid}>
+      <View style={styles.row}>
         {actions.map(action => (
           <Pressable
             key={action.key}
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+            style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
             disabled={!action.onPress}
             onPress={action.onPress}>
-            <View style={styles.cardTop}>
-              <View style={[styles.iconWrap, { backgroundColor: action.iconBg }]}>
-                <action.icon color={action.iconColor} size={23} strokeWidth={2.2} />
-              </View>
-              <View style={styles.arrowBadge}>
-                <ArrowUpRight color={colors.mutedForeground} size={13} />
-              </View>
+            <View style={[styles.iconWrap, { backgroundColor: action.iconBg }]}>
+              <action.icon color={action.iconColor} size={26} strokeWidth={2} />
             </View>
             <Text style={styles.label} numberOfLines={2}>
               {action.label}
@@ -105,54 +102,31 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.foreground,
   },
-  grid: {
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
   },
-  card: {
-    width: '47%',
-    aspectRatio: 1.05,
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    justifyContent: 'space-between',
-    shadowColor: '#0F2238',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+  item: {
+    alignItems: 'center',
+    width: '23%',
   },
-  cardPressed: {
-    opacity: 0.8,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+  itemPressed: {
+    opacity: 0.6,
   },
   iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  arrowBadge: {
-    width: 24,
-    height: 24,
+    width: 60,
+    height: 60,
     borderRadius: radius.full,
-    backgroundColor: colors.muted,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    fontSize: 14,
-    fontWeight: '700',
+    marginTop: spacing.xs,
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.foreground,
-    lineHeight: 18,
+    textAlign: 'center',
+    lineHeight: 15,
   },
 });

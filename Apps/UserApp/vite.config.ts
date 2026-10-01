@@ -23,15 +23,14 @@ export default defineConfig({
   ],
   resolve: {
     extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js'],
-    alias: {
-      'react-native$': 'react-native-web',
-      'lucide-react-native': 'lucide-react',
-    },
+    alias: [
+      { find: /^react-native$/, replacement: 'react-native-web' },
+      { find: /^lucide-react-native$/, replacement: 'lucide-react' },
+    ],
   },
   optimizeDeps: {
     exclude: [
       'react-native',
-      'react-native-web',
       'react-native-gesture-handler',
       'react-native-safe-area-context',
       'react-native-screens',

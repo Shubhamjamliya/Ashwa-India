@@ -8,14 +8,19 @@ const transporterSchema = new mongoose.Schema(
     businessName: { type: String, trim: true },
     vehicleTypes: [{ type: String }],
     serviceArea: { type: String },
+    serviceType: { type: String, enum: ['private', 'shared', 'both'], default: 'private' },
+    location: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended', 'archived'], default: 'pending' },
   },
   { timestamps: true }
 );
 
 transporterSchema.methods.toSafeObject = function toSafeObject() {
-  const { _id, name, phone, email, businessName, vehicleTypes, serviceArea, status, createdAt } = this;
-  return { id: _id, name, phone, email, businessName, vehicleTypes, serviceArea, status, createdAt, role: 'transporter' };
+  const { _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, createdAt } = this;
+  return { id: _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, createdAt, role: 'transporter' };
 };
 
 module.exports = mongoose.model('Transporter', transporterSchema);

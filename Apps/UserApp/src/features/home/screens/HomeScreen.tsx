@@ -58,7 +58,7 @@ export function HomeScreen() {
     <Screen style={styles.noPadding} topColor={colors.navy}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HeroSection
-          heroImage={banners[0]?.image}
+          banners={banners}
           horsesCount={horses.length}
           cartCount={cartCount}
           wishlistCount={savedHorses.length}
@@ -72,6 +72,7 @@ export function HomeScreen() {
         <QuickActionsList
           onHorsesPress={() => navigation.navigate('HorseMarketplace', undefined)}
           onStorePress={() => navigation.navigate('Store', undefined)}
+          onTransportPress={() => navigation.navigate('TransportLocation')}
         />
 
         <FeaturedHorses

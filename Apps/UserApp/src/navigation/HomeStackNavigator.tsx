@@ -11,6 +11,8 @@ import { SelectAddressScreen } from '../features/address/screens/SelectAddressSc
 import { AddressFormScreen } from '../features/address/screens/AddressFormScreen';
 import { WishlistScreen } from '../features/wishlist/screens/WishlistScreen';
 import { NotificationsScreen } from '../features/notifications/screens/NotificationsScreen';
+import { TransportLocationScreen } from '../features/transport/screens/TransportLocationScreen';
+import { TransportResultsScreen } from '../features/transport/screens/TransportResultsScreen';
 import { SavedAddressesScreen } from '../features/profile/screens/SavedAddressesScreen';
 import { HelpSupportScreen } from '../features/profile/screens/HelpSupportScreen';
 import { AboutScreen } from '../features/profile/screens/AboutScreen';
@@ -38,6 +40,8 @@ export function HomeStackNavigator() {
       <Stack.Screen name="AddressForm" component={AddressFormScreen} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="TransportLocation" component={TransportLocationScreen} />
+      <Stack.Screen name="TransportResults" component={TransportResultsScreen} />
       <Stack.Screen name="SavedAddresses" component={SavedAddressesScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="About" component={AboutScreen} />

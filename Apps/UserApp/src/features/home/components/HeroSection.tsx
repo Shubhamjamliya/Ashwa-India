@@ -1,11 +1,12 @@
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Bell, Heart, ShoppingCart } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
-import { getMediaUrl } from '../../../services/media';
+import { BannerCarousel } from './BannerCarousel';
+import type { Banner } from '../types';
 
 type Props = {
-  heroImage?: string;
+  banners: Banner[];
   horsesCount: number;
   cartCount?: number;
   wishlistCount?: number;
@@ -17,7 +18,7 @@ type Props = {
 };
 
 export function HeroSection({
-  heroImage,
+  banners,
   horsesCount,
   cartCount = 0,
   wishlistCount = 0,
@@ -72,9 +73,7 @@ export function HeroSection({
         Buy, sell, connect and grow with India's most trusted equine community.
       </Text>
 
-      {heroImage ? (
-        <Image source={{ uri: getMediaUrl(heroImage) }} style={styles.heroImage} resizeMode="cover" />
-      ) : null}
+      {banners.length > 0 ? <BannerCarousel banners={banners} /> : null}
 
       <Pressable style={styles.cta} onPress={onBrowsePress}>
         <Text style={styles.ctaText}>Browse Horses</Text>
@@ -166,13 +165,6 @@ const styles = StyleSheet.create({
     color: colors.navyMuted,
     marginTop: spacing.sm,
     lineHeight: 19,
-  },
-  heroImage: {
-    width: '100%',
-    height: 170,
-    borderRadius: radius.lg,
-    marginTop: spacing.md,
-    backgroundColor: colors.navyLight,
   },
   cta: {
     marginTop: spacing.md,
