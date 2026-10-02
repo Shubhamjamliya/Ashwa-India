@@ -6,13 +6,17 @@ import type { RazorpaySuccess } from 'react-native-razorpay';
 type CartLineItem = { productId: string; quantity: number };
 
 type PaymentOrderResponse = {
+  paymentIntentId: string;
   razorpayOrderId: string;
   amount: number;
   currency: string;
   keyId: string;
 };
 
-export async function payForCart(items: CartLineItem[], user: SessionUser | null): Promise<RazorpaySuccess> {
+export async function payForCart(
+  items: CartLineItem[],
+  user: SessionUser | null,
+): Promise<{ paymentIntentId: string; result: RazorpaySuccess }> {
   if (Platform.OS === 'web') {
     throw new Error('Payments are only available in the Ashwa India mobile app, not this web preview.');
   }
@@ -24,7 +28,7 @@ export async function payForCart(items: CartLineItem[], user: SessionUser | null
 
   const { default: RazorpayCheckout } = await import('react-native-razorpay');
 
-  return RazorpayCheckout.open({
+  const result = await RazorpayCheckout.open({
     key: order.keyId,
     amount: order.amount,
     currency: order.currency,
@@ -37,4 +41,6 @@ export async function payForCart(items: CartLineItem[], user: SessionUser | null
     },
     theme: { color: '#C28D2E' },
   });
+
+  return { paymentIntentId: order.paymentIntentId, result };
 }
