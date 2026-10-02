@@ -11,4 +11,7 @@ router.get('/requests/mine', protect, authorize('user'), transportRequestControl
 router.get('/requests/incoming', protect, authorize('transporter'), transportRequestController.listIncoming);
 router.patch('/requests/:id/respond', protect, authorize('transporter'), transportRequestController.respond);
 
+router.get('/requests', protect, authorize('admin'), transportRequestController.listAll);
+router.patch('/requests/:id/cancel', protect, authorize('admin'), transportRequestController.cancel);
+
 module.exports = router;

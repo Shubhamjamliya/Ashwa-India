@@ -14,6 +14,7 @@ import UsersList from "./pages/users/List"
 import Banners from "./pages/userApp/Banners"
 import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
+import TransportRequests from "./pages/transport/Requests"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
 import ZoneSetup from "./pages/system/zones/ZoneSetup"
@@ -36,7 +37,6 @@ import DeveloperSettings from "./pages/developer/Settings"
 
 const placeholderRoutes = [
   ["horses/inquiries", "Inquiries"],
-  ["transport/requests", "Transport Requests"],
   ["transport/shared", "Shared Rides"],
   ["transport/tracking", "Live Tracking"],
   ["bookings", "Bookings"],
@@ -55,6 +55,7 @@ export const adminRoutes = (
     <Route path="users" element={<UsersList />} />
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
+    <Route path="transport/requests" element={<TransportRequests />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
     <Route path="horses/listings" element={<HorseListings />} />
     <Route path="horses/categories" element={<HorseCategories />} />

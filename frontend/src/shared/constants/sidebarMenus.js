@@ -2,11 +2,17 @@ export const roles = {
   admin: { label: "Admin", homePath: "/admin", brand: "Admin Panel" },
   "horse-seller": { label: "Horse Seller", homePath: "/seller/horses", brand: "Horse Seller" },
   "store-seller": { label: "Store Seller", homePath: "/seller/store", brand: "Accessories Seller" },
+  user: { label: "User", homePath: "/user", brand: "Ashwa India" },
+  transporter: { label: "Transporter", homePath: "/transporter", brand: "Ashwa India Transporter" },
+  provider: { label: "Service Provider", homePath: "/service", brand: "Ashwa India Services" },
 }
 
 export function getRoleForPath(pathname) {
   if (pathname.startsWith("/seller/horses")) return "horse-seller"
   if (pathname.startsWith("/seller/store")) return "store-seller"
+  if (pathname.startsWith("/user")) return "user"
+  if (pathname.startsWith("/transporter")) return "transporter"
+  if (pathname.startsWith("/service")) return "provider"
   return "admin"
 }
 

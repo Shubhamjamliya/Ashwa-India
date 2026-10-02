@@ -94,6 +94,43 @@ exports.createRequest = asyncHandler(async (req, res) => {
   res.status(201).json({ request: populated });
 });
 
+// GET /api/transport/requests  (admin) — optional ?status= filter
+exports.listAll = asyncHandler(async (req, res) => {
+  const filter = {};
+  if (req.query.status) filter.status = req.query.status;
+
+  const requests = await TransportRequest.find(filter)
+    .populate('user', 'name phone')
+    .populate('transporter', 'name businessName phone vehicleTypes serviceType')
+    .sort({ createdAt: -1 });
+  res.json({ requests });
+});
+
+// PATCH /api/transport/requests/:id/cancel  (admin)
+exports.cancel = asyncHandler(async (req, res) => {
+  const request = await TransportRequest.findById(req.params.id);
+  if (!request) return res.status(404).json({ message: 'Request not found' });
+  if (request.status !== 'pending' && request.status !== 'accepted') {
+    return res.status(400).json({ message: 'Only pending or accepted requests can be cancelled' });
+  }
+
+  request.status = 'cancelled';
+  request.respondedAt = new Date();
+  await request.save();
+
+  const populated = await request
+    .populate('user', 'name phone')
+    .then(r => r.populate('transporter', 'name businessName phone vehicleTypes serviceType'));
+
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`user:${request.user}`).emit('transport:update', populated);
+    io.to(`transporter:${request.transporter}`).emit('transport:update', populated);
+  }
+
+  res.json({ request: populated });
+});
+
 // GET /api/transport/requests/mine  (user)
 exports.listMine = asyncHandler(async (req, res) => {
   const requests = await TransportRequest.find({ user: req.user._id })

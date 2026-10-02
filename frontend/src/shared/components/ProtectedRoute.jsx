@@ -5,6 +5,9 @@ const loginPathForRole = {
   admin: "/admin/login",
   "horse-seller": "/seller/login?type=horse-seller",
   "store-seller": "/seller/login?type=store-seller",
+  user: "/user/login",
+  transporter: "/transporter/login",
+  provider: "/service/login",
 }
 
 export default function ProtectedRoute({ role, children }) {
