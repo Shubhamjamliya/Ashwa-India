@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { useAuth } from '../context/AuthContext';
+import { ZoneGate } from '../features/zone/ZoneGate';
 import { colors } from '../theme/colors';
 
 export function RootNavigator() {
@@ -16,7 +17,7 @@ export function RootNavigator() {
     );
   }
 
-  return isAuthenticated ? <MainNavigator /> : <AuthNavigator />;
+  return <ZoneGate>{isAuthenticated ? <MainNavigator /> : <AuthNavigator />}</ZoneGate>;
 }
 
 const styles = StyleSheet.create({

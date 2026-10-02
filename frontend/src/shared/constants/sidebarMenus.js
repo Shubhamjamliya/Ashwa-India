@@ -88,6 +88,7 @@ const adminMenu = [
       { type: "link", label: "Broadcast Notification", icon: "Bell", path: "/admin/system/broadcast-notification" },
       { type: "link", label: "Sub-Admins", icon: "UserCog", path: "/admin/system/sub-admins" },
       { type: "link", label: "Business Setup", icon: "Settings", path: "/admin/system/business-setup" },
+      { type: "link", label: "Zone Setup", icon: "MapPin", path: "/admin/system/zones" },
       { type: "link", label: "Customization Settings", icon: "Zap", path: "/admin/system/customization" },
       { type: "link", label: "Archived Accounts", icon: "UserX", path: "/admin/system/archived-accounts" },
     ],

@@ -16,6 +16,8 @@ import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
+import ZoneSetup from "./pages/system/zones/ZoneSetup"
+import AddZone from "./pages/system/zones/AddZone"
 import CustomizationSettings from "./pages/system/CustomizationSettings"
 import ArchivedAccounts from "./pages/system/ArchivedAccounts"
 import SubAdmins from "./pages/system/SubAdmins"
@@ -65,6 +67,9 @@ export const adminRoutes = (
     <Route path="system/broadcast-notification" element={<NotificationBroadcast />} />
     <Route path="system/sub-admins" element={<SubAdmins />} />
     <Route path="system/business-setup" element={<BusinessSetup />} />
+    <Route path="system/zones" element={<ZoneSetup />} />
+    <Route path="system/zones/add" element={<AddZone />} />
+    <Route path="system/zones/edit/:id" element={<AddZone />} />
     <Route path="system/customization" element={<CustomizationSettings />} />
     <Route path="system/archived-accounts" element={<ArchivedAccounts />} />
 
