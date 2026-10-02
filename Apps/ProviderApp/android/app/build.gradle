@@ -78,6 +78,20 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.providerapp"
+
+    // Windows MAX_PATH (260 chars) workaround: the autolinked C++ codegen
+    // build (react-native-gesture-handler's shadow nodes, etc.) produces
+    // deeply nested intermediate file paths that overflow 260 chars when
+    // built under this project's long path. Redirect the native build's
+    // staging output to a short path outside the project tree.
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        externalNativeBuild {
+            cmake {
+                buildStagingDirectory = file("C:/rncxx/${rootProject.name}")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.providerapp"
         minSdkVersion rootProject.ext.minSdkVersion
