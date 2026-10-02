@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Heart } from 'lucide-react-native';
+import { Heart, MapPin } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { getMediaUrl } from '../../../services/media';
 import { useWishlist } from '../../../context/WishlistContext';
@@ -60,18 +60,23 @@ export function FeaturedHorses({ horses, onViewAll, onPressHorse }: Props) {
               </View>
               <Text style={styles.breed} numberOfLines={1}>
                 {item.breed}
+                {item.gender ? ` ${item.gender.charAt(0).toUpperCase()}${item.gender.slice(1)}` : ''}
               </Text>
-              <Text style={styles.meta} numberOfLines={1}>
-                {[item.age ? `${item.age} yrs` : null, item.height ? `${item.height} inch` : null]
-                  .filter(Boolean)
-                  .join(' • ')}
-              </Text>
-              {item.location ? (
-                <Text style={styles.location} numberOfLines={1}>
-                  {item.location}
-                </Text>
-              ) : null}
-              <Text style={styles.price}>₹{item.price.toLocaleString('en-IN')}</Text>
+              <View style={styles.metaRow}>
+                {item.location ? (
+                  <View style={styles.locationRow}>
+                    <MapPin color={colors.mutedForeground} size={11} />
+                    <Text style={styles.location} numberOfLines={1}>
+                      {item.location}
+                    </Text>
+                  </View>
+                ) : (
+                  <View />
+                )}
+                <View style={styles.priceBadge}>
+                  <Text style={styles.price}>₹{item.price.toLocaleString('en-IN')}</Text>
+                </View>
+              </View>
             </Pressable>
           );
         }}
@@ -162,23 +167,33 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
-  meta: {
-    fontSize: 11,
-    color: colors.mutedForeground,
-    marginTop: 2,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
     paddingHorizontal: spacing.sm,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    flexShrink: 1,
   },
   location: {
     fontSize: 11,
     color: colors.mutedForeground,
-    marginTop: 1,
-    paddingHorizontal: spacing.sm,
+    flexShrink: 1,
+  },
+  priceBadge: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   price: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
-    color: colors.primary,
-    marginTop: 4,
-    paddingHorizontal: spacing.sm,
+    color: colors.accentForeground,
   },
 });

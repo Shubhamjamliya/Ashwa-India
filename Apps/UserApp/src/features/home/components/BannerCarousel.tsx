@@ -5,8 +5,10 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { getMediaUrl } from '../../../services/media';
 import type { Banner } from '../types';
@@ -19,17 +21,15 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   // keeps the carousel's height stable as the user swipes, instead of jumping
   // between differently-sized banners.
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
-  // The carousel renders inside a padded parent (HeroSection), so its real
-  // width is narrower than the screen — measure it instead of assuming
+  // Measure the actual rendered width instead of assuming
   // Dimensions.get('window').width, which caused slides to overflow the
-  // actual viewport and show a square, un-rounded edge on one side.
+  // real viewport and show a square, un-rounded edge on one side.
   const [pageWidth, setPageWidth] = useState(0);
   const listRef = useRef<FlatList>(null);
   const activeIndexRef = useRef(0);
-  // HeroSection's own paddingHorizontal already insets this carousel from the
-  // screen edges, so slides fill the full measured width — no extra inset
-  // here, or the banner ends up with a visibly oversized side gap.
-  const slideWidth = pageWidth;
+  // This component now sits directly on the screen (not inside a padded
+  // parent), so it insets itself from the screen edges.
+  const slideWidth = pageWidth - spacing.md * 2;
 
   useEffect(() => {
     if (banners.length < 2 || !pageWidth) return;
@@ -71,21 +71,41 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
           scrollEventThrottle={16}
           renderItem={({ item }) => (
             <View style={{ width: pageWidth, alignItems: 'center' }}>
-              <Image
-                source={{ uri: getMediaUrl(item.image) }}
+              <View
                 style={[
                   styles.slide,
                   {
                     width: slideWidth,
                     aspectRatio: aspectRatio ?? DEFAULT_ASPECT_RATIO,
                   },
-                ]}
-                resizeMode="cover"
-                onLoad={e => {
-                  const { width, height } = e.nativeEvent.source;
-                  handleImageLoad(width, height);
-                }}
-              />
+                ]}>
+                <Image
+                  source={{ uri: getMediaUrl(item.image) }}
+                  style={styles.image}
+                  resizeMode="cover"
+                  onLoad={e => {
+                    const { width, height } = e.nativeEvent.source;
+                    handleImageLoad(width, height);
+                  }}
+                />
+                {item.title ? (
+                  <View style={styles.titleBadge}>
+                    <Text style={styles.titleBadgeText} numberOfLines={1}>
+                      {item.title.toUpperCase()}
+                    </Text>
+                  </View>
+                ) : null}
+                {item.subtitle ? (
+                  <Text style={styles.subtitleText} numberOfLines={2}>
+                    {item.subtitle}
+                  </Text>
+                ) : null}
+                {item.link ? (
+                  <View style={styles.arrowBtn}>
+                    <ChevronRight color={colors.white} size={18} />
+                  </View>
+                ) : null}
+              </View>
             </View>
           )}
         />
@@ -104,11 +124,50 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
 const styles = StyleSheet.create({
   wrapper: {
     marginTop: spacing.sm,
-    marginBottom: spacing.md,
   },
   slide: {
     borderRadius: radius.lg,
     backgroundColor: colors.muted,
+    overflow: 'hidden',
+  },
+  image: {
+    ...StyleSheet.absoluteFill,
+  },
+  titleBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  titleBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: 0.4,
+  },
+  subtitleText: {
+    position: 'absolute',
+    left: 14,
+    right: 60,
+    bottom: 14,
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.white,
+    lineHeight: 21,
+  },
+  arrowBtn: {
+    position: 'absolute',
+    right: 14,
+    bottom: 14,
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dots: {
     flexDirection: 'row',

@@ -37,6 +37,7 @@ export type HomeStackParamList = {
   Wishlist: undefined;
   Notifications: undefined;
   ChangeLocation: undefined;
+  EditProfile: undefined;
   TransportLocation: undefined;
   TransportResults: {
     source: { address: string; lat: number; lng: number };

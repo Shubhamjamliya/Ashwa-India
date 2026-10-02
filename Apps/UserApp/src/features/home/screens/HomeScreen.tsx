@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../../../components/Screen';
 import { HeroSection } from '../components/HeroSection';
+import { BannerCarousel } from '../components/BannerCarousel';
 import { SearchFilterCard } from '../components/SearchFilterCard';
 import { QuickActionsList } from '../components/QuickActionsList';
 import { FeaturedHorses } from '../components/FeaturedHorses';
@@ -58,7 +59,6 @@ export function HomeScreen() {
     <Screen style={styles.noPadding} topColor={colors.navy}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HeroSection
-          banners={banners}
           horsesCount={horses.length}
           cartCount={cartCount}
           wishlistCount={savedHorses.length}
@@ -69,6 +69,8 @@ export function HomeScreen() {
           onBellPress={() => navigation.navigate('Notifications', undefined)}
           onChangeLocationPress={() => navigation.navigate('ChangeLocation')}
         />
+
+        {banners.length > 0 ? <BannerCarousel banners={banners} /> : null}
 
         <QuickActionsList
           onHorsesPress={() => navigation.navigate('HorseMarketplace', undefined)}

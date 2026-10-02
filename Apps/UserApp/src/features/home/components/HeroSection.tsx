@@ -1,13 +1,12 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Bell, ChevronDown, Heart, MapPin, ShoppingCart } from 'lucide-react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Bell, ChevronDown, ChevronRight, Heart, MapPin, Search, ShoppingCart, Users } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
-import { BannerCarousel } from './BannerCarousel';
 import { useLocationContext } from '../../../context/LocationContext';
-import type { Banner } from '../types';
+
+const HERO_IMAGE = require('../../../assets/heroimage.png');
 
 type Props = {
-  banners: Banner[];
   horsesCount: number;
   cartCount?: number;
   wishlistCount?: number;
@@ -20,7 +19,6 @@ type Props = {
 };
 
 export function HeroSection({
-  banners,
   horsesCount,
   cartCount = 0,
   wishlistCount = 0,
@@ -36,15 +34,20 @@ export function HeroSection({
 
   return (
     <View style={styles.wrapper}>
+      <Image source={HERO_IMAGE} style={styles.heroImage} resizeMode="contain" />
+
       <View style={styles.topRow}>
         <View style={styles.headerLeft}>
-          <Pressable style={styles.locationRow} onPress={onChangeLocationPress} hitSlop={6}>
-            <MapPin color={colors.primary} size={13} />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {locationLabel}
-            </Text>
-            <ChevronDown color={colors.navyMuted} size={13} />
-          </Pressable>
+          <View style={styles.brandRow}>
+            <Text style={styles.logoGlyph}>🐎</Text>
+            <Pressable style={styles.locationRow} onPress={onChangeLocationPress} hitSlop={6}>
+              <MapPin color={colors.primary} size={13} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {locationLabel}
+              </Text>
+              <ChevronDown color={colors.navyMuted} size={13} />
+            </Pressable>
+          </View>
           <Text style={styles.brand}>
             Ashwa<Text style={styles.brandAccent}>India</Text>
           </Text>
@@ -77,22 +80,27 @@ export function HeroSection({
         </View>
       </View>
 
-      <Text style={styles.welcome}>WELCOME TO ASHWAINDIA</Text>
-      <Text style={styles.heading}>
-        India's <Text style={styles.headingAccent}>Horse</Text> Network
-      </Text>
-      <Text style={styles.subtitle}>
-        Buy, sell, connect and grow with India's most trusted equine community.
-      </Text>
-
-      {banners.length > 0 ? <BannerCarousel banners={banners} /> : null}
+      <View style={styles.textConstrained}>
+        <Text style={styles.welcome}>WELCOME TO ASHWAINDIA</Text>
+        <Text style={styles.heading}>
+          India's <Text style={styles.headingAccent}>Horse</Text> Network
+        </Text>
+        <Text style={styles.subtitle}>
+          Buy, sell, connect and grow with India's most trusted equine community.
+        </Text>
+      </View>
 
       <Pressable style={styles.cta} onPress={onBrowsePress}>
+        <Search color={colors.navy} size={16} />
         <Text style={styles.ctaText}>Browse Horses</Text>
+        <ChevronRight color={colors.navy} size={18} />
       </Pressable>
 
       {horsesCount > 0 && (
-        <Text style={styles.statText}>{horsesCount}+ horses listed on Ashwa India</Text>
+        <View style={styles.statRow}>
+          <Users color={colors.navyMuted} size={13} />
+          <Text style={styles.statText}>{horsesCount}+ horses listed on Ashwa India</Text>
+        </View>
       )}
     </View>
   );
@@ -104,6 +112,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  heroImage: {
+    position: 'absolute',
+    // Cancels the wrapper's paddingHorizontal exactly, so the image sits
+    // flush against the screen's right edge instead of leaving a gap.
+    right: -spacing.md,
+    bottom: 0,
+    width: 168,
+    height: 210,
   },
   topRow: {
     flexDirection: 'row',
@@ -115,11 +133,19 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing.sm,
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  logoGlyph: {
+    fontSize: 20,
+  },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 2,
   },
   locationText: {
     fontSize: 12,
@@ -128,7 +154,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   brand: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.navyForeground,
   },
@@ -166,6 +192,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.white,
   },
+  textConstrained: {
+    maxWidth: '62%',
+  },
   welcome: {
     fontSize: 11,
     fontWeight: '700',
@@ -191,20 +220,28 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: spacing.md,
     height: 48,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     backgroundColor: colors.primary,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.lg,
   },
   ctaText: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.white,
+    color: colors.navy,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.sm,
   },
   statText: {
-    marginTop: spacing.sm,
     fontSize: 12,
     color: colors.navyMuted,
-    textAlign: 'center',
   },
 });

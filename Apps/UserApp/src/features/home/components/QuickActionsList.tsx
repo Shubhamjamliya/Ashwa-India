@@ -1,14 +1,12 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Heart, ShoppingBag, Stethoscope, Truck } from 'lucide-react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
 
 type Action = {
   key: string;
   label: string;
-  icon: typeof Heart;
+  image: number;
   iconBg: string;
-  iconColor: string;
   onPress?: () => void;
 };
 
@@ -23,32 +21,28 @@ export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress
     {
       key: 'horses',
       label: 'Horse\nMarketplace',
-      icon: Heart,
+      image: require('../../../assets/horses-buy.png'),
       iconBg: '#FBEFD6',
-      iconColor: colors.primary,
       onPress: onHorsesPress,
     },
     {
       key: 'providers',
       label: 'Service\nProviders',
-      icon: Stethoscope,
+      image: require('../../../assets/service-providers.png'),
       iconBg: '#E1ECFC',
-      iconColor: '#2563EB',
     },
     {
       key: 'transport',
       label: 'Horse\nTransport',
-      icon: Truck,
+      image: require('../../../assets/transport.png'),
       iconBg: '#E0F4E7',
-      iconColor: '#16A34A',
       onPress: onTransportPress,
     },
     {
       key: 'store',
       label: 'Accessories\nStore',
-      icon: ShoppingBag,
+      image: require('../../../assets/accessories.png'),
       iconBg: '#F0E4FB',
-      iconColor: '#7C3AED',
       onPress: onStorePress,
     },
   ];
@@ -56,8 +50,11 @@ export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress
   return (
     <View style={styles.wrapper}>
       <View style={styles.sectionHeader}>
-        <View style={styles.sectionBar} />
-        <Text style={styles.sectionTitle}>Explore Ashwa India</Text>
+        <View style={styles.sectionHeaderLeft}>
+          <View style={styles.sectionBar} />
+          <Text style={styles.sectionTitle}>Explore Ashwa India</Text>
+        </View>
+        <Text style={styles.viewAll}>View All →</Text>
       </View>
 
       <View style={styles.row}>
@@ -68,7 +65,7 @@ export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress
             disabled={!action.onPress}
             onPress={action.onPress}>
             <View style={[styles.iconWrap, { backgroundColor: action.iconBg }]}>
-              <action.icon color={action.iconColor} size={26} strokeWidth={2} />
+              <Image source={action.image} style={styles.iconImage} resizeMode="cover" />
             </View>
             <Text style={styles.label} numberOfLines={2}>
               {action.label}
@@ -82,14 +79,24 @@ export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginTop: spacing.lg,
+    marginTop: spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  viewAll: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   sectionBar: {
     width: 4,
@@ -120,6 +127,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  iconImage: {
+    width: '100%',
+    height: '100%',
   },
   label: {
     marginTop: spacing.xs,

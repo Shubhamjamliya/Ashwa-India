@@ -12,6 +12,7 @@ import { AddressFormScreen } from '../features/address/screens/AddressFormScreen
 import { WishlistScreen } from '../features/wishlist/screens/WishlistScreen';
 import { NotificationsScreen } from '../features/notifications/screens/NotificationsScreen';
 import { ChangeLocationRoute } from '../features/zone/screens/ChangeLocationRoute';
+import { EditProfileScreen } from '../features/profile/screens/EditProfileScreen';
 import { TransportLocationScreen } from '../features/transport/screens/TransportLocationScreen';
 import { TransportResultsScreen } from '../features/transport/screens/TransportResultsScreen';
 import { SavedAddressesScreen } from '../features/profile/screens/SavedAddressesScreen';
@@ -42,6 +43,7 @@ export function HomeStackNavigator() {
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="ChangeLocation" component={ChangeLocationRoute} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="TransportLocation" component={TransportLocationScreen} />
       <Stack.Screen name="TransportResults" component={TransportResultsScreen} />
       <Stack.Screen name="SavedAddresses" component={SavedAddressesScreen} />

@@ -23,3 +23,10 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   if (!user) return res.status(404).json({ message: 'User not found' });
   res.json({ user });
 });
+
+// PATCH /api/users/me — a user editing their own profile.
+exports.updateMyProfile = asyncHandler(async (req, res) => {
+  const { name, email } = req.body;
+  const user = await User.findByIdAndUpdate(req.user._id, { name, email }, { new: true, omitUndefined: true });
+  res.json({ user: user.toSafeObject() });
+});

@@ -3,6 +3,8 @@ const router = express.Router();
 const userController = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
+router.patch('/me', protect, authorize('user'), userController.updateMyProfile);
+
 router.use(protect, authorize('admin'));
 
 router.get('/', userController.list);
