@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const storeController = require('../controllers/store.controller');
+const reviewController = require('../controllers/review.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const optionalAuth = require('../middleware/optionalAuth.middleware');
 
@@ -16,11 +17,16 @@ router.put('/products/:id', protect, authorize('store-seller', 'admin'), storeCo
 router.delete('/products/:id', protect, authorize('store-seller', 'admin'), storeController.removeProduct);
 
 router.get('/sellers', protect, authorize('admin'), storeController.listSellers);
+router.patch('/sellers/me', protect, authorize('store-seller'), storeController.updateMyProfile);
 router.patch('/sellers/:id/status', protect, authorize('admin'), storeController.updateSellerStatus);
 
 router.get('/orders', protect, authorize('store-seller', 'admin', 'user'), storeController.listOrders);
 router.post('/orders', protect, authorize('user'), storeController.createOrder);
 router.post('/payments/razorpay-order', protect, authorize('user'), storeController.createPaymentOrder);
 router.patch('/orders/:id/status', protect, authorize('store-seller', 'admin'), storeController.updateOrderStatus);
+
+router.get('/reviews', reviewController.listForProduct);
+router.get('/reviews/mine', protect, authorize('store-seller'), reviewController.listMine);
+router.post('/reviews', protect, authorize('user'), reviewController.create);
 
 module.exports = router;

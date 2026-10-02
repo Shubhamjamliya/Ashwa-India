@@ -95,6 +95,17 @@ exports.updateSellerStatus = asyncHandler(async (req, res) => {
   res.json({ seller });
 });
 
+// PATCH /api/store/sellers/me — a store-seller editing their own profile.
+exports.updateMyProfile = asyncHandler(async (req, res) => {
+  const { name, email, businessName, logo } = req.body;
+  const seller = await StoreSeller.findByIdAndUpdate(
+    req.user._id,
+    { name, email, businessName, logo },
+    { new: true, omitUndefined: true }
+  );
+  res.json({ seller: seller.toSafeObject() });
+});
+
 // POST /api/store/payments/razorpay-order — creates a Razorpay order for the given cart items
 exports.createPaymentOrder = asyncHandler(async (req, res) => {
   const { items } = req.body;
