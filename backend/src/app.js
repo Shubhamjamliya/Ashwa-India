@@ -22,12 +22,17 @@ const cmsPageRoutes = require('./routes/cmsPage.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const brandingRoutes = require('./routes/branding.routes');
 const bannerRoutes = require('./routes/banner.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const paymentController = require('./controllers/payment.controller');
 
 const app = express();
 
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
+// Razorpay webhook signature verification needs the exact raw request bytes,
+// so this must be registered before express.json() parses (and discards) them.
+app.post('/api/payments/webhook/razorpay', express.raw({ type: 'application/json' }), paymentController.handleRazorpayWebhook);
 app.use(express.json());
 // Uploaded images must be embeddable cross-origin (frontend and backend run on
 // different origins) — helmet's default same-origin CORP blocks <img> loads
@@ -52,6 +57,7 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/transporters', transporterRoutes);
 app.use('/api/transport', transportRequestRoutes);
 app.use('/api/zones', zoneRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/admin', adminRoutes);

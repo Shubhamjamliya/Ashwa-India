@@ -172,8 +172,8 @@ export default function StoreSellerPayments() {
                       </td>
                       <td className="px-4 py-5 text-sm font-semibold text-neutral-900">{fmt(order.total)}</td>
                       <td className="px-4 py-5 text-xs text-neutral-500">
-                        {order.razorpayPaymentId ? (
-                          <span className="font-mono">{order.razorpayPaymentId}</span>
+                        {order.paymentIntent?.razorpay?.paymentId ? (
+                          <span className="font-mono">{order.paymentIntent.razorpay.paymentId}</span>
                         ) : (
                           "—"
                         )}

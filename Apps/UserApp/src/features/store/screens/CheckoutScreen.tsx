@@ -29,7 +29,7 @@ export function CheckoutScreen() {
     setPlacing(true);
     setError(null);
     try {
-      const payment = await payForCart(
+      const { paymentIntentId, result: payment } = await payForCart(
         items.map(i => ({ productId: i.product._id, quantity: i.quantity })),
         user,
       );
@@ -54,7 +54,7 @@ export function CheckoutScreen() {
               pincode: selectedAddress.pincode,
               phone: user?.phone,
             },
-            razorpayOrderId: payment.razorpay_order_id,
+            paymentIntentId,
             razorpayPaymentId: payment.razorpay_payment_id,
             razorpaySignature: payment.razorpay_signature,
           },

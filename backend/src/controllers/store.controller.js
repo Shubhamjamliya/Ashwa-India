@@ -2,9 +2,11 @@ const Product = require('../models/Product');
 const ProductCategory = require('../models/ProductCategory');
 const Order = require('../models/Order');
 const StoreSeller = require('../models/StoreSeller');
+const PaymentIntent = require('../models/PaymentIntent');
 const asyncHandler = require('../utils/asyncHandler');
 const { createRazorpayOrder, verifyPaymentSignature } = require('../utils/razorpay');
 const pushService = require('../services/push.service');
+const paymentService = require('../services/payment.service');
 
 async function validateCartItems(items) {
   if (!Array.isArray(items) || items.length === 0) {
@@ -106,21 +108,46 @@ exports.updateMyProfile = asyncHandler(async (req, res) => {
   res.json({ seller: seller.toSafeObject() });
 });
 
-// POST /api/store/payments/razorpay-order — creates a Razorpay order for the given cart items
+// POST /api/store/payments/razorpay-order — creates a PaymentIntent + a
+// Razorpay order for the given cart items. The intent is the thing the rest
+// of checkout keys off of; the Razorpay order is just how it gets collected.
 exports.createPaymentOrder = asyncHandler(async (req, res) => {
-  const { items } = req.body;
+  const { items, idempotencyKey } = req.body;
   const { total } = await validateCartItems(items);
   if (total <= 0) {
     return res.status(400).json({ message: 'Order total must be greater than zero' });
   }
 
+  const intent = await paymentService.createIntent({
+    idempotencyKey,
+    payerType: 'user',
+    payerId: req.user._id,
+    purpose: 'store-order',
+    amount: total,
+    method: 'razorpay',
+  });
+
+  if (intent.razorpay?.orderId) {
+    // Same idempotency key as an in-flight attempt — hand back the same order.
+    return res.json({
+      paymentIntentId: intent._id,
+      razorpayOrderId: intent.razorpay.orderId,
+      amount: Math.round(intent.amount * 100),
+      currency: intent.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+    });
+  }
+
   const razorpayOrder = await createRazorpayOrder({
     amount: total,
     receipt: `user_${req.user._id}_${Date.now()}`,
-    notes: { buyerId: String(req.user._id) },
+    notes: { buyerId: String(req.user._id), paymentIntentId: String(intent._id) },
   });
 
+  await paymentService.markIntentPendingRazorpay(intent._id, razorpayOrder.id);
+
   res.json({
+    paymentIntentId: intent._id,
     razorpayOrderId: razorpayOrder.id,
     amount: razorpayOrder.amount,
     currency: razorpayOrder.currency,
@@ -129,14 +156,9 @@ exports.createPaymentOrder = asyncHandler(async (req, res) => {
 });
 
 exports.createOrder = asyncHandler(async (req, res) => {
-  const { items, shippingAddress, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const { items, shippingAddress, paymentIntentId, razorpayPaymentId, razorpaySignature, method } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'At least one item is required' });
-  }
-
-  const paymentValid = verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, razorpaySignature });
-  if (!paymentValid) {
-    return res.status(400).json({ message: 'Payment verification failed' });
   }
 
   const productIds = items.map((i) => i.productId);
@@ -157,17 +179,48 @@ exports.createOrder = asyncHandler(async (req, res) => {
   });
   const total = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  let intent;
+  if (method === 'wallet') {
+    intent = await paymentService.createIntent({
+      payerType: 'user',
+      payerId: req.user._id,
+      purpose: 'store-order',
+      amount: total,
+      method: 'wallet',
+    });
+    try {
+      await paymentService.payIntentFromWallet(intent._id, 'user', req.user._id);
+    } catch (err) {
+      return res.status(err.status || 400).json({ message: err.message });
+    }
+  } else {
+    if (!paymentIntentId) return res.status(400).json({ message: 'paymentIntentId is required' });
+    intent = await PaymentIntent.findById(paymentIntentId);
+    if (!intent) return res.status(404).json({ message: 'Payment not found' });
+    if (String(intent.payerId) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Not your payment' });
+    }
+    if (intent.status !== 'paid') {
+      const valid = verifyPaymentSignature({
+        razorpayOrderId: intent.razorpay?.orderId,
+        razorpayPaymentId,
+        razorpaySignature,
+      });
+      if (!valid) return res.status(400).json({ message: 'Payment verification failed' });
+      intent = await paymentService.markIntentPaid(intent._id, { razorpayPaymentId, razorpaySignature });
+    }
+  }
+
   const order = await Order.create({
     buyer: req.user._id,
     seller: sellerId,
     items: orderItems,
     total,
     status: 'pending',
-    paymentStatus: 'paid',
-    razorpayOrderId,
-    razorpayPaymentId,
+    paymentIntent: intent._id,
     shippingAddress: shippingAddress || undefined,
   });
+  await paymentService.attachReference(intent._id, 'Order', order._id);
 
   await Promise.all(
     orderItems.map((i) => Product.findByIdAndUpdate(i.product, { $inc: { stock: -i.quantity } }))
@@ -177,7 +230,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
   if (io) {
     const populatedOrder = await Order.findById(order._id)
       .populate('buyer', 'name phone')
-      .populate('items.product', 'name price');
+      .populate('items.product', 'name price')
+      .populate('paymentIntent');
     io.to(`seller:${sellerId}`).emit('order:new', populatedOrder);
   }
   pushService.sendPushToAccount('store-seller', sellerId, {
@@ -186,6 +240,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     data: { type: 'order:new', orderId: String(order._id) },
   }).catch(() => {});
 
+  await order.populate('paymentIntent');
   res.status(201).json({ order });
 });
 
@@ -197,6 +252,7 @@ exports.listOrders = asyncHandler(async (req, res) => {
     .populate('buyer', 'name phone')
     .populate('seller', 'name businessName phone')
     .populate('items.product', 'name price')
+    .populate('paymentIntent')
     .sort({ createdAt: -1 });
   res.json({ orders });
 });
@@ -222,6 +278,19 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
   order.status = status;
   await order.save();
+
+  // Credit the seller's wallet once the order is actually delivered — guarded
+  // by payoutCompletedAt so a status flip-flop can't pay out twice.
+  if (status === 'delivered' && !order.payoutCompletedAt) {
+    await paymentService.payout('store-seller', order.seller, order.total, {
+      paymentIntentId: order.paymentIntent,
+      description: `Payout for order ${order._id}`,
+    });
+    order.payoutCompletedAt = new Date();
+    await order.save();
+  }
+
+  await order.populate('paymentIntent');
   res.json({ order });
 });
 
