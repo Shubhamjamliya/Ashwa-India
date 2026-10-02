@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, required: true, unique: true, trim: true },
     email: { type: String, trim: true, lowercase: true },
     status: { type: String, enum: ['active', 'suspended', 'archived'], default: 'active' },
+    fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );

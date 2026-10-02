@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const StoreSeller = require('../models/StoreSeller');
 const asyncHandler = require('../utils/asyncHandler');
 const { createRazorpayOrder, verifyPaymentSignature } = require('../utils/razorpay');
+const pushService = require('../services/push.service');
 
 async function validateCartItems(items) {
   if (!Array.isArray(items) || items.length === 0) {
@@ -168,6 +169,11 @@ exports.createOrder = asyncHandler(async (req, res) => {
       .populate('items.product', 'name price');
     io.to(`seller:${sellerId}`).emit('order:new', populatedOrder);
   }
+  pushService.sendPushToAccount('store-seller', sellerId, {
+    title: 'New order received',
+    body: `You have a new order worth ₹${total}`,
+    data: { type: 'order:new', orderId: String(order._id) },
+  }).catch(() => {});
 
   res.status(201).json({ order });
 });

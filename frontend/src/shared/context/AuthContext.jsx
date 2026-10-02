@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useLocation } from "react-router-dom"
 import { getSession, setSession, clearSession, apiFetch } from "@/shared/lib/api"
 import { getRoleForPath } from "@/shared/constants/sidebarMenus"
+import { registerPushToken, onForegroundPush } from "@/shared/lib/push"
 
 const AuthContext = createContext(null)
 
@@ -17,6 +18,32 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     setSessionState(getSession(role))
   }, [role])
+
+  // Register (or refresh) the FCM token whenever this role becomes
+  // authenticated — covers both a fresh login and reloading an existing
+  // session, without requiring a dedicated "logged in" event.
+  useEffect(() => {
+    if (!session.accessToken || !session.user) return
+    registerPushToken()
+  }, [session.accessToken, session.user])
+
+  useEffect(() => {
+    let unsubscribe = null
+    let cancelled = false
+    onForegroundPush((payload) => {
+      const { title, body } = payload.notification || {}
+      if (title && Notification.permission === "granted") {
+        new Notification(title, { body })
+      }
+    }).then((fn) => {
+      if (cancelled) fn?.()
+      else unsubscribe = fn
+    })
+    return () => {
+      cancelled = true
+      unsubscribe?.()
+    }
+  }, [])
 
   useEffect(() => {
     const handleExpired = (e) => {

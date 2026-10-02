@@ -14,6 +14,7 @@ const transporterSchema = new mongoose.Schema(
       lng: { type: Number },
     },
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended', 'archived'], default: 'pending' },
+    fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );

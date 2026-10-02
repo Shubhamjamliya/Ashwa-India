@@ -13,6 +13,7 @@ import {
 } from '../services/storage';
 import { apiFetch, setOnSessionExpired } from '../services/api';
 import { disconnectSocket } from '../services/socket';
+import { registerPushToken, unregisterPushToken } from '../services/push';
 
 type LoginData = {
   accessToken: string;
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getSession().then(session => {
       setUser(session.accessToken ? session.user : null);
       setBootstrapping(false);
+      if (session.accessToken) registerPushToken();
     });
 
     setOnSessionExpired(() => setUser(null));
@@ -48,9 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (data: LoginData) => {
     await setSession(data);
     setUser(data.user);
+    registerPushToken();
   }, []);
 
   const logout = useCallback(async () => {
+    await unregisterPushToken();
     try {
       await apiFetch('/auth/logout', { method: 'POST' });
     } catch (e) {

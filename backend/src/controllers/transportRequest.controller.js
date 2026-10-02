@@ -1,6 +1,7 @@
 const Transporter = require('../models/Transporter');
 const TransportRequest = require('../models/TransportRequest');
 const asyncHandler = require('../utils/asyncHandler');
+const pushService = require('../services/push.service');
 
 const SEARCH_RADIUS_KM = 75;
 
@@ -84,6 +85,11 @@ exports.createRequest = asyncHandler(async (req, res) => {
   if (io) {
     io.to(`transporter:${transporter._id}`).emit('transport:new', populated);
   }
+  pushService.sendPushToAccount('transporter', transporter._id, {
+    title: 'New transport enquiry',
+    body: `${populated.user?.name || 'A user'} wants to move a horse from ${source.address} to ${destination.address}`,
+    data: { type: 'transport:new', requestId: String(request._id) },
+  }).catch(() => {});
 
   res.status(201).json({ request: populated });
 });
@@ -130,6 +136,14 @@ exports.respond = asyncHandler(async (req, res) => {
   if (io) {
     io.to(`user:${request.user}`).emit('transport:update', populated);
   }
+  pushService.sendPushToAccount('user', request.user, {
+    title: request.status === 'accepted' ? 'Transport request accepted' : 'Transport request declined',
+    body:
+      request.status === 'accepted'
+        ? `${populated.transporter?.businessName || populated.transporter?.name || 'The transporter'} accepted your request`
+        : `${populated.transporter?.businessName || populated.transporter?.name || 'The transporter'} declined your request`,
+    data: { type: 'transport:update', requestId: String(request._id) },
+  }).catch(() => {});
 
   res.json({ request: populated });
 });

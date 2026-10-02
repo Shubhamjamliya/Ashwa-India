@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "685172070077",
+    "firebase_url": "https://ashwa-india-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "ashwa-india",
+    "storage_bucket": "ashwa-india.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685172070077:android:9c240fa942c41b493709d4",
+        "android_client_info": {
+          "package_name": "com.transporterapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKkO4otd2JVD5Zc2wyb7aKMcCXoGtS-B4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685172070077:android:3e7253f6a6ea81043709d4",
+        "android_client_info": {
+          "package_name": "com.userapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKkO4otd2JVD5Zc2wyb7aKMcCXoGtS-B4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

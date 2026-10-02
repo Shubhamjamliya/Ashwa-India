@@ -7,6 +7,7 @@ const storeSellerSchema = new mongoose.Schema(
     email: { type: String, trim: true, lowercase: true },
     businessName: { type: String, trim: true },
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended', 'archived'], default: 'pending' },
+    fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );

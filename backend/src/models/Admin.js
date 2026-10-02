@@ -10,6 +10,7 @@ const adminSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6, select: false },
     accessLevel: { type: String, default: 'Full Access' }, // "Full Access" = main admin, else a scoped sub-admin label
     status: { type: String, enum: ['active', 'suspended'], default: 'active' },
+    fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );

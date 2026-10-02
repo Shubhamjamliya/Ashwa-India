@@ -60,6 +60,7 @@ app.use('/api/admin/archived-accounts', archivedAccountRoutes);
 app.use('/api/admin/pages', cmsPageRoutes);
 app.use('/api/admin/notifications', notificationRoutes);
 app.use('/api/notifications', require('./routes/userNotification.routes'));
+app.use('/api/notifications', require('./routes/pushToken.routes'));
 
 app.use((req, res) => res.status(404).json({ message: 'Not found' }));
 

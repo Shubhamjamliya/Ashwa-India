@@ -117,3 +117,10 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Only apply once google-services.json is dropped in here (Firebase console ->
+// register Android app "com.providerapp" -> download config) — without it,
+// push notifications won't work but the rest of the app still builds fine.
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+}

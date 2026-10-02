@@ -9,6 +9,7 @@ const providerSchema = new mongoose.Schema(
     serviceTypes: [{ type: String }], // vet, trainer, farrier, groomer, boarding, instructor...
     location: { type: String },
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended', 'archived'], default: 'pending' },
+    fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );
