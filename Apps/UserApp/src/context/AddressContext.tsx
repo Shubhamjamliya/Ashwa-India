@@ -11,7 +11,6 @@ export type Address = {
   city: string;
   state: string;
   pincode: string;
-  phone: string;
   lat?: number;
   lng?: number;
 };

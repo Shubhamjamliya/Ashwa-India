@@ -1,16 +1,26 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import { MapPin } from 'lucide-react-native';
 import { Button } from '../../../components/Button';
 import { colors, radius, spacing } from '../../../theme/colors';
 
 type Props = {
   onEnableLocation: () => void;
+  onChangeLocation: () => void;
   checking?: boolean;
   error?: string | null;
+  gpsDisabled?: boolean;
 };
 
-export function LocationRequiredScreen({ onEnableLocation, checking, error }: Props) {
+function openLocationSettings() {
+  if (Platform.OS === 'android') {
+    Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+  } else {
+    Linking.openURL('app-settings:');
+  }
+}
+
+export function LocationRequiredScreen({ onEnableLocation, onChangeLocation, checking, error, gpsDisabled }: Props) {
   return (
     <View style={styles.root}>
       <View style={styles.iconWrap}>
@@ -21,12 +31,18 @@ export function LocationRequiredScreen({ onEnableLocation, checking, error }: Pr
         We use your location to check if Ashwa India is available in your area yet.
       </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {gpsDisabled && (
+        <Button title="Open Location Settings" variant="outline" onPress={openLocationSettings} style={styles.settingsBtn} />
+      )}
+
       <Button
         title={checking ? 'Checking...' : 'Enable Location'}
         onPress={onEnableLocation}
         loading={checking}
         style={styles.btn}
       />
+      <Button title="Set Location Manually" variant="outline" onPress={onChangeLocation} style={styles.btn} />
     </View>
   );
 }
@@ -66,8 +82,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.md,
   },
-  btn: {
+  settingsBtn: {
     marginTop: spacing.xl,
-    minWidth: 180,
+    minWidth: 220,
+  },
+  btn: {
+    marginTop: spacing.sm,
+    minWidth: 220,
   },
 });

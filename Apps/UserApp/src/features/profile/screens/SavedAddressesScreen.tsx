@@ -62,7 +62,6 @@ export function SavedAddressesScreen() {
               <Text style={styles.cardText}>
                 {item.line1}, {item.city}, {item.state} {item.pincode}
               </Text>
-              <Text style={styles.cardText}>{item.phone}</Text>
             </View>
             <View style={styles.cardActions}>
               <Pressable

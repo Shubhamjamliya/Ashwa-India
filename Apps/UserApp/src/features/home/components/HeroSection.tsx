@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Bell, Heart, ShoppingCart } from 'lucide-react-native';
+import { Bell, ChevronDown, Heart, MapPin, ShoppingCart } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { BannerCarousel } from './BannerCarousel';
+import { useLocationContext } from '../../../context/LocationContext';
 import type { Banner } from '../types';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
   onCartPress?: () => void;
   onBellPress?: () => void;
   onWishlistPress?: () => void;
+  onChangeLocationPress: () => void;
 };
 
 export function HeroSection({
@@ -27,15 +29,25 @@ export function HeroSection({
   onCartPress,
   onBellPress,
   onWishlistPress,
+  onChangeLocationPress,
 }: Props) {
+  const { status, location } = useLocationContext();
+  const locationLabel = status === 'loading' ? 'Locating...' : location?.label || 'Set Location';
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.topRow}>
-        <View>
+        <View style={styles.headerLeft}>
+          <Pressable style={styles.locationRow} onPress={onChangeLocationPress} hitSlop={6}>
+            <MapPin color={colors.primary} size={13} />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {locationLabel}
+            </Text>
+            <ChevronDown color={colors.navyMuted} size={13} />
+          </Pressable>
           <Text style={styles.brand}>
             Ashwa<Text style={styles.brandAccent}>India</Text>
           </Text>
-          <Text style={styles.tagline}>India's Horse Network</Text>
         </View>
         <View style={styles.actions}>
           <Pressable style={styles.iconBtn} onPress={onWishlistPress} hitSlop={8}>
@@ -99,6 +111,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
   },
+  headerLeft: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  locationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.navyForeground,
+    flexShrink: 1,
+  },
   brand: {
     fontSize: 18,
     fontWeight: '800',
@@ -106,12 +134,6 @@ const styles = StyleSheet.create({
   },
   brandAccent: {
     color: colors.primary,
-  },
-  tagline: {
-    fontSize: 10,
-    color: colors.navyMuted,
-    marginTop: 2,
-    letterSpacing: 0.3,
   },
   actions: {
     flexDirection: 'row',

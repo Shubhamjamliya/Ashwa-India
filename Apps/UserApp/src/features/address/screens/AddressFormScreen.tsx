@@ -38,7 +38,6 @@ export function AddressFormScreen() {
   const [city, setCity] = useState(editing?.city || params?.presetCity || '');
   const [state, setState] = useState(editing?.state || params?.presetState || '');
   const [pincode, setPincode] = useState(editing?.pincode || params?.presetPincode || '');
-  const [phone, setPhone] = useState(editing?.phone || '');
   const [lat, setLat] = useState<number | undefined>(editing?.lat ?? params?.presetLat);
   const [lng, setLng] = useState<number | undefined>(editing?.lng ?? params?.presetLng);
   const [saving, setSaving] = useState(false);
@@ -100,8 +99,8 @@ export function AddressFormScreen() {
   };
 
   const handleSave = () => {
-    if (!line1.trim() || !city.trim() || !phone.trim()) return;
-    const payload = { label, line1: line1.trim(), city: city.trim(), state: state.trim(), pincode: pincode.trim(), phone: phone.trim(), lat, lng };
+    if (!line1.trim() || !city.trim()) return;
+    const payload = { label, line1: line1.trim(), city: city.trim(), state: state.trim(), pincode: pincode.trim(), lat, lng };
     setSaving(true);
     try {
       if (editing) {
@@ -182,24 +181,15 @@ export function AddressFormScreen() {
 
         <Input label="Address Line *" value={line1} onChangeText={setLine1} placeholder="House no., street, area" />
         <View style={styles.row2}>
-          <Input label="City *" value={city} onChangeText={setCity} style={styles.flex1} />
-          <Input label="State" value={state} onChangeText={setState} style={styles.flex1} />
-        </View>
-        <View style={styles.row2}>
-          <Input
-            label="Pincode"
-            value={pincode}
-            onChangeText={setPincode}
-            keyboardType="number-pad"
-            style={styles.flex1}
-          />
-          <Input
-            label="Phone *"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            style={styles.flex1}
-          />
+          <View style={styles.cityField}>
+            <Input label="City *" value={city} onChangeText={setCity} />
+          </View>
+          <View style={styles.stateField}>
+            <Input label="State" value={state} onChangeText={setState} />
+          </View>
+          <View style={styles.pincodeField}>
+            <Input label="Pincode" value={pincode} onChangeText={setPincode} keyboardType="number-pad" maxLength={6} />
+          </View>
         </View>
 
         <Text style={styles.sectionLabel}>Save address as</Text>
@@ -221,7 +211,7 @@ export function AddressFormScreen() {
           title={saving ? 'Saving...' : 'Save Address'}
           onPress={handleSave}
           loading={saving}
-          disabled={!line1.trim() || !city.trim() || !phone.trim()}
+          disabled={!line1.trim() || !city.trim()}
           style={styles.saveBtn}
         />
       </ScrollView>
@@ -349,8 +339,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  flex1: {
-    flex: 1,
+  cityField: {
+    flex: 1.4,
+  },
+  stateField: {
+    flex: 1.1,
+  },
+  pincodeField: {
+    flex: 0.9,
   },
   sectionLabel: {
     fontSize: 13,

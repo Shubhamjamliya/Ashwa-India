@@ -7,6 +7,7 @@ import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
 import { NotificationProvider } from './src/context/NotificationContext';
 import { AddressProvider } from './src/context/AddressContext';
+import { LocationProvider } from './src/context/LocationContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { listenForTokenRefresh } from './src/services/push';
 
@@ -16,19 +17,21 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <NotificationProvider>
-                <AddressProvider>
-                  <NavigationContainer>
-                    <RootNavigator />
-                  </NavigationContainer>
-                </AddressProvider>
-              </NotificationProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <LocationProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <NotificationProvider>
+                  <AddressProvider>
+                    <NavigationContainer>
+                      <RootNavigator />
+                    </NavigationContainer>
+                  </AddressProvider>
+                </NotificationProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </LocationProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

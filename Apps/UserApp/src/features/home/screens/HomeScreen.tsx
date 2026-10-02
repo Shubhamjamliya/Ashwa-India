@@ -67,6 +67,7 @@ export function HomeScreen() {
           onCartPress={() => navigation.navigate('Cart', undefined)}
           onWishlistPress={() => navigation.navigate('Wishlist', undefined)}
           onBellPress={() => navigation.navigate('Notifications', undefined)}
+          onChangeLocationPress={() => navigation.navigate('ChangeLocation')}
         />
 
         <QuickActionsList

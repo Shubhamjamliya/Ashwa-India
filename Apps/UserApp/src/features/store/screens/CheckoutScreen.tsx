@@ -52,7 +52,7 @@ export function CheckoutScreen() {
               city: selectedAddress.city,
               state: selectedAddress.state,
               pincode: selectedAddress.pincode,
-              phone: selectedAddress.phone,
+              phone: user?.phone,
             },
             razorpayOrderId: payment.razorpay_order_id,
             razorpayPaymentId: payment.razorpay_payment_id,
@@ -99,7 +99,7 @@ export function CheckoutScreen() {
                   .filter(Boolean)
                   .join(', ')}
               </Text>
-              <Text style={styles.addressText}>{selectedAddress.phone}</Text>
+              {user?.phone ? <Text style={styles.addressText}>{user.phone}</Text> : null}
             </View>
             <Text style={styles.changeLink}>Change</Text>
           </Pressable>

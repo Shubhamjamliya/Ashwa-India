@@ -7,10 +7,11 @@ import { colors, radius, spacing } from '../../../theme/colors';
 type Props = {
   zoneLabel?: string | null;
   onRetry: () => void;
+  onChangeLocation: () => void;
   retrying?: boolean;
 };
 
-export function ComingSoonScreen({ zoneLabel, onRetry, retrying }: Props) {
+export function ComingSoonScreen({ zoneLabel, onRetry, onChangeLocation, retrying }: Props) {
   return (
     <View style={styles.root}>
       <View style={styles.iconWrap}>
@@ -30,6 +31,7 @@ export function ComingSoonScreen({ zoneLabel, onRetry, retrying }: Props) {
         loading={retrying}
         style={styles.retryBtn}
       />
+      <Button title="Change Location" variant="outline" onPress={onChangeLocation} style={styles.changeBtn} />
     </View>
   );
 }
@@ -72,6 +74,10 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: spacing.xl,
-    minWidth: 180,
+    minWidth: 220,
+  },
+  changeBtn: {
+    marginTop: spacing.sm,
+    minWidth: 220,
   },
 });
