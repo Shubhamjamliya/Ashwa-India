@@ -4,6 +4,7 @@ const transporterController = require('../controllers/transporter.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 router.patch('/me', protect, authorize('transporter'), transporterController.updateProfile);
+router.patch('/me/availability', protect, authorize('transporter'), transporterController.updateAvailability);
 
 router.use(protect, authorize('admin'));
 router.get('/', transporterController.list);

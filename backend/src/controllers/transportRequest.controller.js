@@ -30,6 +30,7 @@ exports.listAvailable = asyncHandler(async (req, res) => {
 
   const transporters = await Transporter.find({
     status: 'approved',
+    isOnline: { $ne: false },
     'location.lat': { $exists: true },
     'location.lng': { $exists: true },
   });
@@ -68,6 +69,9 @@ exports.createRequest = asyncHandler(async (req, res) => {
   const transporter = await Transporter.findById(transporterId);
   if (!transporter || transporter.status !== 'approved') {
     return res.status(404).json({ message: 'Transporter not found' });
+  }
+  if (transporter.isOnline === false) {
+    return res.status(400).json({ message: 'This transporter is currently offline' });
   }
 
   const request = await TransportRequest.create({

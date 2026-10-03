@@ -24,6 +24,22 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   res.json({ transporter });
 });
 
+exports.updateAvailability = asyncHandler(async (req, res) => {
+  const { isOnline, location } = req.body;
+  if (typeof isOnline !== 'boolean') return res.status(400).json({ message: 'isOnline must be a boolean' });
+
+  const update = { isOnline };
+  if (location) {
+    if (typeof location.lat !== 'number' || typeof location.lng !== 'number') {
+      return res.status(400).json({ message: 'location needs numeric lat and lng' });
+    }
+    update.location = { lat: location.lat, lng: location.lng };
+  }
+
+  const transporter = await Transporter.findByIdAndUpdate(req.user._id, update, { new: true });
+  res.json({ transporter });
+});
+
 exports.updateProfile = asyncHandler(async (req, res) => {
   const { businessName, vehicleTypes, serviceArea, serviceType, location, name, email } = req.body;
   const transporter = await Transporter.findByIdAndUpdate(

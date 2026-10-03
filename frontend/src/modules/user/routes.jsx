@@ -9,8 +9,12 @@ import Checkout from "./pages/Checkout"
 import Orders from "./pages/Orders"
 import Profile from "./pages/Profile"
 import Bookings from "./pages/Bookings"
+import Transport from "./pages/Transport"
+import TransportResults from "./pages/TransportResults"
 import EditProfile from "./pages/EditProfile"
-import { SavedAddresses, AddressForm } from "./pages/SavedAddresses"
+import SavedAddresses from "./pages/SavedAddresses"
+import SelectAddress from "./pages/SelectAddress"
+import AddressForm from "./pages/AddressForm"
 import HelpSupport from "./pages/HelpSupport"
 import About from "./pages/About"
 import Settings from "./pages/Settings"
@@ -27,11 +31,14 @@ export const userRoutes = (
     <Route path="store/:id" element={<ProductDetail />} />
     <Route path="cart" element={<Cart />} />
     <Route path="checkout" element={<Checkout />} />
+    <Route path="transport" element={<Transport />} />
+    <Route path="transport/results" element={<TransportResults />} />
     <Route path="bookings" element={<Bookings />} />
     <Route path="orders" element={<Orders />} />
     <Route path="profile" element={<Profile />} />
     <Route path="profile/edit" element={<EditProfile />} />
     <Route path="addresses" element={<SavedAddresses />} />
+    <Route path="addresses/select" element={<SelectAddress />} />
     <Route path="addresses/new" element={<AddressForm />} />
     <Route path="addresses/:editId/edit" element={<AddressForm />} />
     <Route path="wishlist" element={<Wishlist />} />

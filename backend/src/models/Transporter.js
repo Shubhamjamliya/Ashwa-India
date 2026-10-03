@@ -14,14 +14,15 @@ const transporterSchema = new mongoose.Schema(
       lng: { type: Number },
     },
     status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended', 'archived'], default: 'pending' },
+    isOnline: { type: Boolean, default: true },
     fcmTokens: [{ type: String }],
   },
   { timestamps: true }
 );
 
 transporterSchema.methods.toSafeObject = function toSafeObject() {
-  const { _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, createdAt } = this;
-  return { id: _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, createdAt, role: 'transporter' };
+  const { _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, isOnline, createdAt } = this;
+  return { id: _id, name, phone, email, businessName, vehicleTypes, serviceArea, serviceType, location, status, isOnline, createdAt, role: 'transporter' };
 };
 
 module.exports = mongoose.model('Transporter', transporterSchema);

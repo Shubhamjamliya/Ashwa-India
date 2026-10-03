@@ -2,16 +2,13 @@ import { useEffect, useState } from "react"
 import { Package } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 
-const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-
-const statusBadge = {
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  processing: "bg-blue-50 text-blue-700 border-blue-200",
-  shipped: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  cancelled: "bg-rose-50 text-rose-700 border-rose-200",
-  returned: "bg-neutral-100 text-neutral-600 border-neutral-200",
+const statusMeta = {
+  pending: { label: "Pending", color: "#f59e0b" },
+  processing: { label: "Processing", color: "#0ea5e9" },
+  shipped: { label: "Shipped", color: "#0ea5e9" },
+  delivered: { label: "Delivered", color: "#16a34a" },
+  cancelled: { label: "Cancelled", color: "#ef4444" },
+  returned: { label: "Returned", color: "#ef4444" },
 }
 
 export default function Orders() {
@@ -21,41 +18,48 @@ export default function Orders() {
   useEffect(() => {
     apiFetch("/store/orders")
       .then((data) => setOrders(data.orders || []))
+      .catch(() => setOrders([]))
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading orders...</p>
-
-  if (orders.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white py-16 text-center">
-        <Package className="mb-3 h-10 w-10 text-neutral-300" />
-        <h2 className="text-lg font-bold text-[#0F2238]">No orders yet</h2>
-        <p className="text-sm text-neutral-500">Your accessories store orders will show up here.</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-extrabold text-[#0F2238]">Your Orders</h1>
-      {orders.map((order) => (
-        <div key={order._id} className="rounded-2xl border border-neutral-200 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-xs font-bold text-neutral-500">#{order._id.slice(-6).toUpperCase()}</p>
-            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusBadge[order.status] || ""}`}>
-              {order.status}
-            </span>
-          </div>
-          <p className="mt-2 text-sm text-neutral-600">
-            {order.items.map((i) => `${i.quantity} × ${i.product?.name || "Product"}`).join(", ")}
-          </p>
-          <div className="mt-2 flex items-center justify-between">
-            <p className="text-xs text-neutral-500">{fmtDate(order.createdAt)}</p>
-            <p className="text-sm font-extrabold text-[#0F2238]">{fmt(order.total)}</p>
-          </div>
+    <div className="pb-6">
+      <h1 className="px-4 pb-3 pt-5 text-xl font-bold text-[#0F2238]">Your Orders</h1>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
         </div>
-      ))}
+      ) : orders.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 px-8 py-20 text-center">
+          <Package className="h-8 w-8 text-neutral-400" />
+          <p className="text-base font-semibold text-[#0F2238]">No orders yet</p>
+          <p className="text-[13px] text-neutral-500">Your accessories store orders will show up here once you place one.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5 px-4">
+          {orders.map((order) => {
+            const meta = statusMeta[order.status] || statusMeta.pending
+            return (
+              <div key={order._id} className="space-y-1 rounded-2xl border border-[#E4E1D8] bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-bold text-[#0F2238]">Order #{order._id.slice(-6).toUpperCase()}</p>
+                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold" style={{ backgroundColor: `${meta.color}20`, color: meta.color }}>
+                    {meta.label}
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500">{order.seller?.businessName || order.seller?.name}</p>
+                {order.items.map((orderItem, idx) => (
+                  <p key={idx} className="mt-1 text-[13px] text-[#0F2238]">
+                    {orderItem.quantity} × {typeof orderItem.product === "object" ? orderItem.product.name : "Item"}
+                  </p>
+                ))}
+                <p className="mt-1.5 text-sm font-extrabold text-[#C28D2E]">Total: ₹{order.total?.toLocaleString("en-IN")}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

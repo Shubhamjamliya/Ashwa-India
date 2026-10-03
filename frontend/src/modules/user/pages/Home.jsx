@@ -9,7 +9,7 @@ import { useWishlist } from "../context/WishlistContext"
 const quickActions = [
   { key: "horses", label: "Horse\nMarketplace", image: "/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
   { key: "providers", label: "Service\nProviders", image: "/user/service-providers.png", bg: "#E1ECFC", path: null },
-  { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/bookings" },
+  { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
   { key: "store", label: "Accessories\nStore", image: "/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
 ]
 

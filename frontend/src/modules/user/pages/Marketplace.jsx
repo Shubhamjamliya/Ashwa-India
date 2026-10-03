@@ -1,88 +1,85 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Search } from "lucide-react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { Heart, MapPin } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
-import { Input } from "@/shared/components/ui/input"
+import { useWishlist } from "../context/WishlistContext"
+import PageHeader from "../components/PageHeader"
 
 export default function Marketplace() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const { isSaved, toggle } = useWishlist()
   const [horses, setHorses] = useState([])
-  const [categories, setCategories] = useState([])
-  const [categoryId, setCategoryId] = useState("")
-  const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const category = params.get("category")
+  const location = params.get("location")
+
+  const load = async () => {
+    setError("")
+    try {
+      const query = new URLSearchParams()
+      if (category) query.set("category", category)
+      if (location) query.set("location", location)
+      const qs = query.toString()
+      const data = await apiFetch(`/marketplace/horses${qs ? `?${qs}` : ""}`)
+      setHorses(data.horses || [])
+    } catch (err) {
+      setError(err.message || "Failed to load listings")
+    }
+  }
 
   useEffect(() => {
-    ;(async () => {
-      const [horsesRes, categoriesRes] = await Promise.allSettled([
-        apiFetch("/marketplace/horses"),
-        apiFetch("/marketplace/categories"),
-      ])
-      if (horsesRes.status === "fulfilled") setHorses(horsesRes.value.horses || [])
-      if (categoriesRes.status === "fulfilled") setCategories(categoriesRes.value.categories || [])
-      setLoading(false)
-    })()
-  }, [])
-
-  const filtered = horses.filter((h) => {
-    if (categoryId && h.category?._id !== categoryId) return false
-    if (query && !h.breed?.toLowerCase().includes(query.toLowerCase())) return false
-    return true
-  })
+    setLoading(true)
+    load().finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, location])
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-extrabold text-[#0F2238]">Horse Marketplace</h1>
-        <p className="text-sm text-neutral-500">Browse horses listed by sellers across India</p>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by breed..." className="pl-9" />
-        </div>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="rounded-xl border border-neutral-300 px-4 py-2 text-sm"
-        >
-          <option value="">All Categories</option>
-          {categories.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="pb-6">
+      <PageHeader title="Horse Marketplace" />
 
       {loading ? (
-        <p className="text-sm text-neutral-500">Loading horses...</p>
-      ) : filtered.length === 0 ? (
-        <p className="rounded-2xl border border-neutral-200 bg-white p-10 text-center text-sm text-neutral-500">
-          No horses found.
-        </p>
+        <div className="flex justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
+        </div>
+      ) : error ? (
+        <p className="px-8 py-20 text-center text-sm text-destructive">{error}</p>
+      ) : horses.length === 0 ? (
+        <p className="px-8 py-20 text-center text-sm text-neutral-500">No horses listed yet.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((horse) => (
+        <div className="space-y-2.5 px-4">
+          {horses.map((horse) => (
             <button
               key={horse._id}
               onClick={() => navigate(`/user/horses/${horse._id}`)}
-              className="overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left hover:shadow-md"
+              className="flex w-full overflow-hidden rounded-2xl border border-[#E4E1D8] bg-white text-left"
             >
-              <div className="h-36 w-full bg-neutral-100">
-                {horse.photos?.[0] && (
-                  <img src={getMediaUrl(horse.photos[0])} alt={horse.breed} className="h-full w-full object-cover" />
-                )}
+              <div className="relative h-24 w-24 shrink-0 bg-[#F1EEE6]">
+                {horse.photos?.[0] && <img src={getMediaUrl(horse.photos[0])} alt={horse.breed} className="h-full w-full object-cover" />}
+                <span
+                  role="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggle(horse)
+                  }}
+                  className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#0F2238]/55"
+                >
+                  <Heart className="h-3.5 w-3.5 text-white" fill={isSaved(horse._id) ? "white" : "transparent"} />
+                </span>
               </div>
-              <div className="p-3">
-                <p className="truncate text-sm font-bold text-[#0F2238]">{horse.breed}</p>
-                <p className="text-xs text-neutral-500">
-                  {[horse.age ? `${horse.age} yrs` : null, horse.gender].filter(Boolean).join(" · ")}
-                </p>
-                <p className="truncate text-xs text-neutral-500">{horse.location}</p>
-                <p className="mt-1 text-sm font-extrabold text-[#C28D2E]">₹{horse.price?.toLocaleString("en-IN")}</p>
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 p-3">
+                <p className="truncate text-[15px] font-bold text-[#0F2238]">{horse.breed}</p>
+                <p className="truncate text-xs text-neutral-500">{horse.category?.name}</p>
+                {horse.location && (
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-neutral-500">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    {horse.location}
+                  </p>
+                )}
+                <p className="mt-1 text-[15px] font-bold text-[#C28D2E]">₹{horse.price?.toLocaleString("en-IN")}</p>
               </div>
             </button>
           ))}

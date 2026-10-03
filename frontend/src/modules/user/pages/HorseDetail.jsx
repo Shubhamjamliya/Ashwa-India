@@ -1,136 +1,136 @@
 import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, MapPin, MessageSquare, Phone } from "lucide-react"
+import { useParams } from "react-router-dom"
+import { Heart, MapPin, Phone } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
-import { Button } from "@/shared/components/ui/button"
-import { Textarea } from "@/shared/components/ui/textarea"
+import { useWishlist } from "../context/WishlistContext"
+import PageHeader from "../components/PageHeader"
+
+function InfoChip({ label, value }) {
+  return (
+    <div className="rounded-xl bg-[#F6E9C9] px-2.5 py-1.5">
+      <p className="text-[10px] text-[#8A6416]/70">{label}</p>
+      <p className="text-[13px] font-semibold capitalize text-[#8A6416]">{value}</p>
+    </div>
+  )
+}
 
 export default function HorseDetail() {
   const { id } = useParams()
-  const navigate = useNavigate()
+  const { isSaved, toggle } = useWishlist()
   const [horse, setHorse] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState("")
+  const [sendError, setSendError] = useState("")
 
   useEffect(() => {
     apiFetch(`/marketplace/horses/${id}`)
       .then((data) => setHorse(data.horse))
+      .catch((err) => setError(err.message || "Failed to load listing"))
       .finally(() => setLoading(false))
   }, [id])
 
-  const handleInquire = async () => {
-    if (!message.trim()) {
-      setError("Enter a message for the seller")
-      return
-    }
-    setError("")
+  const sendInquiry = async () => {
+    if (!message.trim()) return
     setSending(true)
+    setSendError("")
     try {
       await apiFetch("/marketplace/inquiries", { method: "POST", body: { horseId: id, message: message.trim() } })
       setSent(true)
+      setMessage("")
     } catch (err) {
-      setError(err.message || "Failed to send inquiry")
+      setSendError(err.message || "Failed to send inquiry")
     } finally {
       setSending(false)
     }
   }
 
-  if (loading) return <p className="text-sm text-neutral-500">Loading...</p>
-  if (!horse) return <p className="text-sm text-neutral-500">Horse not found.</p>
+  const wishlistButton = horse && (
+    <button
+      type="button"
+      onClick={() => toggle(horse)}
+      aria-label="Save horse"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white"
+    >
+      <Heart className="h-[18px] w-[18px] text-[#C28D2E]" fill={isSaved(horse._id) ? "#C28D2E" : "transparent"} />
+    </button>
+  )
 
   return (
-    <div className="space-y-5">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm font-semibold text-neutral-600">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+    <div className="pb-6">
+      <PageHeader title="Horse Details" right={wishlistButton} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="grid grid-cols-2 gap-2">
-          {(horse.photos?.length ? horse.photos : [null]).map((photo, idx) => (
-            <div key={idx} className="aspect-square overflow-hidden rounded-2xl bg-neutral-100">
-              {photo && <img src={getMediaUrl(photo)} alt={horse.breed} className="h-full w-full object-cover" />}
-            </div>
-          ))}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
         </div>
-
-        <div>
-          <h1 className="text-2xl font-extrabold text-[#0F2238]">{horse.breed}</h1>
-          <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
-            <MapPin className="h-4 w-4" /> {horse.location || "Location not specified"}
-          </p>
-          <p className="mt-3 text-3xl font-extrabold text-[#C28D2E]">₹{horse.price?.toLocaleString("en-IN")}</p>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            {horse.age && (
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <p className="text-neutral-500">Age</p>
-                <p className="font-bold text-[#0F2238]">{horse.age} years</p>
-              </div>
-            )}
-            {horse.gender && (
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <p className="text-neutral-500">Gender</p>
-                <p className="font-bold capitalize text-[#0F2238]">{horse.gender}</p>
-              </div>
-            )}
-            {horse.color && (
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <p className="text-neutral-500">Color</p>
-                <p className="font-bold text-[#0F2238]">{horse.color}</p>
-              </div>
-            )}
-            {horse.height && (
-              <div className="rounded-xl border border-neutral-200 p-3">
-                <p className="text-neutral-500">Height</p>
-                <p className="font-bold text-[#0F2238]">{horse.height} inch</p>
-              </div>
-            )}
+      ) : error || !horse ? (
+        <p className="px-8 py-20 text-center text-sm text-destructive">{error || "Listing not found"}</p>
+      ) : (
+        <div className="px-4">
+          <div className="h-[220px] w-full overflow-hidden rounded-2xl bg-[#F1EEE6]">
+            {horse.photos?.[0] && <img src={getMediaUrl(horse.photos[0])} alt={horse.breed} className="h-full w-full object-cover" />}
           </div>
 
-          {horse.description && (
-            <div className="mt-4">
-              <p className="mb-1 text-sm font-bold text-[#0F2238]">Description</p>
-              <p className="text-sm text-neutral-600">{horse.description}</p>
-            </div>
+          <p className="mt-4 text-[22px] font-bold text-[#0F2238]">{horse.breed}</p>
+          <p className="mt-1 text-lg font-bold text-[#C28D2E]">₹{horse.price?.toLocaleString("en-IN")}</p>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {horse.age != null && <InfoChip label="Age" value={`${horse.age} yrs`} />}
+            {horse.gender && <InfoChip label="Gender" value={horse.gender} />}
+            {horse.color && <InfoChip label="Color" value={horse.color} />}
+            {horse.height != null && <InfoChip label="Height" value={`${horse.height} hh`} />}
+          </div>
+
+          {horse.location && (
+            <p className="mt-3 flex items-center gap-1 text-[13px] text-neutral-500">
+              <MapPin className="h-3.5 w-3.5" />
+              {horse.location}
+            </p>
           )}
 
-          <div className="mt-4 rounded-xl border border-neutral-200 p-4">
-            <p className="text-sm font-bold text-[#0F2238]">{horse.seller?.businessName || horse.seller?.name}</p>
+          {horse.description && <p className="mt-3 text-sm leading-5 text-[#0F2238]">{horse.description}</p>}
+
+          <div className="mt-6 rounded-2xl border border-[#E4E1D8] bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-500">Seller</p>
+            <p className="mt-0.5 text-[15px] font-bold text-[#0F2238]">{horse.seller?.businessName || horse.seller?.name}</p>
             {horse.seller?.phone && (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-neutral-600">
-                <Phone className="h-3.5 w-3.5" /> {horse.seller.phone}
+              <p className="mt-1 flex items-center gap-1 text-[13px] text-neutral-500">
+                <Phone className="h-3.5 w-3.5" />
+                {horse.seller.phone}
               </p>
             )}
           </div>
 
-          <div className="mt-5">
+          <div className="mt-4 space-y-3 rounded-2xl border border-[#E4E1D8] bg-white p-4">
+            <p className="text-[15px] font-bold text-[#0F2238]">Interested in this horse?</p>
             {sent ? (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                Inquiry sent to the seller!
-              </p>
+              <p className="text-sm text-emerald-600">Your inquiry has been sent to the seller.</p>
             ) : (
               <>
-                <label className="mb-1.5 block text-sm font-bold text-[#0F2238]">Inquire about this horse</label>
-                <Textarea
+                <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="I'm interested in this horse..."
+                  placeholder="Write a message to the seller..."
                   rows={3}
+                  className="w-full resize-none rounded-xl border border-[#E4E1D8] px-3 py-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
                 />
-                {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-                <Button onClick={handleInquire} disabled={sending} className="mt-3 w-full">
-                  <MessageSquare className="h-4 w-4" />
+                {sendError && <p className="text-[13px] text-destructive">{sendError}</p>}
+                <button
+                  onClick={sendInquiry}
+                  disabled={!message.trim() || sending}
+                  className="w-full rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
+                >
                   {sending ? "Sending..." : "Send Inquiry"}
-                </Button>
+                </button>
               </>
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
