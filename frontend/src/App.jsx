@@ -6,6 +6,7 @@ import AppLayout from "@/shared/layout/AppLayout"
 import ConsumerLayout from "@/shared/layout/ConsumerLayout"
 import UserAppLayout from "@/modules/user/layout/UserAppLayout"
 import TransporterAppLayout from "@/modules/transporter/layout/TransporterAppLayout"
+import ServiceAppLayout from "@/modules/service/layout/ServiceAppLayout"
 import { adminRoutes } from "@/modules/admin/routes"
 import { horseSellerRoutes } from "@/modules/horseSeller/routes"
 import { storeSellerRoutes } from "@/modules/storeSeller/routes"
@@ -100,7 +101,7 @@ function App() {
               path="/service"
               element={
                 <ProtectedRoute role="provider">
-                  <ConsumerLayout brand="Ashwa India Services" navItems={[]} homePath="/service" />
+                  <ServiceAppLayout />
                 </ProtectedRoute>
               }
             >

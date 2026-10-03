@@ -14,6 +14,8 @@ module.exports = function registerSockets(io) {
           socket.join('admin');
         } else if (decoded.role === 'transporter') {
           socket.join(`transporter:${decoded.id}`);
+        } else if (decoded.role === 'provider') {
+          socket.join(`provider:${decoded.id}`);
         } else if (decoded.role === 'user') {
           socket.join(`user:${decoded.id}`);
         }

@@ -33,3 +33,19 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   );
   res.json({ provider });
 });
+
+exports.updateAvailability = asyncHandler(async (req, res) => {
+  const { isOnline, coords } = req.body;
+  if (typeof isOnline !== 'boolean') return res.status(400).json({ message: 'isOnline must be a boolean' });
+
+  const update = { isOnline };
+  if (coords) {
+    if (typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
+      return res.status(400).json({ message: 'coords needs numeric lat and lng' });
+    }
+    update.coords = { lat: coords.lat, lng: coords.lng };
+  }
+
+  const provider = await Provider.findByIdAndUpdate(req.user._id, update, { new: true });
+  res.json({ provider });
+});

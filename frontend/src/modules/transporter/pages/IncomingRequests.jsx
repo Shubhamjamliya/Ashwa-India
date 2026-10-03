@@ -178,16 +178,6 @@ export default function IncomingRequests() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleOnline}
-            disabled={togglingOnline}
-            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-70 ${
-              isOnline ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-neutral-300 bg-neutral-100 text-neutral-600"
-            }`}
-          >
-            <span className={`h-2 w-2 rounded-full ${isOnline ? "bg-emerald-500" : "bg-neutral-400"}`} />
-            {isOnline ? "Online" : "Offline"}
-          </button>
           <button onClick={() => navigate("/transporter/notifications")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
             <Bell className="h-[17px] w-[17px] text-[#0F2238]" />
             {unreadCount > 0 && (
@@ -197,6 +187,27 @@ export default function IncomingRequests() {
             )}
           </button>
         </div>
+      </div>
+
+      <div className={`mx-4 mt-2 flex items-center justify-between rounded-2xl px-4 py-3.5 shadow-sm transition-colors ${isOnline ? "bg-emerald-600" : "bg-[#0B1C33]"}`}>
+        <div>
+          <p className="text-sm font-extrabold text-white">{isOnline ? "You're Online" : "You're Offline"}</p>
+          <p className="text-[11px] text-white/75">
+            {togglingOnline ? "Updating your location..." : isOnline ? "Receiving requests near you" : "Turn on to receive requests"}
+          </p>
+        </div>
+        <button
+          role="switch"
+          aria-checked={isOnline}
+          aria-label="Online status"
+          onClick={toggleOnline}
+          disabled={togglingOnline}
+          className={`flex h-7 w-12 shrink-0 items-center rounded-full p-[3px] transition-colors disabled:opacity-60 ${
+            isOnline ? "justify-end bg-white/40" : "justify-start bg-white/20"
+          }`}
+        >
+          <span className="block h-[22px] w-[22px] rounded-full bg-white shadow" />
+        </button>
       </div>
 
       {locationError && <p className="mx-4 mt-2 text-xs text-destructive">{locationError}</p>}

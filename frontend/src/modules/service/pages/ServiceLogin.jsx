@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Phone, KeyRound, User, Building2, CheckCircle2 } from "lucide-react"
+import { Phone, KeyRound, User, Building2, Mail, CheckCircle2 } from "lucide-react"
 import { Input } from "@/shared/components/ui/input"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/context/AuthContext"
@@ -18,6 +18,7 @@ export default function ServiceLogin() {
   const [registrationToken, setRegistrationToken] = useState("")
   const [name, setName] = useState("")
   const [businessName, setBusinessName] = useState("")
+  const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -85,7 +86,7 @@ export default function ServiceLogin() {
       const data = await apiFetch("/auth/register", {
         method: "POST",
         auth: false,
-        body: { registrationToken, name, businessName },
+        body: { registrationToken, name, businessName, email },
       })
       if (data.accessToken) {
         login(data)
@@ -191,6 +192,19 @@ export default function ServiceLogin() {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Your service business name"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Email (optional)</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     className="pl-9"
                   />
                 </div>
