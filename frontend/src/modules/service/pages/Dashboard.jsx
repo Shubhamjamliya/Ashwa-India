@@ -4,7 +4,6 @@ import { io } from "socket.io-client"
 import { Activity, Bell, CheckCircle2, Clock, Layers, MapPin, Phone, Stethoscope, Wallet as WalletIcon, XCircle } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
-import BackButton from "../components/BackButton"
 
 const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")
 const DISMISSED_KEY = "ashwa_provider_notifications_dismissed"
@@ -56,6 +55,9 @@ export default function ServiceDashboard() {
   const [isOnline, setIsOnline] = useState(user?.isOnline !== false)
   const [togglingOnline, setTogglingOnline] = useState(false)
   const [locationError, setLocationError] = useState("")
+  const [pricingFor, setPricingFor] = useState(null)
+  const [priceInput, setPriceInput] = useState("")
+  const [actionError, setActionError] = useState("")
 
   useEffect(() => {
     Promise.allSettled([apiFetch("/services/requests/incoming"), apiFetch("/payments/wallet"), apiFetch("/notifications")]).then(
@@ -96,15 +98,36 @@ export default function ServiceDashboard() {
     }
   }, [])
 
-  const respond = async (id, action) => {
+  const respond = async (id, action, amount) => {
     setActing(true)
+    setActionError("")
     try {
-      const data = await apiFetch(`/services/requests/${id}/respond`, { method: "PATCH", body: { action } })
+      const body = amount !== undefined ? { action, amount } : { action }
+      const data = await apiFetch(`/services/requests/${id}/respond`, { method: "PATCH", body })
       setRequests((prev) => prev.map((r) => (r._id === id ? data.request : r)))
       if (ringing?._id === id) setRinging(null)
+      return true
+    } catch (err) {
+      setActionError(err.message || "Action failed")
+      return false
     } finally {
       setActing(false)
     }
+  }
+
+  const openPricePrompt = (id) => {
+    setPriceInput("")
+    setActionError("")
+    setPricingFor(id)
+  }
+
+  const submitPrice = async () => {
+    const amount = Number(priceInput)
+    if (!(amount > 0)) {
+      setActionError("Enter the price for this service")
+      return
+    }
+    if (await respond(pricingFor, "accept", amount)) setPricingFor(null)
   }
 
   const saveAvailability = async (nextOnline, coords) => {
@@ -164,12 +187,9 @@ export default function ServiceDashboard() {
   return (
     <div className="min-h-screen pb-4">
       <div className="flex items-center justify-between px-4 pb-2 pt-4">
-        <div className="flex items-center gap-3">
-          <BackButton />
-          <div>
-            <p className="text-xs text-neutral-500">{today}</p>
-            <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
-          </div>
+        <div>
+          <p className="text-xs text-neutral-500">{today}</p>
+          <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => navigate("/service/notifications")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
@@ -294,7 +314,7 @@ export default function ServiceDashboard() {
                       <XCircle className="h-4 w-4" /> Decline
                     </button>
                     <button
-                      onClick={() => respond(req._id, "accept")}
+                      onClick={() => openPricePrompt(req._id)}
                       disabled={acting}
                       className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#C28D2E] py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
                     >
@@ -336,12 +356,50 @@ export default function ServiceDashboard() {
                 <span className="text-xs font-bold">Decline</span>
               </button>
               <button
-                onClick={() => respond(ringing._id, "accept")}
+                onClick={() => openPricePrompt(ringing._id)}
                 disabled={acting}
                 className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1.5 rounded-full bg-[#16a34a] text-white disabled:opacity-60"
               >
                 <CheckCircle2 className="h-[22px] w-[22px]" />
                 <span className="text-xs font-bold">Accept</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pricingFor && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#0B1C33]/70 p-4 sm:items-center">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6">
+            <h2 className="text-base font-bold text-[#0F2238]">Price for this service</h2>
+            <p className="mt-1 text-[12px] text-neutral-500">
+              Set the amount you will charge. Ashwa India keeps its commission from this, and the rest goes to your wallet when you mark the job completed.
+            </p>
+            <div className="relative mt-4">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-neutral-500">₹</span>
+              <input
+                inputMode="numeric"
+                autoFocus
+                value={priceInput}
+                onChange={(e) => setPriceInput(e.target.value.replace(/[^0-9.]/g, ""))}
+                placeholder="e.g. 1500"
+                className="h-12 w-full rounded-xl border border-[#E4E1D8] pl-8 pr-4 text-lg font-bold text-[#0F2238] outline-none focus:border-[#C28D2E]"
+              />
+            </div>
+            {actionError && <p className="mt-2 text-xs text-destructive">{actionError}</p>}
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setPricingFor(null)}
+                className="flex-1 rounded-xl bg-[#F1EEE6] py-3 text-sm font-bold text-[#0F2238]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPrice}
+                disabled={acting}
+                className="flex-1 rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {acting ? "Accepting..." : "Accept & set price"}
               </button>
             </div>
           </div>

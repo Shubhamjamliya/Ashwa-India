@@ -159,6 +159,11 @@ export default function TransportResults() {
                       {item.tripDistanceKm != null ? ` · ${item.tripDistanceKm} km trip` : ""}
                     </p>
                   </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-base font-extrabold text-[#C28D2E]">₹{item.quote?.amount?.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-neutral-500">₹{item.quote?.pricePerKm}/km</p>
+                    {item.quote?.baseFare > 0 && <p className="text-[10px] text-neutral-500">+ ₹{item.quote.baseFare} base</p>}
+                  </div>
                 </div>
 
                 {isSelected && (

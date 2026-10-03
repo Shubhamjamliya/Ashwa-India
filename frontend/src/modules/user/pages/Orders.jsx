@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Package } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
+import BackButton from "../components/BackButton"
 
 const statusMeta = {
   pending: { label: "Pending", color: "#f59e0b" },
@@ -24,7 +25,10 @@ export default function Orders() {
 
   return (
     <div className="pb-6">
-      <h1 className="px-4 pb-3 pt-5 text-xl font-bold text-[#0F2238]">Your Orders</h1>
+      <div className="flex items-center gap-2 px-4 pb-3 pt-4">
+        <BackButton />
+        <h1 className="text-xl font-bold text-[#0F2238]">Your Orders</h1>
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-20">

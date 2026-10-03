@@ -21,6 +21,7 @@ import ServiceLogin from "@/modules/service/pages/ServiceLogin"
 import { CartProvider } from "@/modules/user/context/CartContext"
 import { WishlistProvider } from "@/modules/user/context/WishlistContext"
 import { AddressProvider } from "@/modules/user/context/AddressContext"
+import { LocationProvider } from "@/modules/user/context/LocationContext"
 
 function App() {
   return (
@@ -76,7 +77,9 @@ function App() {
                   <CartProvider>
                     <WishlistProvider>
                       <AddressProvider>
-                        <UserAppLayout />
+                        <LocationProvider>
+                          <UserAppLayout />
+                        </LocationProvider>
                       </AddressProvider>
                     </WishlistProvider>
                   </CartProvider>

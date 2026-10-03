@@ -5,6 +5,7 @@ import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
+import { useLocationContext } from "../context/LocationContext"
 
 const quickActions = [
   { key: "horses", label: "Horse\nMarketplace", image: "/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
@@ -15,6 +16,8 @@ const quickActions = [
 
 function HeroSection({ horsesCount, cartCount, wishlistCount }) {
   const navigate = useNavigate()
+  const { location, status } = useLocationContext()
+  const locationLabel = status === "loading" ? "Locating..." : location?.label || "Set Location"
   return (
     <div className="relative overflow-hidden bg-[#0B1C33] px-4 pb-6 pt-3">
       <img
@@ -29,7 +32,7 @@ function HeroSection({ horsesCount, cartCount, wishlistCount }) {
             <span className="text-xl">🐎</span>
             <button className="flex items-center gap-1 text-left" onClick={() => navigate("/user/change-location")}>
               <MapPin className="h-[13px] w-[13px] text-[#C28D2E]" />
-              <span className="truncate text-xs font-bold text-white">Set Location</span>
+              <span className="truncate text-xs font-bold text-white">{locationLabel}</span>
               <ChevronDown className="h-[13px] w-[13px] text-[#A9B8CC]" />
             </button>
           </div>

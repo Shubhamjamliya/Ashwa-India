@@ -1,23 +1,27 @@
 import { useEffect, useMemo, useState } from "react"
 import { Calendar, CheckCircle2, MapPin, XCircle } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { apiFetch } from "@/shared/lib/api"
 import BackButton from "../components/BackButton"
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 
 const tabs = [
-  { key: "accepted", label: "Accepted" },
+  { key: "accepted", label: "Active" },
+  { key: "completed", label: "Completed" },
   { key: "rejected", label: "Declined" },
   { key: "cancelled", label: "Cancelled" },
 ]
 
 const statusMeta = {
-  accepted: { label: "Accepted", color: "#16a34a", icon: CheckCircle2 },
+  accepted: { label: "In progress", color: "#16a34a", icon: CheckCircle2 },
+  completed: { label: "Completed", color: "#0B1C33", icon: CheckCircle2 },
   rejected: { label: "Declined", color: "#ef4444", icon: XCircle },
   cancelled: { label: "Cancelled", color: "#64748B", icon: XCircle },
 }
 
 export default function Bookings() {
+  const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState("accepted")
@@ -69,7 +73,11 @@ export default function Bookings() {
             const meta = statusMeta[req.status]
             const StatusIcon = meta.icon
             return (
-              <div key={req._id} className="rounded-2xl border border-[#E4E1D8] bg-white p-4">
+              <button
+                key={req._id}
+                onClick={() => req.status === "accepted" && navigate(`/transporter/jobs/${req._id}`)}
+                className="block w-full rounded-2xl border border-[#E4E1D8] bg-white p-4 text-left"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex-1 truncate text-sm font-bold text-[#0F2238]">{req.user?.name || req.user?.phone}</p>
                   <span
@@ -85,10 +93,13 @@ export default function Bookings() {
                   {req.source.address} → {req.destination.address}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between">
-                  <p className="text-[11px] font-semibold text-neutral-500">{req.type === "shared" ? "Shared ride" : "Private transport"}</p>
+                  <p className="text-[11px] font-semibold text-neutral-500">
+                    {req.type === "shared" ? "Shared ride" : "Private transport"}
+                    {req.quote?.amount ? ` · ₹${req.quote.amount.toLocaleString("en-IN")}` : ""}
+                  </p>
                   <p className="text-[11px] text-neutral-400">{fmtDate(req.respondedAt || req.createdAt)}</p>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>

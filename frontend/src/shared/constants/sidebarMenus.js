@@ -37,6 +37,7 @@ const adminMenu = [
     label: "Service Providers",
     items: [
       { type: "link", label: "Service Providers", icon: "UserCog", path: "/admin/providers" },
+      { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/provider" },
     ],
   },
   {
@@ -67,6 +68,7 @@ const adminMenu = [
       { type: "link", label: "Transport Requests", icon: "FileText", path: "/admin/transport/requests" },
       { type: "link", label: "Shared Rides", icon: "Route", path: "/admin/transport/shared" },
       { type: "link", label: "Live Tracking", icon: "MapPin", path: "/admin/transport/tracking" },
+      { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/transporter" },
     ],
   },
   {
@@ -75,7 +77,6 @@ const adminMenu = [
     items: [
       { type: "link", label: "Bookings", icon: "Calendar", path: "/admin/bookings" },
       { type: "link", label: "Payments", icon: "CreditCard", path: "/admin/payments" },
-      { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission" },
     ],
   },
   {

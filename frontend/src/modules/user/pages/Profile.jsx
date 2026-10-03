@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import { useWishlist } from "../context/WishlistContext"
+import BackButton from "../components/BackButton"
 
 function MenuSection({ title, items }) {
   return (
@@ -115,7 +116,7 @@ export default function Profile() {
   return (
     <div className="pb-6">
       <div className="flex items-center justify-between border-b border-[#E4E1D8] bg-white px-4 py-3">
-        <span className="h-9 w-9" />
+        <BackButton />
         <h1 className="text-base font-bold text-[#0F2238]">Profile</h1>
         <span className="h-9 w-9" />
       </div>

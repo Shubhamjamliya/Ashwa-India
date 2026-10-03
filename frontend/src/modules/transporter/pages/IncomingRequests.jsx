@@ -5,7 +5,6 @@ import { io } from "socket.io-client"
 import { Bell, CheckCircle2, Clock, MapPin, Phone, Truck, Wallet as WalletIcon, XCircle, Activity, Layers } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
-import BackButton from "../components/BackButton"
 
 const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")
 const DISMISSED_KEY = "ashwa_transporter_notifications_dismissed"
@@ -170,12 +169,9 @@ export default function IncomingRequests() {
     <div className="min-h-screen pb-4">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pb-2 pt-4">
-        <div className="flex items-center gap-3">
-          <BackButton />
-          <div>
-            <p className="text-xs text-neutral-500">{today}</p>
-            <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
-          </div>
+        <div>
+          <p className="text-xs text-neutral-500">{today}</p>
+          <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => navigate("/transporter/notifications")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
@@ -320,6 +316,15 @@ export default function IncomingRequests() {
                     </a>
                   )}
                 </div>
+
+                {req.status === "accepted" && (
+                  <button
+                    onClick={() => navigate(`/transporter/jobs/${req._id}`)}
+                    className="mt-3 w-full rounded-xl bg-[#0B1C33] py-2.5 text-[13px] font-bold text-white"
+                  >
+                    Open booking
+                  </button>
+                )}
 
                 {req.status === "pending" && (
                   <div className="mt-3 flex gap-2">

@@ -15,6 +15,7 @@ import Banners from "./pages/userApp/Banners"
 import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
 import TransportRequests from "./pages/transport/Requests"
+import RolePage from "./pages/commission/RolePage"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
 import ZoneSetup from "./pages/system/zones/ZoneSetup"
@@ -41,7 +42,6 @@ const placeholderRoutes = [
   ["transport/tracking", "Live Tracking"],
   ["bookings", "Bookings"],
   ["payments", "Payments"],
-  ["commission", "Commission"],
   ["reviews", "Reviews"],
   ["notifications", "Notifications"],
   ["support", "Support Tickets"],
@@ -56,6 +56,8 @@ export const adminRoutes = (
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
     <Route path="transport/requests" element={<TransportRequests />} />
+    <Route path="commission/transporter" element={<RolePage role="transporter" />} />
+    <Route path="commission/provider" element={<RolePage role="provider" />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
     <Route path="horses/listings" element={<HorseListings />} />
     <Route path="horses/categories" element={<HorseCategories />} />

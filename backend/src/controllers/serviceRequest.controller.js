@@ -2,6 +2,7 @@ const Provider = require('../models/Provider');
 const ServiceRequest = require('../models/ServiceRequest');
 const asyncHandler = require('../utils/asyncHandler');
 const pushService = require('../services/push.service');
+const commissionService = require('../services/commission.service');
 
 const USER_FIELDS = 'name phone';
 const PROVIDER_FIELDS = 'name businessName phone serviceTypes location';
@@ -76,9 +77,10 @@ exports.listIncoming = asyncHandler(async (req, res) => {
   res.json({ requests });
 });
 
-// PATCH /api/services/requests/:id/respond  (provider)  { action: 'accept' | 'reject' | 'complete' }
+// PATCH /api/services/requests/:id/respond  (provider)
+// { action: 'accept', amount } | { action: 'reject' } | { action: 'complete' }
 exports.respond = asyncHandler(async (req, res) => {
-  const { action } = req.body;
+  const { action, amount } = req.body;
   if (!['accept', 'reject', 'complete'].includes(action)) {
     return res.status(400).json({ message: 'action must be accept, reject or complete' });
   }
@@ -93,13 +95,32 @@ exports.respond = asyncHandler(async (req, res) => {
     if (request.status !== 'accepted') {
       return res.status(400).json({ message: 'Only accepted requests can be completed' });
     }
+    if (!(request.amount > 0)) {
+      return res.status(400).json({ message: 'This booking has no price to settle' });
+    }
+    request.settlement = await commissionService.settle({
+      role: 'provider',
+      ownerId: req.user._id,
+      amount: request.amount,
+      description: `Service booking ${request._id} completed`,
+    });
     request.status = 'completed';
     request.completedAt = new Date();
+    request.paymentStatus = 'settled';
   } else {
     if (request.status !== 'pending') {
       return res.status(400).json({ message: 'Request already responded to' });
     }
-    request.status = action === 'accept' ? 'accepted' : 'rejected';
+    if (action === 'accept') {
+      const price = Number(amount);
+      if (!(price > 0)) {
+        return res.status(400).json({ message: 'Enter the price for this service before accepting' });
+      }
+      request.amount = price;
+      request.status = 'accepted';
+    } else {
+      request.status = 'rejected';
+    }
     request.respondedAt = new Date();
   }
   await request.save();

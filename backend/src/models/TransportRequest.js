@@ -9,6 +9,30 @@ const pointSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const settlementSchema = new mongoose.Schema(
+  {
+    grossAmount: { type: Number, required: true },
+    commissionPercent: { type: Number, required: true },
+    commissionFixed: { type: Number, required: true },
+    commission: { type: Number, required: true },
+    netAmount: { type: Number, required: true },
+    settledAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+// Price is captured at request time from the transporter's per-km rate, so a
+// later rate change never alters a booking the user already saw.
+const quoteSchema = new mongoose.Schema(
+  {
+    tripKm: { type: Number, required: true },
+    pricePerKm: { type: Number, required: true },
+    baseFare: { type: Number, required: true },
+    amount: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const transportRequestSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -17,11 +41,26 @@ const transportRequestSchema = new mongoose.Schema(
     destination: { type: pointSchema, required: true },
     type: { type: String, enum: ['private', 'shared'], default: 'private' },
     message: { type: String },
+    quote: { type: quoteSchema, required: true },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'rejected', 'cancelled'],
+      enum: ['pending', 'accepted', 'rejected', 'cancelled', 'completed'],
       default: 'pending',
     },
+    // Trip progress, only meaningful once accepted.
+    stage: { type: String, enum: ['scheduled', 'to_pickup', 'in_transit', 'delivered'] },
+    // Hidden by default so the transporter never sees them; read explicitly with +field.
+    pickupOtp: { type: String, select: false },
+    dropOtp: { type: String, select: false },
+    pickupVerifiedAt: { type: Date },
+    deliveredAt: { type: Date },
+    transporterLocation: {
+      lat: { type: Number },
+      lng: { type: Number },
+      updatedAt: { type: Date },
+    },
+    paymentStatus: { type: String, enum: ['unpaid', 'settled'], default: 'unpaid' },
+    settlement: { type: settlementSchema },
     respondedAt: { type: Date },
   },
   { timestamps: true }
