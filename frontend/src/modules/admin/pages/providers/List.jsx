@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import {
   Search, Download, Eye, Mail, Phone, MapPin, Calendar as CalendarIcon, UserCog, Check, X, Briefcase,
 } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
+import ProviderDetailDialog from "./ProviderDetailDialog"
 import { Button } from "@/shared/components/ui/button"
 import { apiFetch } from "@/shared/lib/api"
 import { exportToCSV } from "@/shared/lib/csvExport"
@@ -42,6 +42,8 @@ export default function ProvidersList() {
   const [statusTab, setStatusTab] = useState("")
   const [selected, setSelected] = useState(null)
   const [showDetails, setShowDetails] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [reviews, setReviews] = useState([])
   const [actingId, setActingId] = useState(null)
 
   const tabs = [
@@ -94,9 +96,21 @@ export default function ProvidersList() {
     }
   }
 
-  const handleViewDetails = (provider) => {
+  const handleViewDetails = async (provider) => {
     setSelected(provider)
+    setReviews([])
+    setDetailLoading(true)
     setShowDetails(true)
+    try {
+      const data = await apiFetch(`/providers/${provider._id}`)
+      setSelected(data.provider)
+      setReviews(data.reviews || [])
+    } catch (err) {
+      setError(err.message || "Failed to load provider details")
+      setShowDetails(false)
+    } finally {
+      setDetailLoading(false)
+    }
   }
 
   const handleExport = () => {
@@ -227,23 +241,13 @@ export default function ProvidersList() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {provider.status === "pending" ? (
-                          <div className="flex justify-center gap-2">
-                            <Button size="sm" disabled={actingId === provider._id} onClick={() => updateStatus(provider._id, "approved")}>
-                              <Check className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="sm" variant="outline" disabled={actingId === provider._id} onClick={() => updateStatus(provider._id, "rejected")}>
-                              <X className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleViewDetails(provider)}
-                            className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleViewDetails(provider)}
+                          className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors"
+                          aria-label="View full details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -254,68 +258,16 @@ export default function ProvidersList() {
         </div>
       </div>
 
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-lg mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
-            <DialogTitle className="pr-12 text-xl font-bold text-neutral-900">Provider Details</DialogTitle>
-          </DialogHeader>
-          {selected && (
-            <div className="space-y-4 px-6 py-5">
-              <div className="bg-neutral-50 rounded-xl p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                  <div className="w-16 h-16 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-                    <UserCog className="w-8 h-8 text-neutral-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="text-lg font-bold text-neutral-900">{selected.name || "Unnamed"}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${statusBadgeClass[selected.status]}`}>
-                        {statusLabel[selected.status]}
-                      </span>
-                    </div>
-                    <p className="text-sm text-neutral-600 mb-3">{selected.businessName || "—"}</p>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Mail className="w-4 h-4" />
-                        <span className="truncate">{selected.email || "NA"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Phone className="w-4 h-4" />
-                        <span>{selected.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <MapPin className="w-4 h-4" />
-                        <span>{selected.location || "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Briefcase className="w-4 h-4" />
-                        <span>{selected.serviceTypes?.length ? selected.serviceTypes.join(", ") : "No services listed"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>Joined: {formatDateTime(selected.createdAt)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {selected.status === "pending" && (
-                <div className="flex gap-2">
-                  <Button className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "approved")}>
-                    <Check className="w-4 h-4" />
-                    Approve
-                  </Button>
-                  <Button variant="outline" className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "rejected")}>
-                    <X className="w-4 h-4" />
-                    Reject
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ProviderDetailDialog
+        open={showDetails}
+        onOpenChange={setShowDetails}
+        provider={selected}
+        reviews={reviews}
+        loading={detailLoading}
+        acting={Boolean(selected) && actingId === selected._id}
+        onApprove={(id) => updateStatus(id, "approved")}
+        onReject={(id) => updateStatus(id, "rejected")}
+      />
     </div>
   )
 }

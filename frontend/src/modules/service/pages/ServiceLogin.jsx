@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Phone, KeyRound, User, Building2, Mail, CheckCircle2 } from "lucide-react"
+import { Phone, KeyRound, User, CheckCircle2 } from "lucide-react"
+import ProviderProfileFields, { profilePayload } from "../components/ProviderProfileFields"
 import { Input } from "@/shared/components/ui/input"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/context/AuthContext"
@@ -17,8 +18,7 @@ export default function ServiceLogin() {
   const [devOtp, setDevOtp] = useState("")
   const [registrationToken, setRegistrationToken] = useState("")
   const [name, setName] = useState("")
-  const [businessName, setBusinessName] = useState("")
-  const [email, setEmail] = useState("")
+  const [profile, setProfile] = useState({ serviceTypes: [], pricing: [], serviceZones: [] })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -80,13 +80,17 @@ export default function ServiceLogin() {
       setError("Enter your name")
       return
     }
+    if (!profile.serviceTypes || profile.serviceTypes.length === 0) {
+      setError("Select at least one service you offer")
+      return
+    }
     setError("")
     setLoading(true)
     try {
       const data = await apiFetch("/auth/register", {
         method: "POST",
         auth: false,
-        body: { registrationToken, name, businessName, email },
+        body: { registrationToken, name, ...profilePayload(profile) },
       })
       if (data.accessToken) {
         login(data)
@@ -176,39 +180,15 @@ export default function ServiceLogin() {
 
           {step === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
-              <p className="mb-1 text-sm text-neutral-500">Tell us about your service business.</p>
+              <p className="mb-1 text-sm text-neutral-500">Set up your service business profile. You can add photos later.</p>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Full Name</label>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Your name</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="pl-9" />
                 </div>
               </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Business Name (optional)</label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <Input
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Your service business name"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Email (optional)</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <ProviderProfileFields value={profile} onChange={(patch) => setProfile((prev) => ({ ...prev, ...patch }))} />
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Submitting..." : "Submit Application"}

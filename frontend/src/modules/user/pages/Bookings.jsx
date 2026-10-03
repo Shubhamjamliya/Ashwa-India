@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { io } from "socket.io-client"
-import { Calendar, CheckCircle2, Clock, MapPin, Navigation, Phone, ShieldCheck, Truck, XCircle } from "lucide-react"
+import { Calendar, CheckCircle2, Clock, MapPin, Navigation, Phone, ShieldCheck, Star, Truck, XCircle } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { directionsUrl, distanceKm, mapEmbedUrl } from "@/shared/lib/geo"
 import BackButton from "../components/BackButton"
@@ -82,7 +82,7 @@ function ActiveDetails({ req }) {
   )
 }
 
-export default function Bookings() {
+function TransportBookings() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -115,11 +115,6 @@ export default function Bookings() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
-        <BackButton />
-        <h1 className="text-[17px] font-bold text-[#0F2238]">Transport Requests</h1>
-      </div>
-
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
@@ -164,6 +159,163 @@ export default function Bookings() {
             )
           })}
         </div>
+      )}
+    </div>
+  )
+}
+
+const SERVICE_STATUS = {
+  pending: { label: "Waiting for response", color: "#f59e0b" },
+  accepted: { label: "Accepted", color: "#16a34a" },
+  completed: { label: "Completed", color: "#0B1C33" },
+  rejected: { label: "Declined", color: "#ef4444" },
+  cancelled: { label: "Cancelled", color: "#64748B" },
+}
+
+function ServiceBookings() {
+  const [requests, setRequests] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    apiFetch("/services/requests/mine")
+      .then((data) => setRequests(data.requests || []))
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const { accessToken } = getSession("user")
+    if (!accessToken) return
+    const socket = io(SOCKET_URL, { auth: { token: accessToken }, transports: ["websocket", "polling"] })
+    const onUpdate = (updated) => setRequests((prev) => prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r)))
+    socket.on("service:update", onUpdate)
+    return () => {
+      socket.off("service:update", onUpdate)
+      socket.disconnect()
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
+      </div>
+    )
+  }
+  if (requests.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 px-8 py-20 text-center">
+        <Calendar className="h-8 w-8 text-neutral-400" />
+        <p className="text-base font-semibold text-[#0F2238]">No service bookings yet</p>
+        <p className="text-[13px] text-neutral-500">Book a service from the Services tile on Home.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2.5 px-4 pb-4">
+      {requests.map((item) => {
+        const meta = SERVICE_STATUS[item.status] || SERVICE_STATUS.pending
+        return (
+          <div key={item._id} className="rounded-2xl border border-[#E4E1D8] bg-white p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-bold capitalize text-[#0F2238]">{item.serviceType}</p>
+              <span className="shrink-0 rounded-full px-2 py-1 text-[11px] font-bold" style={{ backgroundColor: `${meta.color}1A`, color: meta.color }}>
+                {meta.label}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-neutral-600">{item.provider?.businessName || item.provider?.name || "Provider"}</p>
+            {item.message && <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{item.message}</p>}
+            <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-neutral-500">
+              <span>{new Date(item.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+              {item.amount ? <span className="font-extrabold text-[#C28D2E]">₹{item.amount.toLocaleString("en-IN")}</span> : null}
+            </div>
+            {item.status === "accepted" && item.provider?.phone && (
+              <a href={`tel:${item.provider.phone}`} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white">
+                <Phone className="h-4 w-4" /> Call provider
+              </a>
+            )}
+            {item.status === "completed" && <RateService requestId={item._id} />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export default function Bookings() {
+  const [tab, setTab] = useState("transport")
+  return (
+    <div>
+      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
+        <BackButton />
+        <h1 className="text-[17px] font-bold text-[#0F2238]">My Bookings</h1>
+      </div>
+      <div className="flex gap-1.5 px-4 pb-3">
+        {[
+          { key: "transport", label: "Transport" },
+          { key: "services", label: "Services" },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 rounded-full px-3 py-2 text-xs font-bold ${tab === t.key ? "bg-[#0B1C33] text-white" : "border border-[#E4E1D8] bg-white text-neutral-600"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === "transport" ? <TransportBookings /> : <ServiceBookings />}
+    </div>
+  )
+}
+
+
+function RateService({ requestId }) {
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState("")
+
+  const submit = async () => {
+    setSaving(true)
+    setError("")
+    try {
+      await apiFetch(`/services/requests/${requestId}/review`, { method: "POST", body: { rating, comment } })
+      setDone(true)
+    } catch (err) {
+      setError(err.message || "Could not save your review")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (done) return <p className="mt-3 text-center text-xs font-bold text-emerald-700">Thanks for rating this service</p>
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-[#E4E1D8] pt-3">
+      <p className="text-xs font-bold text-[#0F2238]">How was the service?</p>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`}>
+            <Star className={`h-6 w-6 ${n <= rating ? "fill-[#C28D2E] text-[#C28D2E]" : "text-neutral-300"}`} />
+          </button>
+        ))}
+      </div>
+      {rating > 0 && (
+        <>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={2}
+            placeholder="Share a few words (optional)"
+            className="w-full resize-none rounded-xl border border-[#E4E1D8] px-3 py-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <button onClick={submit} disabled={saving} className="w-full rounded-xl bg-[#0B1C33] py-2.5 text-sm font-bold text-white disabled:opacity-50">
+            {saving ? "Saving..." : "Submit rating"}
+          </button>
+        </>
       )}
     </div>
   )

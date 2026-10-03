@@ -26,6 +26,7 @@ const brandingRoutes = require('./routes/branding.routes');
 const bannerRoutes = require('./routes/banner.routes');
 const exploreRoutes = require('./routes/explore.routes');
 const eventRoutes = require('./routes/event.routes');
+const serviceCatalogRoutes = require('./routes/serviceCatalog.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const paymentController = require('./controllers/payment.controller');
 
@@ -56,6 +57,7 @@ app.use('/api/branding', brandingRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/explore', exploreRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/service-catalog', serviceCatalogRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

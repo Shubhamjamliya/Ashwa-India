@@ -1,5 +1,7 @@
 const Provider = require('../models/Provider');
+const ServiceReview = require('../models/ServiceReview');
 const asyncHandler = require('../utils/asyncHandler');
+const { buildProviderProfile } = require('../utils/providerProfile');
 
 exports.list = asyncHandler(async (req, res) => {
   const { status } = req.query;
@@ -8,10 +10,26 @@ exports.list = asyncHandler(async (req, res) => {
   res.json({ providers });
 });
 
+// Full profile for the admin review dialog: zone names instead of ids, plus recent reviews.
 exports.getById = asyncHandler(async (req, res) => {
-  const provider = await Provider.findById(req.params.id);
+  const provider = await Provider.findById(req.params.id).populate('serviceZones', 'name serviceLocation isActive');
   if (!provider) return res.status(404).json({ message: 'Provider not found' });
-  res.json({ provider });
+
+  const reviews = await ServiceReview.find({ provider: provider._id })
+    .sort({ createdAt: -1 })
+    .limit(30)
+    .populate('user', 'name');
+
+  res.json({
+    provider,
+    reviews: reviews.map((r) => ({
+      id: r._id,
+      rating: r.rating,
+      comment: r.comment,
+      userName: r.user?.name || 'User',
+      createdAt: r.createdAt,
+    })),
+  });
 });
 
 exports.updateStatus = asyncHandler(async (req, res) => {
@@ -25,13 +43,17 @@ exports.updateStatus = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { businessName, serviceTypes, location, name, email } = req.body;
-  const provider = await Provider.findByIdAndUpdate(
-    req.user._id,
-    { businessName, serviceTypes, location, name, email },
-    { new: true }
-  );
-  res.json({ provider });
+  const provider = await Provider.findById(req.user._id);
+  if (!provider) return res.status(404).json({ message: 'Provider not found' });
+
+  const built = await buildProviderProfile(req.body, {
+    serviceTypes: provider.serviceTypes,
+    pricing: provider.pricing,
+  });
+  if (built.error) return res.status(400).json({ message: built.error });
+
+  const updated = await Provider.findByIdAndUpdate(req.user._id, built.update, { new: true });
+  res.json({ provider: updated });
 });
 
 exports.updateAvailability = asyncHandler(async (req, res) => {

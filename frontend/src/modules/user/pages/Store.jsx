@@ -38,6 +38,8 @@ export default function Store() {
       />
 
       {categories.length > 0 && (
+        <>
+          <p className="px-4 pb-2 text-xs font-bold uppercase tracking-wide text-neutral-500">Shop by Category</p>
         <div className="flex gap-2 overflow-x-auto px-4 pb-3">
           {[{ _id: "", name: "All" }, ...categories].map((c) => {
             const active = activeCategory === c._id
@@ -54,6 +56,7 @@ export default function Store() {
             )
           })}
         </div>
+        </>
       )}
 
       {loading ? (

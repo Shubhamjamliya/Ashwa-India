@@ -18,6 +18,7 @@ import TransportersList from "./pages/transporters/List"
 import TransportRequests from "./pages/transport/Requests"
 import RolePage from "./pages/commission/RolePage"
 import Events from "./pages/events/Events"
+import ServiceCatalog from "./pages/services/ServiceCatalog"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
 import ZoneSetup from "./pages/system/zones/ZoneSetup"
@@ -62,6 +63,7 @@ export const adminRoutes = (
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
     <Route path="events" element={<Events />} />
+    <Route path="services" element={<ServiceCatalog />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
     <Route path="horses/listings" element={<HorseListings />} />
     <Route path="horses/categories" element={<HorseCategories />} />

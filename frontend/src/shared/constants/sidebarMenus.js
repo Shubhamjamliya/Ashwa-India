@@ -38,6 +38,7 @@ const adminMenu = [
     label: "Service Providers",
     items: [
       { type: "link", label: "Service Providers", icon: "UserCog", path: "/admin/providers" },
+      { type: "link", label: "Services", icon: "Wrench", path: "/admin/services" },
       { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/provider" },
     ],
   },

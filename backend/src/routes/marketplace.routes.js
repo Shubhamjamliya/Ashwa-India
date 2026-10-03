@@ -24,4 +24,18 @@ router.patch('/sellers/:id/status', protect, authorize('admin'), marketplaceCont
 router.get('/inquiries', protect, authorize('horse-seller', 'admin'), marketplaceController.listInquiries);
 router.post('/inquiries', protect, authorize('user'), marketplaceController.createInquiry);
 
+const engagement = require('../controllers/marketplaceEngagement.controller');
+
+router.get('/inquiries/mine', protect, authorize('user'), engagement.listMyInquiries);
+router.get('/inquiries/:id', protect, authorize('user', 'horse-seller'), engagement.getThread);
+router.post('/inquiries/:id/messages', protect, authorize('user', 'horse-seller'), engagement.postMessage);
+
+router.post('/visits', protect, authorize('user'), engagement.createVisit);
+router.get('/visits/mine', protect, authorize('user'), engagement.listMyVisits);
+router.get('/visits', protect, authorize('horse-seller'), engagement.listSellerVisits);
+router.patch('/visits/:id', protect, authorize('horse-seller'), engagement.respondVisit);
+
+router.get('/favourites', protect, authorize('user'), engagement.listFavourites);
+router.post('/favourites/:horseId/toggle', protect, authorize('user'), engagement.toggleFavourite);
+
 module.exports = router;

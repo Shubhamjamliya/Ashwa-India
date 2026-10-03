@@ -10,6 +10,7 @@ import {
   Pencil,
   Settings as SettingsIcon,
   User as UserIcon,
+  MessageSquare,
 } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import { useWishlist } from "../context/WishlistContext"
@@ -65,6 +66,15 @@ export default function Profile() {
       iconBg: "#E1ECFC",
       iconColor: "#2563EB",
       onPress: () => navigate("/user/addresses"),
+    },
+    {
+      key: "enquiries",
+      label: "Horse enquiries",
+      sublabel: "Conversations with sellers and visit requests",
+      icon: MessageSquare,
+      iconBg: "#E0F4E7",
+      iconColor: "#16A34A",
+      onPress: () => navigate("/user/inquiries"),
     },
     {
       key: "orders",

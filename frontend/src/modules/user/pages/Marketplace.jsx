@@ -16,6 +16,15 @@ export default function Marketplace() {
 
   const category = params.get("category")
   const location = params.get("location")
+  const [tab, setTab] = useState("all")
+
+  // Quick tabs map onto listing filters, so the same server filters serve the app and the API.
+  const TABS = [
+    { key: "all", label: "All", filter: {} },
+    { key: "stallions", label: "Stallions", filter: { gender: "stallion" } },
+    { key: "foals", label: "Foals", filter: { maxAge: "1" } },
+    { key: "lease", label: "For lease", filter: { listingType: "lease" } },
+  ]
 
   const load = async () => {
     setError("")
@@ -23,6 +32,7 @@ export default function Marketplace() {
       const query = new URLSearchParams()
       if (category) query.set("category", category)
       if (location) query.set("location", location)
+      Object.entries(TABS.find((t) => t.key === tab).filter).forEach(([k, v]) => query.set(k, v))
       const qs = query.toString()
       const data = await apiFetch(`/marketplace/horses${qs ? `?${qs}` : ""}`)
       setHorses(data.horses || [])
@@ -35,11 +45,25 @@ export default function Marketplace() {
     setLoading(true)
     load().finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, location])
+  }, [category, location, tab])
 
   return (
     <div className="pb-6">
       <PageHeader title="Horse Marketplace" />
+
+      <div className="flex gap-2 overflow-x-auto px-4 pb-3">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold ${
+              tab === t.key ? "border-[#0B1C33] bg-[#0B1C33] text-white" : "border-[#E4E1D8] bg-white text-[#0F2238]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -79,7 +103,11 @@ export default function Marketplace() {
                     {horse.location}
                   </p>
                 )}
-                <p className="mt-1 text-[15px] font-bold text-[#C28D2E]">₹{horse.price?.toLocaleString("en-IN")}</p>
+                <p className="mt-1 text-[15px] font-bold text-[#C28D2E]">
+                  {horse.listingType === "lease"
+                    ? `₹${horse.leaseRate?.toLocaleString("en-IN")} / ${horse.leasePeriod || "month"}`
+                    : `₹${horse.price?.toLocaleString("en-IN")}`}
+                </p>
               </div>
             </button>
           ))}

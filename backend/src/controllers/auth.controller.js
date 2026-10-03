@@ -4,6 +4,7 @@ const { allRoles, otpRoles } = require('../utils/roleModel');
 const { generateAccessToken, generateRefreshToken, generateRegistrationToken } = require('../utils/generateToken');
 const { requestOtp: sendOtp, verifyOtp: checkOtp, normalizePhone } = require('../utils/otp');
 const asyncHandler = require('../utils/asyncHandler');
+const { buildProviderProfile } = require('../utils/providerProfile');
 
 function issueTokens(res, account, role, status) {
   const accessToken = generateAccessToken({ _id: account._id, role });
@@ -107,11 +108,21 @@ exports.register = asyncHandler(async (req, res) => {
 
   // Consumers don't need approval; sellers/providers/transporters do.
   const status = decoded.role === 'user' ? 'active' : 'pending';
+
+  let providerFields = {};
+  if (decoded.role === 'provider') {
+    const built = await buildProviderProfile({ ...req.body, name, email, businessName });
+    if (built.error) return res.status(400).json({ message: built.error });
+    if (!built.update.serviceTypes) return res.status(400).json({ message: 'Select at least one service you offer' });
+    providerFields = built.update;
+  }
+
   const account = await Model.create({
     phone: decoded.phone,
     name,
     email,
     ...(businessName ? { businessName } : {}),
+    ...providerFields,
     status,
   });
 

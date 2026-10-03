@@ -10,7 +10,7 @@ import { useLocationContext } from "../context/LocationContext"
 // Tile order, colours and destinations are fixed in the app; images and labels come from the admin Explore section.
 const quickActions = [
   { key: "horses", label: "Horse\nMarketplace", image: "/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
-  { key: "providers", label: "Service\nProviders", image: "/user/service-providers.png", bg: "#E1ECFC", path: null },
+  { key: "providers", label: "Service\nProviders", image: "/user/service-providers.png", bg: "#E1ECFC", path: "/user/services" },
   { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
   { key: "store", label: "Accessories\nStore", image: "/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
   { key: "events", label: "Horse\nEvents", image: null, bg: "#FDE7E7", path: "/user/events" },

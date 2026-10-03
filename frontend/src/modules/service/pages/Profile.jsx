@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { Bell, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, Stethoscope, Wallet } from "lucide-react"
+import { Bell, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, Star, Stethoscope, Wallet } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import BackButton from "../components/BackButton"
 
@@ -60,6 +60,15 @@ export default function Profile() {
       iconBg: "#FBEFD6",
       iconColor: "#C28D2E",
       onPress: () => navigate("/service/wallet"),
+    },
+    {
+      key: "reviews",
+      label: "Reviews & Ratings",
+      sublabel: "What customers say about your service",
+      icon: Star,
+      iconBg: "#FBEFD6",
+      iconColor: "#C28D2E",
+      onPress: () => navigate("/service/reviews"),
     },
     {
       key: "earnings",

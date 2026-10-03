@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, trim: true, lowercase: true },
     status: { type: String, enum: ['active', 'suspended', 'archived'], default: 'active' },
     fcmTokens: [{ type: String }],
+    favouriteHorses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Horse' }],
   },
   { timestamps: true }
 );

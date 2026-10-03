@@ -3,6 +3,7 @@ const HorseCategory = require('../models/HorseCategory');
 const Inquiry = require('../models/Inquiry');
 const HorseSeller = require('../models/HorseSeller');
 const asyncHandler = require('../utils/asyncHandler');
+const pushService = require('../services/push.service');
 
 // GET /api/marketplace/horses  (admin: all, horse-seller: own only, public/user: listed only)
 exports.list = asyncHandler(async (req, res) => {
@@ -15,6 +16,12 @@ exports.list = asyncHandler(async (req, res) => {
   if (req.query.status && req.role === 'admin') filter.status = req.query.status;
   if (req.query.category) filter.category = req.query.category;
   if (req.query.location) filter.location = new RegExp(req.query.location.trim(), 'i');
+  if (req.query.listingType === 'sale' || req.query.listingType === 'lease') filter.listingType = req.query.listingType;
+  if (['mare', 'stallion', 'gelding'].includes(req.query.gender)) filter.gender = req.query.gender;
+  const minAge = Number(req.query.minAge);
+  const maxAge = Number(req.query.maxAge);
+  if (req.query.minAge !== undefined && !Number.isNaN(minAge)) filter.age = { ...filter.age, $gte: minAge };
+  if (req.query.maxAge !== undefined && !Number.isNaN(maxAge)) filter.age = { ...filter.age, $lte: maxAge };
 
   const horses = await Horse.find(filter)
     .populate('seller', 'name businessName phone')
@@ -31,7 +38,17 @@ exports.getById = asyncHandler(async (req, res) => {
   res.json({ horse });
 });
 
+// Sale listings need a price; lease listings need a lease rate.
+function listingError(data) {
+  const type = data.listingType || 'sale';
+  if (type === 'lease' && !(Number(data.leaseRate) > 0)) return 'Enter the lease rate';
+  if (type === 'sale' && !(Number(data.price) > 0)) return 'Enter a valid sale price';
+  return null;
+}
+
 exports.create = asyncHandler(async (req, res) => {
+  const error = listingError(req.body);
+  if (error) return res.status(400).json({ message: error });
   const horse = await Horse.create({ ...req.body, seller: req.user._id, status: 'pending' });
   res.status(201).json({ horse });
 });
@@ -42,6 +59,8 @@ exports.update = asyncHandler(async (req, res) => {
   if (req.role === 'horse-seller' && String(horse.seller) !== String(req.user._id)) {
     return res.status(403).json({ message: 'Not your listing' });
   }
+  const error = listingError({ ...horse.toObject(), ...req.body });
+  if (error) return res.status(400).json({ message: error });
   Object.assign(horse, req.body);
   await horse.save();
   res.json({ horse });
@@ -80,7 +99,7 @@ exports.listInquiries = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.role === 'horse-seller') filter.seller = req.user._id;
   const inquiries = await Inquiry.find(filter)
-    .populate('horse', 'breed price')
+    .populate('horse', 'breed name price photos')
     .populate('buyer', 'name phone')
     .sort({ createdAt: -1 });
   res.json({ inquiries });
@@ -94,7 +113,19 @@ exports.createInquiry = asyncHandler(async (req, res) => {
     buyer: req.user._id,
     seller: horse.seller,
     message: req.body.message,
+    messages: [{ sender: 'user', text: String(req.body.message || '').trim() }],
   });
+
+  const io = req.app.get('io');
+  if (io) io.to(`horse-seller:${horse.seller}`).emit('inquiry:new', { inquiryId: String(inquiry._id) });
+  pushService
+    .sendPushToAccount('horse-seller', horse.seller, {
+      title: 'New enquiry about your horse',
+      body: `A buyer is interested in ${horse.name || horse.breed}`,
+      data: { type: 'inquiry:new', inquiryId: String(inquiry._id) },
+    })
+    .catch(() => {});
+
   res.status(201).json({ inquiry });
 });
 

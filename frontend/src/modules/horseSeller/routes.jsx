@@ -3,10 +3,10 @@ import Dashboard from "./pages/Dashboard"
 import Categories from "./pages/Categories"
 import Listings from "./pages/Listings"
 import AddHorse from "./pages/AddHorse"
+import Inquiries from "./pages/Inquiries"
 import PlaceholderPage from "@/shared/components/PlaceholderPage"
 
 const placeholderRoutes = [
-  ["inquiries", "Inquiries"],
   ["orders", "Orders"],
   ["payments", "Payments"],
   ["reviews", "Reviews"],
@@ -19,6 +19,7 @@ export const horseSellerRoutes = (
     <Route path="categories" element={<Categories />} />
     <Route path="listings" element={<Listings />} />
     <Route path="add" element={<AddHorse />} />
+    <Route path="inquiries" element={<Inquiries />} />
     {placeholderRoutes.map(([path, title]) => (
       <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
     ))}

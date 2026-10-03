@@ -11,16 +11,42 @@ import {
 import { apiFetch, apiUpload } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 
+const SCOPE_OPTIONS = [
+  { value: "riding", label: "Riding" },
+  { value: "racing", label: "Racing" },
+  { value: "breeding", label: "Breeding" },
+  { value: "showing", label: "Showing" },
+  { value: "pleasure", label: "Pleasure" },
+  { value: "trekking", label: "Trekking" },
+  { value: "therapy", label: "Therapy" },
+  { value: "draught", label: "Draught" },
+]
+
+const TRAINING_OPTIONS = ["unbroken", "green", "basic", "intermediate", "advanced", "trained"]
+
 const defaultForm = {
   category: "",
+  listingType: "sale",
+  name: "",
   breed: "",
   age: "",
   gender: "",
   color: "",
   height: "",
+  discipline: "",
+  scopeOfWork: [],
+  trainingLevel: "",
+  vaccinationStatus: "unknown",
+  healthNotes: "",
+  registry: "",
+  registrationNumber: "",
   location: "",
   price: "",
+  leaseRate: "",
+  leasePeriod: "month",
+  priceNegotiable: false,
   description: "",
+  videos: [],
 }
 
 export default function AddHorse() {
@@ -49,6 +75,17 @@ export default function AddHorse() {
         const h = data.horse
         setForm({
           category: h.category?._id || h.category || "",
+          listingType: h.listingType || "sale",
+          name: h.name || "",
+          discipline: h.discipline || "",
+          scopeOfWork: h.scopeOfWork || [],
+          trainingLevel: h.trainingLevel || "",
+          vaccinationStatus: h.health?.vaccinationStatus || "unknown",
+          healthNotes: h.health?.notes || "",
+          registry: h.registration?.registry || "",
+          registrationNumber: h.registration?.number || "",
+          priceNegotiable: Boolean(h.priceNegotiable),
+          videos: h.videos || [],
           breed: h.breed || "",
           age: h.age ?? "",
           gender: h.gender || "",
@@ -56,6 +93,8 @@ export default function AddHorse() {
           height: h.height ?? "",
           location: h.location || "",
           price: h.price ?? "",
+          leaseRate: h.leaseRate ?? "",
+          leasePeriod: h.leasePeriod || "month",
           description: h.description || "",
         })
         setPhotos((h.photos || []).map((url) => ({ url })))
@@ -103,21 +142,36 @@ export default function AddHorse() {
 
     if (!form.category) return setError("Select a category")
     if (!form.breed.trim()) return setError("Breed is required")
-    if (!form.price || Number(form.price) <= 0) return setError("Enter a valid price")
+    if (form.listingType === "lease") {
+      if (!form.leaseRate || Number(form.leaseRate) <= 0) return setError("Enter the lease rate")
+    } else if (!form.price || Number(form.price) <= 0) {
+      return setError("Enter a valid sale price")
+    }
 
     setSaving(true)
     try {
       const payload = {
         category: form.category,
+        listingType: form.listingType,
         breed: form.breed.trim(),
         age: form.age ? Number(form.age) : undefined,
         gender: form.gender || undefined,
         color: form.color.trim() || undefined,
         height: form.height ? Number(form.height) : undefined,
         location: form.location.trim() || undefined,
-        price: Number(form.price),
+        name: form.name.trim() || undefined,
+        discipline: form.discipline.trim() || undefined,
+        scopeOfWork: form.scopeOfWork,
+        trainingLevel: form.trainingLevel || undefined,
+        health: { vaccinationStatus: form.vaccinationStatus, notes: form.healthNotes.trim() },
+        registration: { registry: form.registry.trim(), number: form.registrationNumber.trim() },
+        ...(form.listingType === "lease"
+          ? { leaseRate: Number(form.leaseRate), leasePeriod: form.leasePeriod }
+          : { price: Number(form.price) }),
+        priceNegotiable: form.priceNegotiable,
         description: form.description.trim() || undefined,
         photos: photos.filter((p) => p.url).map((p) => p.url),
+        videos: form.videos.map((v) => v.trim()).filter(Boolean),
       }
 
       if (editId) {
@@ -183,6 +237,11 @@ export default function AddHorse() {
               </div>
 
               <div>
+                <Label htmlFor="name">Horse name</Label>
+                <Input id="name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} placeholder="e.g. Raja" className="mt-1.5" />
+              </div>
+
+              <div>
                 <Label htmlFor="breed">Breed *</Label>
                 <Input
                   id="breed"
@@ -193,18 +252,49 @@ export default function AddHorse() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="price">Price (INR) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  value={form.price}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                  placeholder="e.g. 150000"
-                  className="mt-1.5"
-                />
-              </div>
+              {form.listingType === "lease" ? (
+                <>
+                  <div>
+                    <Label htmlFor="leaseRate">Lease rate (INR) *</Label>
+                    <Input
+                      id="leaseRate"
+                      type="number"
+                      min="0"
+                      value={form.leaseRate}
+                      onChange={(e) => handleChange("leaseRate", e.target.value)}
+                      placeholder="e.g. 15000"
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label>Lease period</Label>
+                    <Select value={form.leasePeriod} onValueChange={(v) => handleChange("leasePeriod", v)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="day">Per day</SelectItem>
+                        <SelectItem value="week">Per week</SelectItem>
+                        <SelectItem value="month">Per month</SelectItem>
+                        <SelectItem value="year">Per year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label htmlFor="price">Sale price (INR) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    value={form.price}
+                    onChange={(e) => handleChange("price", e.target.value)}
+                    placeholder="e.g. 150000"
+                    className="mt-1.5"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="age">Age (years)</Label>
@@ -216,6 +306,19 @@ export default function AddHorse() {
                   onChange={(e) => handleChange("age", e.target.value)}
                   className="mt-1.5"
                 />
+              </div>
+
+              <div>
+                <Label>Listing type</Label>
+                <Select value={form.listingType} onValueChange={(v) => handleChange("listingType", v)}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sale">For sale</SelectItem>
+                    <SelectItem value="lease">For lease</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -278,6 +381,94 @@ export default function AddHorse() {
                   className="mt-1.5 w-full"
                 />
               </div>
+
+              <div>
+                <Label htmlFor="discipline">Discipline</Label>
+                <Input id="discipline" value={form.discipline} onChange={(e) => handleChange("discipline", e.target.value)} placeholder="e.g. Dressage, Endurance" className="mt-1.5" />
+              </div>
+
+              <div>
+                <Label>Training level</Label>
+                <Select value={form.trainingLevel} onValueChange={(v) => handleChange("trainingLevel", v)}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRAINING_OPTIONS.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label>Scope of work</Label>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {SCOPE_OPTIONS.map((opt) => {
+                    const on = form.scopeOfWork.includes(opt.value)
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          handleChange("scopeOfWork", on ? form.scopeOfWork.filter((v) => v !== opt.value) : [...form.scopeOfWork, opt.value])
+                        }
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${on ? "border-primary bg-primary text-white" : "border-neutral-300 bg-white text-neutral-700"}`}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <Label>Vaccination status</Label>
+                <Select value={form.vaccinationStatus} onValueChange={(v) => handleChange("vaccinationStatus", v)}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="complete">Complete</SelectItem>
+                    <SelectItem value="partial">Partial</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="unknown">Not known</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="healthNotes">Health notes</Label>
+                <Input id="healthNotes" value={form.healthNotes} onChange={(e) => handleChange("healthNotes", e.target.value)} placeholder="Deworming, past illness, vet checks" className="mt-1.5" />
+              </div>
+
+              <div>
+                <Label htmlFor="registry">Registry / society</Label>
+                <Input id="registry" value={form.registry} onChange={(e) => handleChange("registry", e.target.value)} placeholder="e.g. Marwari Horse Society" className="mt-1.5" />
+              </div>
+
+              <div>
+                <Label htmlFor="registrationNumber">Registration number</Label>
+                <Input id="registrationNumber" value={form.registrationNumber} onChange={(e) => handleChange("registrationNumber", e.target.value)} className="mt-1.5" />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label>Videos (links)</Label>
+                <div className="mt-1.5 space-y-2">
+                  {form.videos.map((url, i) => (
+                    <div key={i} className="flex gap-2">
+                      <Input value={url} onChange={(e) => handleChange("videos", form.videos.map((v, j) => (j === i ? e.target.value : v)))} placeholder="https://youtube.com/..." />
+                      <Button type="button" variant="outline" onClick={() => handleChange("videos", form.videos.filter((_, j) => j !== i))}>Remove</Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" onClick={() => handleChange("videos", [...form.videos, ""])}>Add video link</Button>
+                </div>
+              </div>
+
+              <label className="md:col-span-2 flex items-center gap-2 text-sm font-semibold text-neutral-700">
+                <input type="checkbox" checked={form.priceNegotiable} onChange={(e) => handleChange("priceNegotiable", e.target.checked)} className="h-4 w-4 accent-amber-600" />
+                Price is negotiable
+              </label>
 
               <div className="md:col-span-2">
                 <Label>Photos</Label>

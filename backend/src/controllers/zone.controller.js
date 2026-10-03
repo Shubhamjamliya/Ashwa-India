@@ -85,3 +85,16 @@ exports.checkPoint = asyncHandler(async (req, res) => {
 
   res.json({ inZone: Boolean(zone), zone: zone ? { id: zone._id, name: zone.name } : null });
 });
+
+// GET /api/zones/active — public, names only (no polygons). Providers pick their service area from these.
+exports.listActivePublic = asyncHandler(async (req, res) => {
+  const zones = await Zone.find({ isActive: true }).select('name serviceLocation').sort({ name: 1 });
+  res.json({ zones: zones.map((z) => ({ id: z._id, name: z.name, serviceLocation: z.serviceLocation })) });
+});
+
+// Zones that contain a point — used to decide which providers serve a user's location.
+exports.zonesContaining = async (lat, lng) =>
+  Zone.find({
+    isActive: true,
+    polygon: { $geoIntersects: { $geometry: { type: 'Point', coordinates: [lng, lat] } } },
+  }).select('_id');
