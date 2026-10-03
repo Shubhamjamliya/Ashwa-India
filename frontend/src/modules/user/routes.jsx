@@ -9,6 +9,7 @@ import Checkout from "./pages/Checkout"
 import Orders from "./pages/Orders"
 import Profile from "./pages/Profile"
 import Bookings from "./pages/Bookings"
+import Events from "./pages/Events"
 import Transport from "./pages/Transport"
 import TransportResults from "./pages/TransportResults"
 import EditProfile from "./pages/EditProfile"
@@ -34,6 +35,7 @@ export const userRoutes = (
     <Route path="transport" element={<Transport />} />
     <Route path="transport/results" element={<TransportResults />} />
     <Route path="bookings" element={<Bookings />} />
+    <Route path="events" element={<Events />} />
     <Route path="orders" element={<Orders />} />
     <Route path="profile" element={<Profile />} />
     <Route path="profile/edit" element={<EditProfile />} />

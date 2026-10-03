@@ -23,6 +23,7 @@ const adminMenu = [
     label: "Manage User App",
     items: [
       { type: "link", label: "Banners", icon: "Image", path: "/admin/user-app/banners" },
+      { type: "link", label: "Explore", icon: "Compass", path: "/admin/user-app/explore" },
     ],
   },
   {
@@ -69,6 +70,13 @@ const adminMenu = [
       { type: "link", label: "Shared Rides", icon: "Route", path: "/admin/transport/shared" },
       { type: "link", label: "Live Tracking", icon: "MapPin", path: "/admin/transport/tracking" },
       { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/transporter" },
+    ],
+  },
+  {
+    type: "section",
+    label: "Events",
+    items: [
+      { type: "link", label: "Events", icon: "CalendarDays", path: "/admin/events" },
     ],
   },
   {

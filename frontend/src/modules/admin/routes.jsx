@@ -12,10 +12,12 @@ import StoreOrders from "./pages/store/Orders"
 import StoreCategories from "./pages/store/Categories"
 import UsersList from "./pages/users/List"
 import Banners from "./pages/userApp/Banners"
+import Explore from "./pages/userApp/Explore"
 import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
 import TransportRequests from "./pages/transport/Requests"
 import RolePage from "./pages/commission/RolePage"
+import Events from "./pages/events/Events"
 
 import BusinessSetup from "./pages/system/BusinessSetup"
 import ZoneSetup from "./pages/system/zones/ZoneSetup"
@@ -52,12 +54,14 @@ export const adminRoutes = (
     <Route index element={<Dashboard />} />
 
     <Route path="user-app/banners" element={<Banners />} />
+    <Route path="user-app/explore" element={<Explore />} />
     <Route path="users" element={<UsersList />} />
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
     <Route path="transport/requests" element={<TransportRequests />} />
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
+    <Route path="events" element={<Events />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
     <Route path="horses/listings" element={<HorseListings />} />
     <Route path="horses/categories" element={<HorseCategories />} />

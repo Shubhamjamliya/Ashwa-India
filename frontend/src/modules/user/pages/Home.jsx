@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Bell, ChevronDown, ChevronRight, Heart, MapPin, Search, ShoppingBag, ShoppingCart, Users } from "lucide-react"
+import { Bell, CalendarDays, ChevronDown, ChevronRight, Heart, MapPin, Search, ShoppingBag, ShoppingCart, Users } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 import { useLocationContext } from "../context/LocationContext"
 
+// Tile order, colours and destinations are fixed in the app; images and labels come from the admin Explore section.
 const quickActions = [
   { key: "horses", label: "Horse\nMarketplace", image: "/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
   { key: "providers", label: "Service\nProviders", image: "/user/service-providers.png", bg: "#E1ECFC", path: null },
   { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
   { key: "store", label: "Accessories\nStore", image: "/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
+  { key: "events", label: "Horse\nEvents", image: null, bg: "#FDE7E7", path: "/user/events" },
 ]
 
 function HeroSection({ horsesCount, cartCount, wishlistCount }) {
@@ -141,6 +143,18 @@ function BannerCarousel({ banners }) {
 
 function QuickActionsList() {
   const navigate = useNavigate()
+  const [adminTiles, setAdminTiles] = useState({})
+
+  useEffect(() => {
+    apiFetch("/explore", { auth: false })
+      .then((data) => {
+        const byKey = {}
+        for (const item of data.items || []) byKey[item.key] = item
+        setAdminTiles(byKey)
+      })
+      .catch(() => setAdminTiles({}))
+  }, [])
+
   return (
     <div className="mt-2">
       <div className="mb-2 flex items-center justify-between px-4">
@@ -150,20 +164,30 @@ function QuickActionsList() {
         </div>
         <span className="text-xs font-bold text-[#C28D2E]">View All →</span>
       </div>
-      <div className="flex justify-between px-4">
-        {quickActions.map((action) => (
-          <button
-            key={action.key}
-            disabled={!action.path}
-            onClick={() => action.path && navigate(action.path)}
-            className="flex w-[23%] flex-col items-center disabled:opacity-60"
-          >
-            <div className="flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full" style={{ backgroundColor: action.bg }}>
-              <img src={action.image} alt={action.label} className="h-full w-full object-cover" />
-            </div>
-            <span className="mt-1 whitespace-pre-line text-center text-xs font-semibold leading-[15px] text-[#0F2238]">{action.label}</span>
-          </button>
-        ))}
+      <div className="grid grid-cols-5 gap-1 px-3">
+        {quickActions.map((fallback) => {
+          const tile = adminTiles[fallback.key]
+          if (tile && !tile.active) return null
+          const image = tile?.image ? getMediaUrl(tile.image) : fallback.image
+          const label = tile?.label ? tile.label.replace(/ /, "\n") : fallback.label
+          return (
+            <button
+              key={fallback.key}
+              disabled={!fallback.path}
+              onClick={() => fallback.path && navigate(fallback.path)}
+              className="flex min-w-0 flex-col items-center disabled:opacity-60"
+            >
+              <div className="flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full" style={{ backgroundColor: fallback.bg }}>
+                {image ? (
+                  <img src={image} alt={label.replace("\n", " ")} className="h-full w-full object-cover" />
+                ) : (
+                  <CalendarDays className="h-6 w-6 text-[#B5474A]" />
+                )}
+              </div>
+              <span className="mt-1 whitespace-pre-line text-center text-xs font-semibold leading-[15px] text-[#0F2238]">{label}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
