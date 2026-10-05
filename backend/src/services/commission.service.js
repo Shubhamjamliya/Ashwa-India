@@ -1,7 +1,7 @@
 const CommissionRule = require('../models/CommissionRule');
 const paymentService = require('./payment.service');
 
-const ROLES = ['transporter', 'provider'];
+const ROLES = ['transporter', 'provider', 'store-seller'];
 
 async function getRule(role) {
   return CommissionRule.findOneAndUpdate({ role }, { $setOnInsert: { role } }, { upsert: true, new: true });

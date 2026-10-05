@@ -9,6 +9,7 @@ import HorseCategories from "./pages/horses/Categories"
 import StoreSellers from "./pages/store/Sellers"
 import StoreProducts from "./pages/store/Products"
 import StoreOrders from "./pages/store/Orders"
+import CouponsPayments from "./pages/store/CouponsPayments"
 import StoreCategories from "./pages/store/Categories"
 import UsersList from "./pages/users/List"
 import Banners from "./pages/userApp/Banners"
@@ -62,6 +63,7 @@ export const adminRoutes = (
     <Route path="transport/requests" element={<TransportRequests />} />
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
+    <Route path="commission/store" element={<RolePage role="store-seller" />} />
     <Route path="events" element={<Events />} />
     <Route path="services" element={<ServiceCatalog />} />
     <Route path="horses/sellers" element={<HorseSellers />} />
@@ -71,6 +73,7 @@ export const adminRoutes = (
     <Route path="store/sellers" element={<StoreSellers />} />
     <Route path="store/products" element={<StoreProducts />} />
     <Route path="store/orders" element={<StoreOrders />} />
+    <Route path="store/coupons" element={<CouponsPayments />} />
 
     {/* System Settings */}
     <Route path="system/broadcast-notification" element={<NotificationBroadcast />} />

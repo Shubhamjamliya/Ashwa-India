@@ -1,5 +1,6 @@
 const Review = require('../models/Review');
 const Product = require('../models/Product');
+const Order = require('../models/Order');
 const asyncHandler = require('../utils/asyncHandler');
 
 // GET /api/store/reviews?productId=  (public)
@@ -37,6 +38,10 @@ exports.create = asyncHandler(async (req, res) => {
   const product = await Product.findById(productId);
   if (!product) return res.status(404).json({ message: 'Product not found' });
 
+  // Only people who received the product can review it.
+  const bought = await Order.exists({ buyer: req.user._id, status: 'delivered', 'items.product': product._id });
+  if (!bought) return res.status(403).json({ message: 'You can review a product after it is delivered to you' });
+
   try {
     const review = await Review.create({
       product: product._id,
@@ -45,6 +50,16 @@ exports.create = asyncHandler(async (req, res) => {
       rating: numericRating,
       comment,
     });
+
+    const [agg] = await Review.aggregate([
+      { $match: { product: product._id } },
+      { $group: { _id: null, average: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ]);
+    await Product.updateOne(
+      { _id: product._id },
+      { ratingAverage: Math.round((agg?.average || 0) * 10) / 10, ratingCount: agg?.count || 0 }
+    );
+
     res.status(201).json({ review });
   } catch (err) {
     if (err.code === 11000) {

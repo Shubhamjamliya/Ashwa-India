@@ -1,10 +1,18 @@
 const CommissionRule = require('../models/CommissionRule');
 const TransportRequest = require('../models/TransportRequest');
 const ServiceRequest = require('../models/ServiceRequest');
+const Order = require('../models/Order');
 const asyncHandler = require('../utils/asyncHandler');
 const commissionService = require('../services/commission.service');
 
-const PARTY_FIELDS = { transporter: 'name businessName phone', provider: 'name businessName phone' };
+const PARTY_FIELDS = 'name businessName phone';
+
+// Each partner type's bookings live in one collection, and each has its own field for the partner.
+const SOURCES = {
+  transporter: { Model: TransportRequest, field: 'transporter', match: { paymentStatus: 'settled' } },
+  provider: { Model: ServiceRequest, field: 'provider', match: { paymentStatus: 'settled' } },
+  'store-seller': { Model: Order, field: 'seller', match: { 'settlement.settledAt': { $exists: true } } },
+};
 
 function totalsOf(docs) {
   return docs.reduce(
@@ -20,17 +28,23 @@ function totalsOf(docs) {
 }
 
 function rowFor(doc, role) {
-  const party = role === 'transporter' ? doc.transporter : doc.provider;
+  const party = doc[SOURCES[role].field];
+  const kind = role === 'transporter' ? 'Transport' : role === 'provider' ? doc.serviceType : 'Store order';
   return {
     id: doc._id,
     role,
-    kind: role === 'transporter' ? 'Transport' : doc.serviceType,
+    kind,
     party: party ? party.businessName || party.name || party.phone : '—',
     gross: doc.settlement.grossAmount,
     commission: doc.settlement.commission,
     net: doc.settlement.netAmount,
     settledAt: doc.settlement.settledAt,
   };
+}
+
+async function settledDocs(role) {
+  const { Model, field, match } = SOURCES[role];
+  return Model.find(match).populate(field, PARTY_FIELDS);
 }
 
 // GET /api/commissions/rules  (admin)
@@ -70,35 +84,36 @@ exports.updateRule = asyncHandler(async (req, res) => {
 
 // GET /api/commissions/summary  (admin)
 exports.adminSummary = asyncHandler(async (req, res) => {
-  const [transportDocs, serviceDocs] = await Promise.all([
-    TransportRequest.find({ paymentStatus: 'settled' }).populate('transporter', PARTY_FIELDS.transporter),
-    ServiceRequest.find({ paymentStatus: 'settled' }).populate('provider', PARTY_FIELDS.provider),
-  ]);
+  const docsByRole = {};
+  for (const role of Object.keys(SOURCES)) {
+    docsByRole[role] = (await settledDocs(role)).map((d) => ({ doc: d, role }));
+  }
 
-  const recent = [
-    ...transportDocs.map((d) => rowFor(d, 'transporter')),
-    ...serviceDocs.map((d) => rowFor(d, 'provider')),
-  ]
+  const everything = Object.entries(docsByRole).flatMap(([role, rows]) => rows.map((r) => ({ ...r, row: rowFor(r.doc, role) })));
+  const recent = everything
+    .map((r) => r.row)
     .sort((a, b) => new Date(b.settledAt) - new Date(a.settledAt))
     .slice(0, 50);
 
+  const perRole = (role) => ({ ...totalsOf(docsByRole[role].map((r) => r.doc)), recent: docsByRole[role].map((r) => rowFor(r.doc, role)).sort((a, b) => new Date(b.settledAt) - new Date(a.settledAt)).slice(0, 100) });
+
   res.json({
-    transporter: totalsOf(transportDocs),
-    provider: totalsOf(serviceDocs),
-    total: totalsOf([...transportDocs, ...serviceDocs]),
+    transporter: perRole('transporter'),
+    provider: perRole('provider'),
+    'store-seller': perRole('store-seller'),
+    total: totalsOf(everything.map((r) => r.doc)),
     recent,
   });
 });
 
-// GET /api/commissions/me  (transporter | provider)
+// GET /api/commissions/me  (transporter | provider | store-seller)
 exports.myEarnings = asyncHandler(async (req, res) => {
   const role = req.role;
+  const { Model, field, match } = SOURCES[role];
   const rule = await commissionService.getRule(role);
-  const Model = role === 'transporter' ? TransportRequest : ServiceRequest;
-  const field = role === 'transporter' ? 'transporter' : 'provider';
 
-  const docs = await Model.find({ [field]: req.user._id, paymentStatus: 'settled' })
-    .populate(field, PARTY_FIELDS[role])
+  const docs = await Model.find({ ...match, [field]: req.user._id })
+    .populate(field, PARTY_FIELDS)
     .sort({ 'settlement.settledAt': -1 })
     .limit(200);
 

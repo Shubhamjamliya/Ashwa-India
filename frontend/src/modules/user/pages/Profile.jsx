@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   User as UserIcon,
   MessageSquare,
+  Wallet,
 } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import { useWishlist } from "../context/WishlistContext"
@@ -66,6 +67,15 @@ export default function Profile() {
       iconBg: "#E1ECFC",
       iconColor: "#2563EB",
       onPress: () => navigate("/user/addresses"),
+    },
+    {
+      key: "wallet",
+      label: "Wallet",
+      sublabel: "Balance, add money and payments",
+      icon: Wallet,
+      iconBg: "#FBEFD6",
+      iconColor: "#C28D2E",
+      onPress: () => navigate("/user/wallet"),
     },
     {
       key: "enquiries",

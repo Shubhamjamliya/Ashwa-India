@@ -8,7 +8,7 @@ import { getMediaUrl } from "@/shared/lib/media"
 const INR = "₹"
 const fmt = (n) => `${INR}${Number(n || 0).toLocaleString("en-IN")}`
 
-const defaultFormData = { name: "", category: "", price: "", stock: "", description: "", image: "", status: "draft" }
+const defaultFormData = { name: "", category: "", price: "", stock: "", variants: [], description: "", image: "", status: "draft" }
 
 const tabs = [
   { key: "", label: "All" },
@@ -92,6 +92,7 @@ export default function SellerStoreProducts() {
       category: product.category?._id || product.category || "",
       price: String(product.price ?? ""),
       stock: String(product.stock ?? ""),
+      variants: (product.variants || []).map((v) => ({ label: v.label, price: v.price != null ? String(v.price) : "", stock: String(v.stock ?? 0) })),
       description: product.description || "",
       image: product.photos?.[0] || "",
       status: product.status || "draft",
@@ -160,6 +161,9 @@ export default function SellerStoreProducts() {
         category: formData.category,
         price: Number(formData.price),
         stock: Number(formData.stock) || 0,
+        variants: formData.variants
+          .filter((v) => v.label.trim())
+          .map((v) => ({ label: v.label.trim(), price: v.price !== "" ? Number(v.price) : undefined, stock: Number(v.stock) || 0 })),
         description: formData.description.trim(),
         photos: imageUrl ? [imageUrl] : [],
         status: formData.status,
@@ -379,6 +383,55 @@ export default function SellerStoreProducts() {
                               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-neutral-900"
                             />
                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <label className="block text-sm font-medium text-neutral-700">Options (size, colour...)</label>
+                              <p className="text-xs text-neutral-500">Add options if buyers choose between versions. Each option has its own stock.</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFormData((prev) => ({ ...prev, variants: [...prev.variants, { label: "", price: "", stock: "" }] }))}
+                              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700"
+                            >
+                              Add option
+                            </button>
+                          </div>
+                          {formData.variants.map((v, i) => (
+                            <div key={i} className="grid grid-cols-[1fr_110px_90px_auto] gap-2">
+                              <input
+                                value={v.label}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, variants: prev.variants.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) }))}
+                                placeholder="e.g. Size M / Red"
+                                className="rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                value={v.price}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, variants: prev.variants.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) }))}
+                                placeholder="Price"
+                                className="rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                value={v.stock}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, variants: prev.variants.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)) }))}
+                                placeholder="Stock"
+                                className="rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setFormData((prev) => ({ ...prev, variants: prev.variants.filter((_, j) => j !== i) }))}
+                                className="rounded-xl px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
                         </div>
 
                         <div>

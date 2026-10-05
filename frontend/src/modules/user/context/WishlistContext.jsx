@@ -3,18 +3,23 @@ import { apiFetch } from "@/shared/lib/api"
 
 const WishlistContext = createContext(null)
 
-// Saved horses live on the account, so they follow the user across devices.
+// Saved horses and saved products live on the account, so they follow the user across devices.
 // Toggles update the screen straight away and roll back if the server rejects them.
 export function WishlistProvider({ children }) {
   const [horses, setHorses] = useState([])
+  const [products, setProducts] = useState([])
 
   useEffect(() => {
     apiFetch("/marketplace/favourites")
       .then((data) => setHorses(data.horses || []))
       .catch(() => setHorses([]))
+    apiFetch("/store/favourites")
+      .then((data) => setProducts(data.products || []))
+      .catch(() => setProducts([]))
   }, [])
 
   const isSaved = (horseId) => horses.some((h) => h._id === horseId)
+  const isSavedProduct = (productId) => products.some((p) => p._id === productId)
 
   const toggle = async (horse) => {
     const wasSaved = isSaved(horse._id)
@@ -26,7 +31,21 @@ export function WishlistProvider({ children }) {
     }
   }
 
-  return <WishlistContext.Provider value={{ horses, isSaved, toggle }}>{children}</WishlistContext.Provider>
+  const toggleProduct = async (product) => {
+    const wasSaved = isSavedProduct(product._id)
+    setProducts((prev) => (wasSaved ? prev.filter((p) => p._id !== product._id) : [...prev, product]))
+    try {
+      await apiFetch(`/store/favourites/${product._id}/toggle`, { method: "POST" })
+    } catch {
+      setProducts((prev) => (wasSaved ? [...prev, product] : prev.filter((p) => p._id !== product._id)))
+    }
+  }
+
+  return (
+    <WishlistContext.Provider value={{ horses, products, isSaved, toggle, isSavedProduct, toggleProduct }}>
+      {children}
+    </WishlistContext.Provider>
+  )
 }
 
 export function useWishlist() {

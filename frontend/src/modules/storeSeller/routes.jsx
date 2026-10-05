@@ -6,6 +6,7 @@ import Orders from "./pages/Orders"
 import Profile from "./pages/Profile"
 import Reviews from "./pages/Reviews"
 import Payments from "./pages/Payments"
+import Earnings from "./pages/Earnings"
 import PlaceholderPage from "@/shared/components/PlaceholderPage"
 
 const placeholderRoutes = [
@@ -20,6 +21,7 @@ export const storeSellerRoutes = (
     <Route path="products" element={<Products />} />
     <Route path="orders" element={<Orders />} />
     <Route path="payments" element={<Payments />} />
+    <Route path="earnings" element={<Earnings />} />
     <Route path="reviews" element={<Reviews />} />
     <Route path="profile" element={<Profile />} />
     {placeholderRoutes.map(([path, title]) => (

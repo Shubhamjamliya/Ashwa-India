@@ -116,3 +116,11 @@ export async function apiUpload(path, { method = "PUT", formData, auth = true } 
     auth
   )
 }
+
+// Downloads a file (such as an invoice) with the signed-in role's token. Returns a Blob.
+export async function apiBlob(path, { auth = true } = {}) {
+  const token = auth ? getSession(currentRole()).accessToken : null
+  const res = await fetch(`${BASE_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  if (!res.ok) throw new Error("Could not download the file")
+  return res.blob()
+}

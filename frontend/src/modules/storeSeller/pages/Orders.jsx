@@ -109,9 +109,19 @@ export default function SellerStoreOrders() {
   const closePanel = () => setSelectedOrder(null)
 
   const updateStatus = async (order, status) => {
+    const body = { status }
+    if (status === "shipped") {
+      // Shoppers follow their parcel with these details.
+      const courierName = window.prompt("Courier name (e.g. Delhivery, DTDC)", order.courier?.name || "")
+      if (courierName === null) return
+      const trackingNumber = window.prompt("Tracking number", order.courier?.trackingNumber || "")
+      if (trackingNumber === null) return
+      body.courierName = courierName.trim()
+      body.trackingNumber = trackingNumber.trim()
+    }
     setActingId(order._id)
     try {
-      const res = await apiFetch(`/store/orders/${order._id}/status`, { method: "PATCH", body: { status } })
+      const res = await apiFetch(`/store/orders/${order._id}/status`, { method: "PATCH", body })
       setOrders((prev) => prev.map((o) => (o._id === order._id ? res.order : o)))
       setSelectedOrder((prev) => (prev && prev._id === order._id ? res.order : prev))
     } catch (err) {

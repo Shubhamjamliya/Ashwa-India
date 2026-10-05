@@ -60,6 +60,8 @@ const adminMenu = [
       { type: "link", label: "Products", icon: "Package", path: "/admin/store/products" },
       { type: "link", label: "Store Sellers", icon: "Building2", path: "/admin/store/sellers" },
       { type: "link", label: "Orders", icon: "ShoppingBag", path: "/admin/store/orders" },
+      { type: "link", label: "Coupons & Payments", icon: "Ticket", path: "/admin/store/coupons" },
+      { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/store" },
     ],
   },
   {
@@ -179,6 +181,7 @@ const storeSellerMenu = [
       { type: "link", label: "Orders", icon: "ShoppingBag", path: "/seller/store/orders" },
       { type: "link", label: "Returns", icon: "FileText", path: "/seller/store/returns" },
       { type: "link", label: "Payments", icon: "CreditCard", path: "/seller/store/payments" },
+      { type: "link", label: "Earnings", icon: "Wallet", path: "/seller/store/earnings" },
     ],
   },
   {

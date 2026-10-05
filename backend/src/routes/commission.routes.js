@@ -7,6 +7,6 @@ router.get('/rules', protect, authorize('admin'), commissionController.listRules
 router.put('/rules/:role', protect, authorize('admin'), commissionController.updateRule);
 router.get('/summary', protect, authorize('admin'), commissionController.adminSummary);
 
-router.get('/me', protect, authorize('transporter', 'provider'), commissionController.myEarnings);
+router.get('/me', protect, authorize('transporter', 'provider', 'store-seller'), commissionController.myEarnings);
 
 module.exports = router;

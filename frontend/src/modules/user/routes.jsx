@@ -7,6 +7,8 @@ import ProductDetail from "./pages/ProductDetail"
 import Cart from "./pages/Cart"
 import Checkout from "./pages/Checkout"
 import Orders from "./pages/Orders"
+import Wallet from "./pages/Wallet"
+import OrderDetail from "./pages/OrderDetail"
 import Profile from "./pages/Profile"
 import Bookings from "./pages/Bookings"
 import Events from "./pages/Events"
@@ -45,6 +47,8 @@ export const userRoutes = (
     <Route path="services/:key" element={<ServiceProviders />} />
     <Route path="services/:key/providers/:id" element={<ProviderProfile />} />
     <Route path="orders" element={<Orders />} />
+    <Route path="wallet" element={<Wallet />} />
+    <Route path="orders/:id" element={<OrderDetail />} />
     <Route path="profile" element={<Profile />} />
     <Route path="profile/edit" element={<EditProfile />} />
     <Route path="addresses" element={<SavedAddresses />} />

@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     status: { type: String, enum: ['active', 'suspended', 'archived'], default: 'active' },
     fcmTokens: [{ type: String }],
     favouriteHorses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Horse' }],
+    favouriteProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   },
   { timestamps: true }
 );

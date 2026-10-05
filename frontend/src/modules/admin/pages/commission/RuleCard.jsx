@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Loader2, Save, Truck, Stethoscope } from "lucide-react"
+import { Loader2, Save, Truck, Stethoscope, ShoppingBag } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
@@ -7,6 +7,7 @@ const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
 export const ROLE_META = {
   transporter: { label: "Transporters", hint: "Applied to every completed transport booking.", icon: Truck },
   provider: { label: "Service Providers", hint: "Applied to every completed service booking.", icon: Stethoscope },
+  "store-seller": { label: "Accessories Sellers", hint: "Applied to every delivered accessories store order.", icon: ShoppingBag },
 }
 
 export default function RuleCard({ rule, onSaved }) {

@@ -18,6 +18,9 @@ const systemSettingsSchema = new mongoose.Schema(
       transporterLogo: { url: String, filename: String, publicId: String, provider: String }, // TransporterApp
       favicon: { url: String, filename: String, publicId: String, provider: String },
     },
+    payments: {
+      codEnabled: { type: Boolean, default: false },
+    },
     customization: {
       horseMarketplace: { type: Boolean, default: true },
       accessoriesStore: { type: Boolean, default: true },
