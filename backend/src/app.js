@@ -26,12 +26,9 @@ const cmsPageRoutes = require('./routes/cmsPage.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const brandingRoutes = require('./routes/branding.routes');
 const bannerRoutes = require('./routes/banner.routes');
-<<<<<<< HEAD
 const exploreRoutes = require('./routes/explore.routes');
 const eventRoutes = require('./routes/event.routes');
 const serviceCatalogRoutes = require('./routes/serviceCatalog.routes');
-=======
->>>>>>> 9b7361865f039f7f9c120afae6d02753b2c7e89d
 const paymentRoutes = require('./routes/payment.routes');
 const paymentController = require('./controllers/payment.controller');
 
