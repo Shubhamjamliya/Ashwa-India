@@ -10,6 +10,10 @@ import Orders from "./pages/Orders"
 import Wallet from "./pages/Wallet"
 import OrderDetail from "./pages/OrderDetail"
 import Profile from "./pages/Profile"
+import JobsBrowser from "@/shared/jobs/JobsBrowser"
+import JobDetail from "@/shared/jobs/JobDetail"
+import PostJob from "@/shared/jobs/PostJob"
+import ManageJob from "@/shared/jobs/ManageJob"
 import Bookings from "./pages/Bookings"
 import Events from "./pages/Events"
 import Services from "./pages/Services"
@@ -44,6 +48,10 @@ export const userRoutes = (
     <Route path="events" element={<Events />} />
     <Route path="inquiries" element={<Inquiries />} />
     <Route path="services" element={<Services />} />
+    <Route path="jobs" element={<JobsBrowser basePath="/user/jobs" />} />
+    <Route path="jobs/new" element={<PostJob basePath="/user/jobs" />} />
+    <Route path="jobs/:id" element={<JobDetail />} />
+    <Route path="jobs/:id/manage" element={<ManageJob />} />
     <Route path="services/:key" element={<ServiceProviders />} />
     <Route path="services/:key/providers/:id" element={<ProviderProfile />} />
     <Route path="orders" element={<Orders />} />

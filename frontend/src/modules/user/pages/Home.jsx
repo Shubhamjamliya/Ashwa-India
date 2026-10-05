@@ -14,6 +14,7 @@ const quickActions = [
   { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
   { key: "store", label: "Accessories\nStore", image: "/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
   { key: "events", label: "Horse\nEvents", image: null, bg: "#FDE7E7", path: "/user/events" },
+  { key: "jobs", label: "Horse\nJobs", image: null, bg: "#E8E6F9", path: "/user/jobs" },
 ]
 
 function HeroSection({ horsesCount, cartCount, wishlistCount }) {
@@ -164,7 +165,7 @@ function QuickActionsList() {
         </div>
         <span className="text-xs font-bold text-[#C28D2E]">View All →</span>
       </div>
-      <div className="grid grid-cols-5 gap-1 px-3">
+      <div className="flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {quickActions.map((fallback) => {
           const tile = adminTiles[fallback.key]
           if (tile && !tile.active) return null
@@ -175,7 +176,7 @@ function QuickActionsList() {
               key={fallback.key}
               disabled={!fallback.path}
               onClick={() => fallback.path && navigate(fallback.path)}
-              className="flex min-w-0 flex-col items-center disabled:opacity-60"
+              className="flex w-[72px] shrink-0 flex-col items-center disabled:opacity-60"
             >
               <div className="flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-full" style={{ backgroundColor: fallback.bg }}>
                 {image ? (

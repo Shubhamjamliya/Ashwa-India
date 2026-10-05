@@ -7,6 +7,7 @@ const DEFAULTS = [
   { key: 'transport', label: 'Horse Transport', order: 2 },
   { key: 'store', label: 'Accessories Store', order: 3 },
   { key: 'events', label: 'Events', order: 4 },
+  { key: 'jobs', label: 'Horse Jobs', order: 5 },
 ];
 
 const KEYS = DEFAULTS.map((d) => d.key);

@@ -79,6 +79,13 @@ const adminMenu = [
   },
   {
     type: "section",
+    label: "Jobs",
+    items: [
+      { type: "link", label: "Job Listings", icon: "Briefcase", path: "/admin/jobs/manage" },
+    ],
+  },
+  {
+    type: "section",
     label: "Events",
     items: [
       { type: "link", label: "Events", icon: "CalendarDays", path: "/admin/events" },

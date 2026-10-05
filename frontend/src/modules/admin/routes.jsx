@@ -20,6 +20,7 @@ import TransportRequests from "./pages/transport/Requests"
 import TransportWithdrawals from "./pages/transport/Withdrawals"
 import LiveTrips from "./pages/transport/LiveTrips"
 import TransportReports from "./pages/transport/Reports"
+import JobManagement from "./pages/jobs/JobManagement"
 import RolePage from "./pages/commission/RolePage"
 import Events from "./pages/events/Events"
 import ServiceCatalog from "./pages/services/ServiceCatalog"
@@ -66,6 +67,7 @@ export const adminRoutes = (
     <Route path="transport/tracking" element={<LiveTrips />} />
     <Route path="transport/withdrawals" element={<TransportWithdrawals />} />
     <Route path="transport/reports" element={<TransportReports />} />
+    <Route path="jobs/manage" element={<JobManagement />} />
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
     <Route path="commission/store" element={<RolePage role="store-seller" />} />

@@ -12,6 +12,7 @@ const TILE_HINTS = {
   transport: "Opens Horse Transport booking",
   store: "Opens the Accessories Store",
   events: "Opens the list of events you publish",
+  jobs: "Opens Horse Jobs for users and service providers",
 }
 
 function TileCard({ item, onSaved }) {

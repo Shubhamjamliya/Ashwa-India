@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
-import { Activity, Bell, CheckCircle2, Clock, Layers, MapPin, Phone, Stethoscope, Wallet as WalletIcon, XCircle } from "lucide-react"
+import { Activity, Bell, Briefcase, CheckCircle2, Clock, Layers, MapPin, Phone, Stethoscope, Wallet as WalletIcon, XCircle } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
 
@@ -269,6 +269,20 @@ export default function ServiceDashboard() {
           onClick={() => navigate("/service/bookings")}
         />
       </div>
+
+      <button
+        onClick={() => navigate("/service/jobs")}
+        className="mx-4 mt-4 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl border border-[#E4E1D8] bg-white p-4 text-left"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8E6F9]">
+          <Briefcase className="h-5 w-5 text-[#4B3FA6]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-[#0F2238]">Horse Jobs</span>
+          <span className="block text-[12px] text-neutral-500">Browse trainer, groom, rider and vet roles and apply</span>
+        </span>
+        <span className="text-xs font-bold text-[#C28D2E]">Open →</span>
+      </button>
 
       <div className="mt-6 flex items-center justify-between px-4">
         <h2 className="text-[15px] font-extrabold text-[#0F2238]">Active Bookings</h2>
