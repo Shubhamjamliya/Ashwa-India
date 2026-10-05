@@ -155,6 +155,7 @@ function TransportBookings() {
                   <span className="font-extrabold text-[#C28D2E]">{fmt(item.quote?.amount)}</span>
                 </div>
                 {active && <ActiveDetails req={item} />}
+                {item.status === "completed" && <RateTrip requestId={item._id} reviewed={item.reviewed} />}
               </div>
             )
           })}
@@ -269,6 +270,57 @@ export default function Bookings() {
   )
 }
 
+
+function RateTrip({ requestId, reviewed }) {
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [done, setDone] = useState(Boolean(reviewed))
+  const [error, setError] = useState("")
+
+  const submit = async () => {
+    setSaving(true)
+    setError("")
+    try {
+      await apiFetch(`/transport/requests/${requestId}/review`, { method: "POST", body: { rating, comment } })
+      setDone(true)
+    } catch (err) {
+      setError(err.message || "Could not save your review")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (done) return <p className="mt-3 text-center text-xs font-bold text-emerald-700">Thanks for rating this trip</p>
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-[#E4E1D8] pt-3">
+      <p className="text-xs font-bold text-[#0F2238]">How was the transport?</p>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`}>
+            <Star className={`h-6 w-6 ${n <= rating ? "fill-[#C28D2E] text-[#C28D2E]" : "text-neutral-300"}`} />
+          </button>
+        ))}
+      </div>
+      {rating > 0 && (
+        <>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={2}
+            placeholder="Share a few words (optional)"
+            className="w-full resize-none rounded-xl border border-[#E4E1D8] px-3 py-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <button onClick={submit} disabled={saving} className="w-full rounded-xl bg-[#0B1C33] py-2.5 text-sm font-bold text-white disabled:opacity-50">
+            {saving ? "Saving..." : "Submit rating"}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
 
 function RateService({ requestId }) {
   const [rating, setRating] = useState(0)

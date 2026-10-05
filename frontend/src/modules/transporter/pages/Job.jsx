@@ -4,6 +4,7 @@ import { CheckCircle2, Map as MapIcon, MapPin, Navigation, Phone, Route } from "
 import { apiFetch } from "@/shared/lib/api"
 import { directionsUrl, distanceKm, mapEmbedUrl } from "@/shared/lib/geo"
 import BackButton from "../components/BackButton"
+import TripControls from "../components/TripControls"
 
 const LOCATION_PUSH_MS = 20000
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
@@ -198,6 +199,29 @@ export default function Job() {
             </a>
           </div>
         </div>
+
+        {request.sharedRun && (
+          <div className="space-y-2 rounded-2xl border border-[#E4E1D8] bg-white p-4">
+            <p className="text-sm font-bold text-[#0F2238]">Shared run · {request.sharedRun.animalsTotal} animal(s) in total</p>
+            <p className="text-[11px] text-neutral-500">Stops run in booking order. Each drop-off waits for the earlier one.</p>
+            {request.sharedRun.stops.map((s) => (
+              <div key={String(s.requestId)} className={`rounded-xl border p-3 text-[12px] ${s.isThis ? "border-[#C28D2E] bg-[#FBEFD6]" : "border-[#E4E1D8]"}`}>
+                <p className="font-bold text-[#0F2238]">
+                  {s.position}. {s.animals} animal(s) {s.isThis && <span className="text-[#C28D2E]">· this booking</span>}
+                </p>
+                <p className="text-neutral-600">Pick up: {s.pickup.address}</p>
+                <p className="text-neutral-600">Drop: {s.drop.address}</p>
+                <p className="mt-1 text-[11px] font-semibold text-neutral-500">
+                  {s.delivered ? "Delivered" : s.picked ? "On board" : s.status === "accepted" ? "Waiting for pickup" : s.status}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {request.status === "accepted" && !finished && stage !== "delivered" && (
+          <TripControls request={request} onUpdated={() => load()} />
+        )}
 
         {request.status === "accepted" && stage === "scheduled" && (
           <button

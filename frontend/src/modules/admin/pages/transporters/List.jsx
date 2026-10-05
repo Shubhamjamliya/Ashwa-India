@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/compo
 import { Button } from "@/shared/components/ui/button"
 import { apiFetch } from "@/shared/lib/api"
 import { exportToCSV } from "@/shared/lib/csvExport"
+import OpsPanel from "./OpsPanel"
 
 const statusLabel = { pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended", archived: "Archived" }
 const statusBadgeClass = {
@@ -312,6 +313,8 @@ export default function TransportersList() {
                   </Button>
                 </div>
               )}
+
+              <OpsPanel transporter={selected} onChanged={load} />
             </div>
           )}
         </DialogContent>

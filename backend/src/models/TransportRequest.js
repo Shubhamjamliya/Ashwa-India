@@ -40,6 +40,11 @@ const transportRequestSchema = new mongoose.Schema(
     source: { type: pointSchema, required: true },
     destination: { type: pointSchema, required: true },
     type: { type: String, enum: ['private', 'shared'], default: 'private' },
+    // Shared bookings: how many animals this customer books, the day of the run,
+    // and the group they ride in. Private bookings keep the defaults.
+    animals: { type: Number, min: 1, default: 1 },
+    scheduledDate: { type: String }, // YYYY-MM-DD
+    sharedGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'SharedTrip', index: true },
     message: { type: String },
     quote: { type: quoteSchema, required: true },
     status: {
@@ -62,6 +67,13 @@ const transportRequestSchema = new mongoose.Schema(
     paymentStatus: { type: String, enum: ['unpaid', 'settled'], default: 'unpaid' },
     settlement: { type: settlementSchema },
     respondedAt: { type: Date },
+    // Trip logistics assigned by the transporter.
+    vehicle: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
+    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
+    pickupScheduledAt: { type: Date },
+    paused: { type: Boolean, default: false },
+    deliveryProof: { url: String, note: String, uploadedAt: Date },
+    reviewed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

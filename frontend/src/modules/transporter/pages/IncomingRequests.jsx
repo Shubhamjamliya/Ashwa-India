@@ -56,6 +56,11 @@ export default function IncomingRequests() {
   const [isOnline, setIsOnline] = useState(user?.isOnline !== false)
   const [togglingOnline, setTogglingOnline] = useState(false)
   const [locationError, setLocationError] = useState("")
+  const [stats, setStats] = useState(null)
+
+  useEffect(() => {
+    apiFetch("/transporter-ops/dashboard").then(setStats).catch(() => {})
+  }, [])
 
   useEffect(() => {
     Promise.allSettled([apiFetch("/transport/requests/incoming"), apiFetch("/payments/wallet"), apiFetch("/notifications")]).then(
@@ -207,6 +212,22 @@ export default function IncomingRequests() {
       </div>
 
       {locationError && <p className="mx-4 mt-2 text-xs text-destructive">{locationError}</p>}
+
+      {stats && (
+        <div className="mx-4 mt-3 grid grid-cols-4 gap-2">
+          {[
+            ["Active", stats.active],
+            ["Upcoming", stats.upcoming],
+            ["Completed", stats.completed],
+            ["Free vehicles", `${stats.availableVehicles}/${stats.vehicles}`],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-xl border border-[#E4E1D8] bg-white p-2.5 text-center">
+              <p className="text-base font-extrabold text-[#0F2238]">{value}</p>
+              <p className="text-[10px] font-semibold text-neutral-500">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Profile card */}
       <div className="mx-4 mt-3 flex items-center gap-4 rounded-2xl bg-[#0B1C33] p-4 shadow-[0_6px_12px_rgba(11,28,51,0.2)]">

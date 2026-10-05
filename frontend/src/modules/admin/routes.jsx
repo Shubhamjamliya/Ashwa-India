@@ -17,6 +17,9 @@ import Explore from "./pages/userApp/Explore"
 import ProvidersList from "./pages/providers/List"
 import TransportersList from "./pages/transporters/List"
 import TransportRequests from "./pages/transport/Requests"
+import TransportWithdrawals from "./pages/transport/Withdrawals"
+import LiveTrips from "./pages/transport/LiveTrips"
+import TransportReports from "./pages/transport/Reports"
 import RolePage from "./pages/commission/RolePage"
 import Events from "./pages/events/Events"
 import ServiceCatalog from "./pages/services/ServiceCatalog"
@@ -43,7 +46,6 @@ import DeveloperSettings from "./pages/developer/Settings"
 const placeholderRoutes = [
   ["horses/inquiries", "Inquiries"],
   ["transport/shared", "Shared Rides"],
-  ["transport/tracking", "Live Tracking"],
   ["bookings", "Bookings"],
   ["payments", "Payments"],
   ["reviews", "Reviews"],
@@ -61,6 +63,9 @@ export const adminRoutes = (
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
     <Route path="transport/requests" element={<TransportRequests />} />
+    <Route path="transport/tracking" element={<LiveTrips />} />
+    <Route path="transport/withdrawals" element={<TransportWithdrawals />} />
+    <Route path="transport/reports" element={<TransportReports />} />
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
     <Route path="commission/store" element={<RolePage role="store-seller" />} />

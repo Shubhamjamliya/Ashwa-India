@@ -10,6 +10,11 @@ import Earnings from "./pages/Earnings"
 import HelpSupport from "./pages/HelpSupport"
 import About from "./pages/About"
 import Settings from "./pages/Settings"
+import Vehicles from "./pages/Vehicles"
+import Drivers from "./pages/Drivers"
+import Kyc from "./pages/Kyc"
+import Withdrawals from "./pages/Withdrawals"
+import Reviews from "./pages/Reviews"
 
 export const transporterRoutes = (
   <>
@@ -24,5 +29,10 @@ export const transporterRoutes = (
     <Route path="help" element={<HelpSupport />} />
     <Route path="about" element={<About />} />
     <Route path="settings" element={<Settings />} />
+    <Route path="vehicles" element={<Vehicles />} />
+    <Route path="drivers" element={<Drivers />} />
+    <Route path="kyc" element={<Kyc />} />
+    <Route path="withdrawals" element={<Withdrawals />} />
+    <Route path="reviews" element={<Reviews />} />
   </>
 )

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { Bell, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, Truck, Wallet } from "lucide-react"
+import { Bell, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, ShieldCheck, Star, Truck, UserRound, Wallet, Banknote } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import BackButton from "../components/BackButton"
 
@@ -87,6 +87,51 @@ export default function Profile() {
       iconBg: "#F0E4FB",
       iconColor: "#7C3AED",
       onPress: () => navigate("/transporter/notifications"),
+    },
+    {
+      key: "kyc",
+      label: "Verification (KYC)",
+      sublabel: "Identity, licence, GST and bank details",
+      icon: ShieldCheck,
+      iconBg: "#E0F4E7",
+      iconColor: "#16A34A",
+      onPress: () => navigate("/transporter/kyc"),
+    },
+    {
+      key: "vehicles",
+      label: "Vehicles",
+      sublabel: "Your fleet, capacity and documents",
+      icon: Truck,
+      iconBg: "#FBEFD6",
+      iconColor: "#C28D2E",
+      onPress: () => navigate("/transporter/vehicles"),
+    },
+    {
+      key: "drivers",
+      label: "Drivers",
+      sublabel: "Drivers and their licences",
+      icon: UserRound,
+      iconBg: "#E1ECFC",
+      iconColor: "#2563EB",
+      onPress: () => navigate("/transporter/drivers"),
+    },
+    {
+      key: "withdrawals",
+      label: "Withdrawals",
+      sublabel: "Move earnings to your bank",
+      icon: Banknote,
+      iconBg: "#E0F4E7",
+      iconColor: "#16A34A",
+      onPress: () => navigate("/transporter/withdrawals"),
+    },
+    {
+      key: "reviews",
+      label: "Ratings & Reviews",
+      sublabel: "What customers say about your trips",
+      icon: Star,
+      iconBg: "#FEF3C7",
+      iconColor: "#D97706",
+      onPress: () => navigate("/transporter/reviews"),
     },
   ]
 

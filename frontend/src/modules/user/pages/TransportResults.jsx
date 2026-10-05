@@ -24,6 +24,8 @@ export default function TransportResults() {
   const [options, setOptions] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [requestType, setRequestType] = useState("private")
+  const [animals, setAnimals] = useState(1)
+  const [sharedDate, setSharedDate] = useState("")
   const [enquiring, setEnquiring] = useState(false)
   const [sentFor, setSentFor] = useState(null)
   const [error, setError] = useState("")
@@ -64,7 +66,13 @@ export default function TransportResults() {
     try {
       await apiFetch("/transport/requests", {
         method: "POST",
-        body: { transporterId, source, destination, type: requestType },
+        body: {
+          transporterId,
+          source,
+          destination,
+          type: requestType,
+          ...(requestType === "shared" ? { animals, scheduledDate: sharedDate } : {}),
+        },
       })
       setSentFor(transporterId)
     } catch (err) {
@@ -114,6 +122,34 @@ export default function TransportResults() {
         {renderTypeTab("private", Truck, "Private")}
         {renderTypeTab("shared", Users, "Shared")}
       </div>
+
+      {requestType === "shared" && (
+        <div className="mx-4 mb-3 space-y-3 rounded-2xl border border-[#E4E1D8] bg-white p-4">
+          <p className="text-[12px] text-neutral-600">
+            Shared trips run on your route with other customers on the same day. You pay for your animals and distance, so the price drops as others join.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold text-neutral-700">Animals</label>
+              <div className="flex h-10 items-center justify-between rounded-lg border border-[#E4E1D8] px-2">
+                <button type="button" onClick={() => setAnimals((n) => Math.max(1, n - 1))} className="px-2 text-lg font-bold text-[#0F2238]">−</button>
+                <span className="text-sm font-bold text-[#0F2238]">{animals}</span>
+                <button type="button" onClick={() => setAnimals((n) => n + 1)} className="px-2 text-lg font-bold text-[#0F2238]">+</button>
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold text-neutral-700">Travel date</label>
+              <input
+                type="date"
+                value={sharedDate}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setSharedDate(e.target.value)}
+                className="h-10 w-full rounded-lg border border-[#E4E1D8] px-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -172,7 +208,7 @@ export default function TransportResults() {
                       e.stopPropagation()
                       if (!isSent) handleEnquire(item.transporter.id)
                     }}
-                    disabled={isSent || enquiring}
+                    disabled={isSent || enquiring || (requestType === "shared" && !sharedDate)}
                     className="mt-3 w-full rounded-xl bg-[#C28D2E] py-2.5 text-sm font-bold text-white disabled:opacity-60"
                   >
                     {isSent ? "Enquiry Sent" : enquiring ? "Ringing..." : "Enquire (Ring Transporter)"}
