@@ -79,6 +79,18 @@ const adminMenu = [
   },
   {
     type: "section",
+    label: "Reports",
+    items: [
+      { type: "link", label: "Sales Reports", icon: "FileText", path: "/admin/reports/sales" },
+      { type: "link", label: "Transport Reports", icon: "Truck", path: "/admin/reports/transport" },
+      { type: "link", label: "Service Reports", icon: "Zap", path: "/admin/reports/service" },
+      { type: "link", label: "Product Reports", icon: "Package", path: "/admin/reports/product" },
+      { type: "link", label: "Revenue Reports", icon: "DollarSign", path: "/admin/reports/revenue" },
+      { type: "link", label: "User Reports", icon: "Users", path: "/admin/reports/users" },
+    ],
+  },
+  {
+    type: "section",
     label: "Jobs",
     items: [
       { type: "link", label: "Job Listings", icon: "Briefcase", path: "/admin/jobs/manage" },

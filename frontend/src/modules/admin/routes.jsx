@@ -21,6 +21,7 @@ import TransportWithdrawals from "./pages/transport/Withdrawals"
 import LiveTrips from "./pages/transport/LiveTrips"
 import TransportReports from "./pages/transport/Reports"
 import JobManagement from "./pages/jobs/JobManagement"
+import ReportPage from "./pages/reports/ReportPage"
 import RolePage from "./pages/commission/RolePage"
 import Events from "./pages/events/Events"
 import ServiceCatalog from "./pages/services/ServiceCatalog"
@@ -68,6 +69,12 @@ export const adminRoutes = (
     <Route path="transport/withdrawals" element={<TransportWithdrawals />} />
     <Route path="transport/reports" element={<TransportReports />} />
     <Route path="jobs/manage" element={<JobManagement />} />
+    <Route path="reports/sales" element={<ReportPage type="sales" title="Sales Reports" />} />
+    <Route path="reports/transport" element={<ReportPage type="transport" title="Transport Reports" />} />
+    <Route path="reports/service" element={<ReportPage type="service" title="Service Reports" />} />
+    <Route path="reports/product" element={<ReportPage type="product" title="Product Reports" />} />
+    <Route path="reports/revenue" element={<ReportPage type="revenue" title="Revenue Reports" />} />
+    <Route path="reports/users" element={<ReportPage type="users" title="User Reports" />} />
     <Route path="commission/transporter" element={<RolePage role="transporter" />} />
     <Route path="commission/provider" element={<RolePage role="provider" />} />
     <Route path="commission/store" element={<RolePage role="store-seller" />} />
