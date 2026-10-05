@@ -9,6 +9,7 @@ export const JOB_CATEGORY_LABEL = {
   "stable-manager": "Stable Manager",
   rider: "Rider",
   veterinarian: "Veterinarian",
+  driver: "Driver",
 }
 
 export const APPLICATION_LABEL = {
@@ -27,10 +28,11 @@ const TABS = [
 
 // Job browser shared by the user and service provider apps.
 // basePath is the app's jobs route, for example /user/jobs or /service/jobs.
-export default function JobsBrowser({ basePath }) {
+export default function JobsBrowser({ basePath, lockedCategory }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState("browse")
-  const [category, setCategory] = useState("")
+  const [pickedCategory, setCategory] = useState("")
+  const category = lockedCategory || pickedCategory
   const [query, setQuery] = useState("")
   const [city, setCity] = useState("")
   const [jobs, setJobs] = useState([])
@@ -80,8 +82,8 @@ export default function JobsBrowser({ basePath }) {
           <ArrowLeft className="h-5 w-5 text-white" />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="text-[18px] font-bold text-white">Horse Jobs</h1>
-          <p className="text-xs text-[#A9B8CC]">Find work, or post a job and hire</p>
+          <h1 className="text-[18px] font-bold text-white">{lockedCategory ? `${JOB_CATEGORY_LABEL[lockedCategory]} Jobs` : "Horse Jobs"}</h1>
+          <p className="text-xs text-[#A9B8CC]">{lockedCategory ? "Find driver work, or post a driver job and hire" : "Find work, or post a job and hire"}</p>
         </div>
         <button onClick={() => navigate(`${basePath}/new`)} className="shrink-0 rounded-xl bg-[#C28D2E] px-3 py-2 text-xs font-bold text-white">
           + Post job
@@ -117,14 +119,14 @@ export default function JobsBrowser({ basePath }) {
             placeholder="City"
             className="h-10 w-full rounded-xl border border-[#E4E1D8] bg-white px-3 text-sm outline-none focus:border-[#C28D2E]"
           />
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          {!lockedCategory && <div className="flex gap-2 overflow-x-auto pb-1">
             <button onClick={() => setCategory("")} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${!category ? "border-[#0B1C33] bg-[#0B1C33] text-white" : "border-[#E4E1D8] bg-white text-[#0F2238]"}`}>All</button>
             {categories.map(([key, label]) => (
               <button key={key} onClick={() => setCategory(key)} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${category === key ? "border-[#0B1C33] bg-[#0B1C33] text-white" : "border-[#E4E1D8] bg-white text-[#0F2238]"}`}>
                 {label}
               </button>
             ))}
-          </div>
+          </div>}
         </div>
       )}
 

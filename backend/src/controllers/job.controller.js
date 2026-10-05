@@ -7,8 +7,13 @@ const { uploadFileBuffer } = require('../services/storage.service');
 const { JOB_CATEGORIES, JOB_TYPES } = Job;
 const APPLICATION_STATUSES = ['applied', 'shortlisted', 'rejected', 'hired'];
 
+// Transporters work only with driver jobs. Everyone else can use every category.
+const isTransporter = (req) => req.role === 'transporter';
+const DRIVER_ONLY = 'driver';
+
 // Users and service providers both post, apply and hire. The role on the request decides how they are stored.
-const accountOf = (req) => ({ model: req.role === 'provider' ? 'Provider' : 'User', id: req.user._id });
+const ACCOUNT_MODEL = { provider: 'Provider', transporter: 'Transporter', user: 'User' };
+const accountOf = (req) => ({ model: ACCOUNT_MODEL[req.role] || 'User', id: req.user._id });
 const sameAccount = (a, model, id) => a.posterModel === model && String(a.poster) === String(id);
 
 // Jobs anyone can see: active and not past the deadline.
@@ -32,7 +37,9 @@ const posterView = (job) => ({ name: job.posterName, phone: job.posterPhone });
 exports.listJobs = asyncHandler(async (req, res) => {
   const filter = openJobFilter();
   const { q, category, city } = req.query;
-  if (category) {
+  if (isTransporter(req)) {
+    filter.category = DRIVER_ONLY;
+  } else if (category) {
     if (!JOB_CATEGORIES.includes(category)) return res.status(400).json({ message: 'Unknown job category' });
     filter.category = category;
   }
@@ -68,7 +75,7 @@ exports.listJobs = asyncHandler(async (req, res) => {
 exports.jobDetail = asyncHandler(async (req, res) => {
   const { model, id } = accountOf(req);
   const job = await Job.findById(req.params.id);
-  if (!job) return res.status(404).json({ message: 'Job not found' });
+  if (!job || (isTransporter(req) && job.category !== DRIVER_ONLY)) return res.status(404).json({ message: 'Job not found' });
   // The poster and admins can see a job in any state. Everyone else only sees open jobs.
   const isPoster = sameAccount(job, model, id);
   if (!isPoster && (job.status !== 'active' || (job.deadline && job.deadline < new Date()))) {
@@ -91,7 +98,7 @@ exports.jobDetail = asyncHandler(async (req, res) => {
 exports.apply = asyncHandler(async (req, res) => {
   const { model, id } = accountOf(req);
   const job = await Job.findOne({ _id: req.params.id, ...openJobFilter() });
-  if (!job) return res.status(404).json({ message: 'This job is no longer open' });
+  if (!job || (isTransporter(req) && job.category !== DRIVER_ONLY)) return res.status(404).json({ message: 'This job is no longer open' });
   if (sameAccount(job, model, id)) return res.status(400).json({ message: 'You cannot apply to your own job' });
 
   const { coverNote, resume } = req.body;
@@ -175,6 +182,7 @@ function validateJob(data, { partial = false } = {}) {
 // POST /api/jobs  — post a job
 exports.createJob = asyncHandler(async (req, res) => {
   const data = pickJob(req.body);
+  if (isTransporter(req)) data.category = DRIVER_ONLY;
   const error = validateJob(data);
   if (error) return res.status(400).json({ message: error });
   const { model, id } = accountOf(req);

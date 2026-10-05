@@ -14,8 +14,8 @@ const resumeUpload = multer({
   },
 });
 
-// Users and service providers are both posters and applicants.
-const member = [protect, authorize('user', 'provider')];
+// Users, service providers and transporters can all post, apply and hire (drivers are one job category).
+const member = [protect, authorize('user', 'provider', 'transporter')];
 
 // Literal paths first so they are not read as a job id.
 router.get('/mine/applications', ...member, jobs.myApplications);

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const savedJobSchema = new mongoose.Schema(
   {
     job: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
-    accountModel: { type: String, enum: ['User', 'Provider'], required: true },
+    accountModel: { type: String, enum: ['User', 'Provider', 'Transporter'], required: true },
     account: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'accountModel' },
   },
   { timestamps: true }

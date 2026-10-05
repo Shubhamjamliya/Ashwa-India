@@ -23,9 +23,9 @@ const EMPTY = {
 
 // Post a job. Users and service providers both use this, from their own app.
 // basePath is the app's jobs route, for example /user/jobs or /service/jobs.
-export default function PostJob({ basePath }) {
+export default function PostJob({ basePath, lockedCategory }) {
   const navigate = useNavigate()
-  const [form, setForm] = useState(EMPTY)
+  const [form, setForm] = useState({ ...EMPTY, category: lockedCategory || EMPTY.category })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }))
@@ -67,9 +67,13 @@ export default function PostJob({ basePath }) {
       <form onSubmit={submit} className="space-y-3 p-4">
         <input className={inputClass} placeholder="Job title *" value={form.title} onChange={(e) => set("title", e.target.value)} required />
         <div className="grid grid-cols-2 gap-2">
-          <select className={inputClass} value={form.category} onChange={(e) => set("category", e.target.value)}>
-            {Object.entries(JOB_CATEGORY_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select>
+          {lockedCategory ? (
+            <div className={`${inputClass} flex items-center text-neutral-600`}>{JOB_CATEGORY_LABEL[lockedCategory]}</div>
+          ) : (
+            <select className={inputClass} value={form.category} onChange={(e) => set("category", e.target.value)}>
+              {Object.entries(JOB_CATEGORY_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </select>
+          )}
           <select className={inputClass} value={form.jobType} onChange={(e) => set("jobType", e.target.value)}>
             {JOB_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>

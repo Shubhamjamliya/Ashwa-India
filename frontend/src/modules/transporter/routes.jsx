@@ -15,6 +15,10 @@ import Drivers from "./pages/Drivers"
 import Kyc from "./pages/Kyc"
 import Withdrawals from "./pages/Withdrawals"
 import Reviews from "./pages/Reviews"
+import JobsBrowser from "@/shared/jobs/JobsBrowser"
+import JobDetail from "@/shared/jobs/JobDetail"
+import PostJob from "@/shared/jobs/PostJob"
+import ManageJob from "@/shared/jobs/ManageJob"
 
 export const transporterRoutes = (
   <>
@@ -34,5 +38,9 @@ export const transporterRoutes = (
     <Route path="kyc" element={<Kyc />} />
     <Route path="withdrawals" element={<Withdrawals />} />
     <Route path="reviews" element={<Reviews />} />
+    <Route path="jobs" element={<JobsBrowser basePath="/transporter/jobs" lockedCategory="driver" />} />
+    <Route path="jobs/new" element={<PostJob basePath="/transporter/jobs" lockedCategory="driver" />} />
+    <Route path="jobs/:id" element={<JobDetail />} />
+    <Route path="jobs/:id/manage" element={<ManageJob />} />
   </>
 )

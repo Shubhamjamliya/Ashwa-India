@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { Bell, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, ShieldCheck, Star, Truck, UserRound, Wallet, Banknote } from "lucide-react"
+import { Bell, Briefcase, Calendar, ChevronRight, Info, LifeBuoy, LogOut, Percent, Pencil, Settings as SettingsIcon, ShieldCheck, Star, Truck, UserRound, Wallet, Banknote } from "lucide-react"
 import { useAuth } from "@/shared/context/AuthContext"
 import BackButton from "../components/BackButton"
 
@@ -123,6 +123,15 @@ export default function Profile() {
       iconBg: "#E0F4E7",
       iconColor: "#16A34A",
       onPress: () => navigate("/transporter/withdrawals"),
+    },
+    {
+      key: "jobs",
+      label: "Drivers for Job",
+      sublabel: "Find driver jobs or post one to hire",
+      icon: Briefcase,
+      iconBg: "#E8E6F9",
+      iconColor: "#4B3FA6",
+      onPress: () => navigate("/transporter/jobs"),
     },
     {
       key: "reviews",

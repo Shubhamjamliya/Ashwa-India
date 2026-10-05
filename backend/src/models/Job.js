@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
 // Horse-related job categories. Keep in sync with the frontend filter chips.
-const JOB_CATEGORIES = ['trainer', 'groom', 'stable-manager', 'rider', 'veterinarian'];
+const JOB_CATEGORIES = ['trainer', 'groom', 'stable-manager', 'rider', 'veterinarian', 'driver'];
 const JOB_TYPES = ['full-time', 'part-time', 'contract', 'freelance'];
 
 // Any user or service provider can post a job. The poster reviews applicants and hires.
 const jobSchema = new mongoose.Schema(
   {
     poster: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'posterModel', index: true },
-    posterModel: { type: String, enum: ['User', 'Provider'], required: true },
+    posterModel: { type: String, enum: ['User', 'Provider', 'Transporter'], required: true },
     posterName: { type: String, trim: true },
     posterPhone: { type: String, trim: true },
     title: { type: String, required: true, trim: true, maxlength: 120 },

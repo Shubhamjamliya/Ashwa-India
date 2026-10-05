@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const jobApplicationSchema = new mongoose.Schema(
   {
     job: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true, index: true },
-    applicantModel: { type: String, enum: ['User', 'Provider'], required: true },
+    applicantModel: { type: String, enum: ['User', 'Provider', 'Transporter'], required: true },
     applicant: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'applicantModel' },
     applicantName: { type: String, trim: true },
     applicantPhone: { type: String, trim: true },
