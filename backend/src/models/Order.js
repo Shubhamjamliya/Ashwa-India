@@ -41,6 +41,7 @@ const orderSchema = new mongoose.Schema(
       name: { type: String, trim: true },
       trackingNumber: { type: String, trim: true },
     },
+<<<<<<< HEAD
     // Payment data lives entirely in PaymentIntent/PaymentTransaction. Cash on delivery has no intent.
     paymentIntent: { type: mongoose.Schema.Types.ObjectId, ref: 'PaymentIntent' },
     settlement: {
@@ -53,13 +54,27 @@ const orderSchema = new mongoose.Schema(
       _id: false,
     },
     // Set once, when the seller's wallet has been credited for this order (on delivery).
+=======
+    // Payment data lives entirely in PaymentIntent/PaymentTransaction — this
+    // is just a pointer, not a second copy of the truth. Populate it to read
+    // payment state; see the `paymentStatus` virtual below for convenience.
+    paymentIntent: { type: mongoose.Schema.Types.ObjectId, ref: 'PaymentIntent' },
+    // Set once, when the seller's wallet has been credited for this order
+    // (on delivery) — guards against crediting the payout twice.
+>>>>>>> 9b7361865f039f7f9c120afae6d02753b2c7e89d
     payoutCompletedAt: { type: Date },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+<<<<<<< HEAD
 orderSchema.virtual('paymentStatus').get(function paymentStatus() {
   if (this.paymentMethod === 'cod') return this.status === 'delivered' ? 'paid' : 'pending';
+=======
+// Only resolves when paymentIntent has been populated — callers that need
+// payment status must `.populate('paymentIntent')`.
+orderSchema.virtual('paymentStatus').get(function paymentStatus() {
+>>>>>>> 9b7361865f039f7f9c120afae6d02753b2c7e89d
   if (!this.paymentIntent || typeof this.paymentIntent !== 'object') return undefined;
   return this.paymentIntent.status;
 });
