@@ -108,12 +108,20 @@ exports.listInquiries = asyncHandler(async (req, res) => {
 exports.createInquiry = asyncHandler(async (req, res) => {
   const horse = await Horse.findById(req.body.horseId);
   if (!horse) return res.status(404).json({ message: 'Horse not found' });
+
+  // The buyer can send an enquiry with a price offer. The offer is only a proposal, not a payment.
+  const hasOffer = req.body.quoteAmount !== undefined && req.body.quoteAmount !== null && req.body.quoteAmount !== '';
+  const offer = hasOffer ? Number(req.body.quoteAmount) : undefined;
+  if (hasOffer && (!Number.isFinite(offer) || offer <= 0)) return res.status(400).json({ message: 'Enter a valid offer amount' });
+
+  const text = String(req.body.message || '').trim() || (offer ? `I'd like to offer ₹${offer.toLocaleString('en-IN')}` : '');
   const inquiry = await Inquiry.create({
     horse: horse._id,
     buyer: req.user._id,
     seller: horse.seller,
-    message: req.body.message,
-    messages: [{ sender: 'user', text: String(req.body.message || '').trim() }],
+    message: text,
+    messages: [{ sender: 'user', kind: offer ? 'offer' : 'text', amount: offer, text }],
+    quote: offer ? { amount: offer, by: 'user', status: 'pending', at: new Date() } : undefined,
   });
 
   const io = req.app.get('io');

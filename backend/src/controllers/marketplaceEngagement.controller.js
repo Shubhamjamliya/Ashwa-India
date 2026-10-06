@@ -8,9 +8,12 @@ const pushService = require('../services/push.service');
 const HORSE_FIELDS = 'name breed photos price leaseRate leasePeriod listingType status';
 
 // Only the buyer and the seller of an inquiry can read or write its thread.
+// Works whether buyer/seller are plain ids or populated documents (getThread populates them).
+const idOf = (ref) => String(ref?._id || ref);
+
 function canAccess(inquiry, req) {
-  if (req.role === 'user') return String(inquiry.buyer) === String(req.user._id);
-  if (req.role === 'horse-seller') return String(inquiry.seller) === String(req.user._id);
+  if (req.role === 'user') return idOf(inquiry.buyer) === String(req.user._id);
+  if (req.role === 'horse-seller') return idOf(inquiry.seller) === String(req.user._id);
   return false;
 }
 
@@ -48,7 +51,11 @@ exports.getThread = asyncHandler(async (req, res) => {
 
 // POST /api/marketplace/inquiries/:id/messages  (buyer or seller) { text }
 exports.postMessage = asyncHandler(async (req, res) => {
-  const text = String(req.body.text || '').trim();
+  let text = String(req.body.text || '').trim();
+  const hasOffer = req.body.offerAmount !== undefined && req.body.offerAmount !== null && req.body.offerAmount !== '';
+  const offer = hasOffer ? Number(req.body.offerAmount) : undefined;
+  if (hasOffer && (!Number.isFinite(offer) || offer <= 0)) return res.status(400).json({ message: 'Enter a valid offer amount' });
+  if (!text && offer) text = `Offer: ₹${offer.toLocaleString('en-IN')}`;
   if (!text) return res.status(400).json({ message: 'Message cannot be empty' });
   if (text.length > 1000) return res.status(400).json({ message: 'Message is too long (max 1000 characters)' });
 
@@ -58,7 +65,9 @@ exports.postMessage = asyncHandler(async (req, res) => {
   if (inquiry.status === 'closed') return res.status(400).json({ message: 'This conversation is closed' });
 
   const sender = req.role === 'horse-seller' ? 'seller' : 'user';
-  inquiry.messages.push({ sender, text });
+  inquiry.messages.push({ sender, text, kind: offer ? 'offer' : 'text', amount: offer });
+  // A new offer replaces any earlier one still waiting for an answer.
+  if (offer) inquiry.quote = { amount: offer, by: sender, status: 'pending', at: new Date() };
   inquiry.status = sender === 'seller' ? 'replied' : 'open';
   inquiry.lastMessageAt = new Date();
   await inquiry.save();
@@ -201,4 +210,41 @@ exports.toggleFavourite = asyncHandler(async (req, res) => {
   }
   await user.save();
   res.json({ favourites: user.favouriteHorses.map(String), saved: !exists });
+});
+
+// PATCH /api/marketplace/inquiries/:id/quote  (buyer or seller) { action: 'accept' | 'decline' }
+// Only the party who did NOT make the pending offer can answer it. Accepting agrees the price in chat.
+// No payment is taken here. The two parties call each other to arrange the rest.
+exports.decideQuote = asyncHandler(async (req, res) => {
+  const { action } = req.body;
+  if (!['accept', 'decline'].includes(action)) return res.status(400).json({ message: 'action must be accept or decline' });
+
+  const inquiry = await Inquiry.findById(req.params.id);
+  if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+  if (!canAccess(inquiry, req)) return res.status(403).json({ message: 'Not your conversation' });
+  if (inquiry.status === 'closed') return res.status(400).json({ message: 'This conversation is closed' });
+
+  const responder = req.role === 'horse-seller' ? 'seller' : 'user';
+  const quote = inquiry.quote;
+  if (!quote || quote.status !== 'pending') return res.status(400).json({ message: 'There is no offer waiting for an answer' });
+  if (quote.by === responder) return res.status(400).json({ message: 'You cannot answer your own offer' });
+
+  quote.status = action === 'accept' ? 'accepted' : 'declined';
+  const text =
+    action === 'accept'
+      ? `Offer of ₹${quote.amount.toLocaleString('en-IN')} accepted. Call each other to arrange the rest.`
+      : `Offer of ₹${quote.amount.toLocaleString('en-IN')} declined.`;
+  if (action === 'accept') inquiry.agreedAmount = quote.amount;
+  inquiry.messages.push({ sender: responder, kind: 'deal', amount: quote.amount, text });
+  inquiry.lastMessageAt = new Date();
+  await inquiry.save();
+
+  const message = inquiry.messages[inquiry.messages.length - 1];
+  const payload = { inquiryId: String(inquiry._id), message };
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`user:${inquiry.buyer}`).emit('inquiry:message', payload);
+    io.to(`horse-seller:${inquiry.seller}`).emit('inquiry:message', payload);
+  }
+  res.json({ inquiry });
 });

@@ -47,6 +47,7 @@ export const userRoutes = (
     <Route path="bookings" element={<Bookings />} />
     <Route path="events" element={<Events />} />
     <Route path="inquiries" element={<Inquiries />} />
+    <Route path="inquiries/:id" element={<Inquiries />} />
     <Route path="services" element={<Services />} />
     <Route path="jobs" element={<JobsBrowser basePath="/user/jobs" />} />
     <Route path="jobs/new" element={<PostJob basePath="/user/jobs" />} />

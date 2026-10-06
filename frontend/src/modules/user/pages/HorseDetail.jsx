@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { CalendarClock, Heart, MapPin, Phone, Play, Send, Share2 } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
+import OfferPanel from "@/shared/inquiry/OfferPanel"
 import { getMediaUrl } from "@/shared/lib/media"
 import useLiveEvents from "@/shared/lib/useLiveEvents"
 import { useWishlist } from "../context/WishlistContext"
@@ -91,6 +92,7 @@ function Conversation({ inquiryId }) {
 
   return (
     <div className="space-y-3">
+      {inquiry && <OfferPanel inquiry={inquiry} role="user" onChanged={load} />}
       <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl bg-[#F6F3EC] p-3">
         {(inquiry?.messages || []).map((m, i) => (
           <div key={i} className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
@@ -126,6 +128,7 @@ export default function HorseDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
+  const [quoteAmount, setQuoteAmount] = useState("")
   const [sending, setSending] = useState(false)
   const [inquiryId, setInquiryId] = useState(null)
   const [visitOpen, setVisitOpen] = useState(false)
@@ -143,13 +146,16 @@ export default function HorseDetail() {
   }, [id])
 
   const startConversation = async () => {
-    if (!message.trim()) return
+    if (!message.trim() && !quoteAmount) return
     setSending(true)
     setError("")
     try {
-      const data = await apiFetch("/marketplace/inquiries", { method: "POST", body: { horseId: id, message: message.trim() } })
+      const body = { horseId: id, message: message.trim() }
+      if (quoteAmount) body.quoteAmount = Number(quoteAmount)
+      const data = await apiFetch("/marketplace/inquiries", { method: "POST", body })
       setInquiryId(data.inquiry._id)
       setMessage("")
+      setQuoteAmount("")
     } catch (err) {
       setError(err.message || "Failed to send inquiry")
     } finally {
@@ -328,10 +334,22 @@ export default function HorseDetail() {
                 rows={3}
                 className="w-full resize-none rounded-xl border border-[#E4E1D8] px-3 py-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
               />
+              {horse && !isLease && (
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 text-xs font-semibold text-neutral-600">Your offer (₹)</span>
+                  <input
+                    inputMode="numeric"
+                    value={quoteAmount}
+                    onChange={(e) => setQuoteAmount(e.target.value.replace(/\D/g, ""))}
+                    placeholder={horse.price ? `Asking ₹${Number(horse.price).toLocaleString("en-IN")}` : "Optional"}
+                    className="h-9 flex-1 rounded-lg border border-[#E4E1D8] px-3 text-sm outline-none focus:border-[#C28D2E]"
+                  />
+                </div>
+              )}
               {error && <p className="text-[13px] text-destructive">{error}</p>}
               <button
                 onClick={startConversation}
-                disabled={!message.trim() || sending}
+                disabled={(!message.trim() && !quoteAmount) || sending}
                 className="w-full rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
               >
                 {sending ? "Sending..." : "Send message"}

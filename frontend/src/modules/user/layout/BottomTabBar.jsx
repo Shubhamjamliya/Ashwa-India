@@ -1,10 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { Calendar, Home, Package, User } from "lucide-react"
+import { Calendar, Home, MessageSquare, Package, User } from "lucide-react"
 
 const tabs = [
   { key: "Home", label: "Home", path: "/user", icon: Home },
   { key: "Booking", label: "Booking", path: "/user/bookings", icon: Calendar },
   { key: "Orders", label: "Orders", path: "/user/orders", icon: Package },
+  { key: "Enquiry", label: "Enquiry", path: "/user/inquiries", icon: MessageSquare },
   { key: "Profile", label: "Profile", path: "/user/profile", icon: User },
 ]
 

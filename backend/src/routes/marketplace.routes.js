@@ -29,6 +29,7 @@ const engagement = require('../controllers/marketplaceEngagement.controller');
 router.get('/inquiries/mine', protect, authorize('user'), engagement.listMyInquiries);
 router.get('/inquiries/:id', protect, authorize('user', 'horse-seller'), engagement.getThread);
 router.post('/inquiries/:id/messages', protect, authorize('user', 'horse-seller'), engagement.postMessage);
+router.patch('/inquiries/:id/quote', protect, authorize('user', 'horse-seller'), engagement.decideQuote);
 
 router.post('/visits', protect, authorize('user'), engagement.createVisit);
 router.get('/visits/mine', protect, authorize('user'), engagement.listMyVisits);
