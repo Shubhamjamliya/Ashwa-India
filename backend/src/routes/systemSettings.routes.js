@@ -3,6 +3,7 @@ const router = express.Router();
 const systemSettingsController = require('../controllers/systemSettings.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/upload.middleware');
+const operationalData = require('../controllers/operationalData.controller');
 
 router.use(protect, authorize('admin'));
 
@@ -21,5 +22,7 @@ router.put('/customization', systemSettingsController.updateCustomization);
 
 router.get('/developer', systemSettingsController.getDeveloperSettings);
 router.put('/developer', systemSettingsController.updateDeveloperSettings);
+router.get('/developer/operational-data', operationalData.operationalCounts);
+router.post('/developer/clear-operational-data', operationalData.clearOperationalData);
 
 module.exports = router;

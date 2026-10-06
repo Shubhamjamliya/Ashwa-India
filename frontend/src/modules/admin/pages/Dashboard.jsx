@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -8,30 +9,22 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts"
 import {
-  ArrowUpRight, Users, Heart, Calendar, Truck, DollarSign, Store, UserCheck, Headset,
+  ArrowUpRight, Users, Heart, Calendar, Truck, DollarSign, Store, UserCheck, MessageSquare,
+  Percent, Wallet, Navigation, PackageX,
 } from "lucide-react"
-import { useState } from "react"
+import { apiFetch } from "@/shared/lib/api"
 
-const INR = "₹"
-const fmt = (n) => `${INR}${Number(n || 0).toLocaleString("en-IN")}`
+const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
+const num = (n) => Number(n || 0).toLocaleString("en-IN")
 
-const monthlyData = [
-  { month: "Jan", bookings: 22, revenue: 48000 },
-  { month: "Feb", bookings: 31, revenue: 61000 },
-  { month: "Mar", bookings: 28, revenue: 57000 },
-  { month: "Apr", bookings: 40, revenue: 82000 },
-  { month: "May", bookings: 46, revenue: 95000 },
-  { month: "Jun", bookings: 39, revenue: 88000 },
-]
+const STATUS_COLOR = {
+  Completed: "#16a34a",
+  Ongoing: "#0ea5e9",
+  Pending: "#f59e0b",
+  Cancelled: "#ef4444",
+}
 
-const bookingStatus = [
-  { name: "Completed", value: 128, fill: "#16a34a" },
-  { name: "Ongoing", value: 34, fill: "#0ea5e9" },
-  { name: "Pending", value: 19, fill: "#f59e0b" },
-  { name: "Cancelled", value: 7, fill: "#ef4444" },
-]
-
-function MetricCard({ title, value, helper, icon, accent, path }) {
+function MetricCard({ title, value, helper, icon, accent, path, loading }) {
   const navigate = useNavigate()
   return (
     <Card
@@ -40,17 +33,17 @@ function MetricCard({ title, value, helper, icon, accent, path }) {
     >
       <CardContent className="relative flex flex-col gap-2 px-4 pb-4 pt-4">
         <div className={`absolute inset-0 opacity-40 transition-opacity duration-300 group-hover:opacity-60 ${accent}`} />
-        <div className="relative flex items-center justify-between z-10">
-          <div className="flex-1 min-w-0 mr-2">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-neutral-500 font-bold mb-1 truncate">{title}</p>
-            <p className="text-xl font-bold text-neutral-900 leading-tight mb-1">{value}</p>
-            <p className="text-[10px] text-neutral-500 font-medium line-clamp-1">{helper}</p>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="mr-2 min-w-0 flex-1">
+            <p className="mb-1 truncate text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500">{title}</p>
+            <p className="mb-1 text-xl font-bold leading-tight text-neutral-900">{loading ? "—" : value}</p>
+            <p className="line-clamp-1 text-[10px] font-medium text-neutral-500">{helper}</p>
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 ring-1 ring-neutral-200 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 shadow-sm ring-1 ring-neutral-200 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110">
             {icon}
           </div>
         </div>
-        <div className="absolute bottom-2 right-2 opacity-0 translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+        <div className="absolute bottom-2 right-2 translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
           <ArrowUpRight className="h-3 w-3 text-neutral-400" />
         </div>
       </CardContent>
@@ -60,9 +53,24 @@ function MetricCard({ title, value, helper, icon, accent, path }) {
 
 export default function AdminHome() {
   const [period, setPeriod] = useState("overall")
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    setLoading(true)
+    setError("")
+    apiFetch(`/admin/dashboard?period=${period}`)
+      .then(setData)
+      .catch((err) => setError(err.message || "Could not load dashboard"))
+      .finally(() => setLoading(false))
+  }, [period])
+
+  const t = data?.totals || {}
+  const periodLabel = { overall: "all time", today: "today", week: "this week", month: "this month" }[period]
 
   return (
-    <div className="px-4 pb-10 lg:px-6 pt-4">
+    <div className="px-4 pb-10 pt-4 lg:px-6">
       <div className="relative overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_30px_120px_-60px_rgba(0,0,0,0.28)]">
         <div className="flex flex-col gap-4 border-b border-neutral-200 bg-gradient-to-br from-white via-neutral-50 to-neutral-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -83,79 +91,128 @@ export default function AdminHome() {
         </div>
 
         <div className="space-y-6 px-6 py-6">
+          {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
+              loading={loading}
               title="Total users"
-              value="4,238"
-              helper="Registered horse owners"
+              value={num(t.totalUsers)}
+              helper={`${num(t.newUsers)} joined ${periodLabel}`}
               icon={<Users className="h-5 w-5 text-emerald-600" />}
               accent="bg-emerald-200/40"
               path="/admin/users"
             />
             <MetricCard
+              loading={loading}
               title="Horse listings"
-              value="612"
-              helper="Live listings for sale"
+              value={num(t.horseListings)}
+              helper="Listed for sale"
               icon={<Heart className="h-5 w-5 text-rose-600" />}
               accent="bg-rose-200/40"
               path="/admin/horses/listings"
             />
             <MetricCard
+              loading={loading}
               title="Active bookings"
-              value="188"
-              helper="Services + transport in progress"
+              value={num(t.activeBookings)}
+              helper="Store orders, transport and services in progress"
               icon={<Calendar className="h-5 w-5 text-amber-600" />}
               accent="bg-amber-200/40"
               path="/admin/bookings"
             />
             <MetricCard
+              loading={loading}
               title="Transport requests"
-              value="76"
-              helper="Including shared-ride requests"
+              value={num(t.transportRequests)}
+              helper={`Requested ${periodLabel}`}
               icon={<Truck className="h-5 w-5 text-blue-600" />}
               accent="bg-blue-200/40"
               path="/admin/transport/requests"
             />
             <MetricCard
+              loading={loading}
               title="Gross revenue"
-              value={fmt(431000)}
-              helper="This month's transaction volume"
+              value={fmt(t.grossRevenue)}
+              helper={`Settled sales ${periodLabel}, before commission`}
               icon={<DollarSign className="h-5 w-5 text-green-600" />}
               accent="bg-green-200/40"
               path="/admin/payments"
             />
             <MetricCard
-              title="Store & marketplace sellers"
-              value="94"
-              helper="Approved horse & accessory sellers"
+              loading={loading}
+              title="Approved sellers"
+              value={num(t.sellers)}
+              helper="Store and horse sellers"
               icon={<Store className="h-5 w-5 text-purple-600" />}
               accent="bg-purple-200/40"
               path="/admin/horses/sellers"
             />
             <MetricCard
-              title="Provider approvals pending"
-              value="11"
-              helper="Vets, trainers, transporters awaiting review"
+              loading={loading}
+              title="Approvals pending"
+              value={num(t.pendingApprovals)}
+              helper="Providers and transporters awaiting review"
               icon={<UserCheck className="h-5 w-5 text-orange-600" />}
               accent="bg-orange-200/40"
               path="/admin/providers"
             />
             <MetricCard
-              title="Open support tickets"
-              value="5"
-              helper="Awaiting a response"
-              icon={<Headset className="h-5 w-5 text-indigo-600" />}
+              loading={loading}
+              title="Open enquiries"
+              value={num(t.openEnquiries)}
+              helper="Horse buyers waiting for a reply"
+              icon={<MessageSquare className="h-5 w-5 text-indigo-600" />}
               accent="bg-indigo-200/40"
-              path="/admin/support"
+              path="/admin/horses/inquiries"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              loading={loading}
+              title="Platform commission"
+              value={fmt(t.commissionEarned)}
+              helper={`Earned ${periodLabel} across all bookings`}
+              icon={<Percent className="h-5 w-5 text-teal-600" />}
+              accent="bg-teal-200/40"
+              path="/admin/commission/transporter"
+            />
+            <MetricCard
+              loading={loading}
+              title="Withdrawals to pay"
+              value={num(t.pendingWithdrawals)}
+              helper={`${fmt(t.pendingWithdrawalAmount)} waiting for approval or payment`}
+              icon={<Wallet className="h-5 w-5 text-cyan-600" />}
+              accent="bg-cyan-200/40"
+              path="/admin/transport/withdrawals"
+            />
+            <MetricCard
+              loading={loading}
+              title="Live trips now"
+              value={num(t.liveTrips)}
+              helper="Transport trips scheduled or on the road"
+              icon={<Navigation className="h-5 w-5 text-sky-600" />}
+              accent="bg-sky-200/40"
+              path="/admin/transport/tracking"
+            />
+            <MetricCard
+              loading={loading}
+              title="Low stock products"
+              value={num(t.lowStockProducts)}
+              helper="Five or fewer left in stock"
+              icon={<PackageX className="h-5 w-5 text-red-600" />}
+              accent="bg-red-200/40"
+              path="/admin/store/products"
             />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="lg:col-span-2 p-0">
+            <Card className="p-0 lg:col-span-2">
               <CardContent className="p-5">
-                <p className="text-sm font-semibold text-neutral-900 mb-4">Bookings & revenue trend</p>
+                <p className="mb-4 text-sm font-semibold text-neutral-900">Bookings & revenue, last 6 months</p>
                 <ResponsiveContainer width="100%" height={280}>
-                  <AreaChart data={monthlyData}>
+                  <AreaChart data={data?.trend || []}>
                     <defs>
                       <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#92400e" stopOpacity={0.35} />
@@ -165,8 +222,9 @@ export default function AdminHome() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="revenue" stroke="#92400e" fill="url(#rev)" strokeWidth={2} />
+                    <Tooltip formatter={(v, name) => (name === "revenue" ? fmt(v) : num(v))} />
+                    <Area type="monotone" dataKey="revenue" name="revenue" stroke="#92400e" fill="url(#rev)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="bookings" name="bookings" stroke="#0ea5e9" fill="none" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -174,18 +232,22 @@ export default function AdminHome() {
 
             <Card className="p-0">
               <CardContent className="p-5">
-                <p className="text-sm font-semibold text-neutral-900 mb-4">Booking status</p>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={bookingStatus} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                      {bookingStatus.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                <p className="mb-4 text-sm font-semibold text-neutral-900">Booking status, {periodLabel}</p>
+                {(data?.statusSplit || []).every((s) => s.value === 0) && !loading ? (
+                  <div className="flex h-[280px] items-center justify-center text-sm text-neutral-500">No bookings {periodLabel}</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={data?.statusSplit || []} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                        {(data?.statusSplit || []).map((entry) => (
+                          <Cell key={entry.name} fill={STATUS_COLOR[entry.name]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
