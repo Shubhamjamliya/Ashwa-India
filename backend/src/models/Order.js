@@ -18,6 +18,7 @@ const orderSchema = new mongoose.Schema(
     subtotal: { type: Number },
     couponCode: { type: String },
     discount: { type: Number, default: 0 },
+    gst: { percent: { type: Number, default: 0 }, amount: { type: Number, default: 0 } },
     total: { type: Number, required: true },
     paymentMethod: { type: String, enum: ['razorpay', 'wallet', 'cod'], default: 'razorpay' },
     shippingAddress: {

@@ -1,5 +1,12 @@
 const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
+const SystemSettings = require('../models/SystemSettings');
+
+// The GST rate admin set for store orders. Zero when nothing is set.
+async function gstPercent() {
+  const settings = await SystemSettings.findOne({ key: 'singleton' }).select('tax');
+  return settings?.tax?.gstPercent || 0;
+}
 
 function fail(message, status = 400) {
   const err = new Error(message);
@@ -42,6 +49,10 @@ async function priceCart(items, couponCode) {
 
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
   const applied = couponCode ? await applyCoupon(couponCode, subtotal) : { discount: 0, coupon: null };
+  // GST is charged on the amount after the coupon discount.
+  const taxable = subtotal - applied.discount;
+  const percent = await gstPercent();
+  const gst = { percent, amount: Math.round((taxable * percent) / 100 * 100) / 100 };
 
   return {
     lines,
@@ -49,7 +60,8 @@ async function priceCart(items, couponCode) {
     subtotal,
     discount: applied.discount,
     couponCode: applied.coupon ? applied.coupon.code : undefined,
-    total: subtotal - applied.discount,
+    gst,
+    total: taxable + gst.amount,
   };
 }
 

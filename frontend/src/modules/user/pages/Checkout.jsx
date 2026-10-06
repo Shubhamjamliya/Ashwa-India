@@ -216,6 +216,7 @@ export default function Checkout() {
             <div className="space-y-1 border-t border-[#E4E1D8] pt-3 text-sm">
               <div className="flex justify-between text-neutral-500"><span>Subtotal</span><span>{money(preview?.subtotal)}</span></div>
               {preview?.discount > 0 && <div className="flex justify-between text-emerald-700"><span>Coupon {preview.couponCode}</span><span>− {money(preview.discount)}</span></div>}
+              {preview?.gst?.amount > 0 && <div className="flex justify-between"><span>GST ({preview.gst.percent}%)</span><span>{money(preview.gst.amount)}</span></div>}
               <div className="flex justify-between text-base font-extrabold text-[#0F2238]"><span>Total</span><span>{money(preview?.total)}</span></div>
             </div>
           </div>

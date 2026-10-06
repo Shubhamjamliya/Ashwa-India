@@ -33,6 +33,8 @@ router.patch('/orders/:id/status', protect, authorize('store-seller', 'admin'), 
 router.post('/payments/razorpay-order', protect, authorize('user'), commerce.createPaymentOrder);
 router.post('/cart/preview', protect, authorize('user'), commerce.previewCart);
 router.get('/payment-options', commerce.paymentOptions);
+router.get('/tax', commerce.taxSettings);
+router.put('/tax', protect, authorize('admin'), commerce.updateTaxSettings);
 router.put('/payment-options', protect, authorize('admin'), commerce.updatePaymentOptions);
 
 router.get('/coupons', protect, authorize('admin'), commerce.listCoupons);

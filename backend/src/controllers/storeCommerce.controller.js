@@ -75,6 +75,7 @@ exports.previewCart = asyncHandler(async (req, res) => {
   res.json({
     subtotal: cart.subtotal,
     discount: cart.discount,
+    gst: cart.gst,
     total: cart.total,
     couponCode: cart.couponCode || null,
     lines: cart.lines.map((l) => ({
@@ -199,6 +200,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     subtotal: cart.subtotal,
     couponCode: cart.couponCode,
     discount: cart.discount,
+    gst: cart.gst,
     total: cart.total,
     paymentMethod: method,
     status: 'pending',
@@ -389,4 +391,24 @@ exports.toggleFavouriteProduct = asyncHandler(async (req, res) => {
   }
   await user.save();
   res.json({ saved: !exists, favourites: user.favouriteProducts.map(String) });
+});
+
+// GET /api/store/tax — public, the GST rate applied to store orders
+exports.taxSettings = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.findOne({ key: 'singleton' }).select('tax');
+  res.json({ gstPercent: settings?.tax?.gstPercent || 0 });
+});
+
+// PUT /api/store/tax (admin) { gstPercent }
+exports.updateTaxSettings = asyncHandler(async (req, res) => {
+  const percent = Number(req.body.gstPercent);
+  if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+    return res.status(400).json({ message: 'GST must be a percentage between 0 and 100' });
+  }
+  await SystemSettings.findOneAndUpdate(
+    { key: 'singleton' },
+    { $set: { 'tax.gstPercent': percent }, $setOnInsert: { key: 'singleton' } },
+    { upsert: true }
+  );
+  res.json({ gstPercent: percent });
 });

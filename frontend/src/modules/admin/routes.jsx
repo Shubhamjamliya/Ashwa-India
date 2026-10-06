@@ -22,6 +22,7 @@ import LiveTrips from "./pages/transport/LiveTrips"
 import TransportReports from "./pages/transport/Reports"
 import JobManagement from "./pages/jobs/JobManagement"
 import ReportPage from "./pages/reports/ReportPage"
+import TaxSettings from "./pages/store/TaxSettings"
 import RolePage from "./pages/commission/RolePage"
 import Events from "./pages/events/Events"
 import ServiceCatalog from "./pages/services/ServiceCatalog"
@@ -88,6 +89,7 @@ export const adminRoutes = (
     <Route path="store/products" element={<StoreProducts />} />
     <Route path="store/orders" element={<StoreOrders />} />
     <Route path="store/coupons" element={<CouponsPayments />} />
+    <Route path="store/tax" element={<TaxSettings />} />
 
     {/* System Settings */}
     <Route path="system/broadcast-notification" element={<NotificationBroadcast />} />

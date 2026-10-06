@@ -107,6 +107,9 @@ function SellerGroup({ sellerId, sellerName, lines, onCheckout }) {
           {preview?.discount > 0 && (
             <div className="flex justify-between text-emerald-700"><span>Discount</span><span>− {money(preview.discount)}</span></div>
           )}
+          {preview?.gst?.amount > 0 && (
+            <div className="flex justify-between"><span>GST ({preview.gst.percent}%)</span><span>{money(preview.gst.amount)}</span></div>
+          )}
           <div className="flex justify-between text-base font-extrabold text-[#0F2238]">
             <span>Total</span>
             <span>{busy ? "…" : money(preview?.total)}</span>

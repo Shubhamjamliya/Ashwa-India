@@ -61,6 +61,7 @@ const adminMenu = [
       { type: "link", label: "Store Sellers", icon: "Building2", path: "/admin/store/sellers" },
       { type: "link", label: "Orders", icon: "ShoppingBag", path: "/admin/store/orders" },
       { type: "link", label: "Coupons & Payments", icon: "Ticket", path: "/admin/store/coupons" },
+      { type: "link", label: "Tax / GST", icon: "Receipt", path: "/admin/store/tax" },
       { type: "link", label: "Commission", icon: "DollarSign", path: "/admin/commission/store" },
     ],
   },

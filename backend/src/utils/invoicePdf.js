@@ -68,6 +68,7 @@ function buildInvoicePdf(order, res) {
   };
   row('Subtotal', money(order.subtotal ?? order.total + (order.discount || 0)));
   if (order.discount) row(`Discount${order.couponCode ? ` (${order.couponCode})` : ''}`, `- ${money(order.discount)}`);
+  if (order.gst?.amount) row(`GST (${order.gst.percent}%)`, money(order.gst.amount));
   row('Total', money(order.total), true);
 
   doc.font('Helvetica').fontSize(10).fillColor(muted)

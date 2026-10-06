@@ -21,6 +21,10 @@ const systemSettingsSchema = new mongoose.Schema(
     payments: {
       codEnabled: { type: Boolean, default: false },
     },
+    // GST charged to customers on store orders. Set by admin on the Tax / GST page.
+    tax: {
+      gstPercent: { type: Number, default: 0, min: 0, max: 100 },
+    },
     customization: {
       horseMarketplace: { type: Boolean, default: true },
       accessoriesStore: { type: Boolean, default: true },
