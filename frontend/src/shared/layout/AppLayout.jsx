@@ -9,7 +9,7 @@ import { SellerNotificationsProvider, useSellerNotifications } from "@/shared/co
 function AppLayoutInner({ role, roleInfo, menu }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const { pendingInquiries, pendingVisits, toasts, dismissToast } = useSellerNotifications()
+  const { pendingInquiries, pendingVisits, pendingOrders, toasts, dismissToast } = useSellerNotifications()
 
   useEffect(() => {
     try {
@@ -22,7 +22,12 @@ function AppLayoutInner({ role, roleInfo, menu }) {
   }, [])
 
   // The seller "Inquiries" menu item covers both conversations and visit requests, so its badge sums both.
-  const badges = role === "horse-seller" ? { "/seller/horses/inquiries": pendingInquiries + pendingVisits } : {}
+  const badges =
+    role === "horse-seller"
+      ? { "/seller/horses/inquiries": pendingInquiries + pendingVisits }
+      : role === "store-seller"
+        ? { "/seller/store/orders": pendingOrders }
+        : {}
 
   return (
     <div className="h-screen bg-neutral-100 flex overflow-hidden">

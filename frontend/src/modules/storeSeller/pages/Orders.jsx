@@ -90,10 +90,21 @@ export default function SellerStoreOrders() {
 
   useEffect(() => {
     const socket = getSocket()
-    const handleNewOrder = (order) => {
-      setOrders((prev) => [order, ...prev.filter((o) => o._id !== order._id)])
-      setNewOrderAlert(order)
-      playChime()
+    // The socket only carries { orderId } — fetch the full, populated order before showing it.
+    const handleNewOrder = async ({ orderId } = {}) => {
+      if (!orderId) return
+      try {
+        const res = await apiFetch("/store/orders")
+        const freshOrders = res.orders || []
+        setOrders(freshOrders)
+        const order = freshOrders.find((o) => o._id === orderId)
+        if (order) {
+          setNewOrderAlert(order)
+          playChime()
+        }
+      } catch {
+        // Best-effort — the seller still sees the new order on next manual refresh.
+      }
     }
     socket.on("order:new", handleNewOrder)
     return () => {
@@ -196,7 +207,7 @@ export default function SellerStoreOrders() {
                     onClick={() => setSelectedOrder(order)}
                   >
                     <td className="px-5 py-5">
-                      <p className="font-mono text-xs font-semibold text-neutral-900">#{order._id.slice(-6).toUpperCase()}</p>
+                      <p className="font-mono text-xs font-semibold text-neutral-900">#{(order._id || "").slice(-6).toUpperCase() || "—"}</p>
                       <p className="mt-1 text-xs text-neutral-500">{fmtDate(order.createdAt)}</p>
                     </td>
                     <td className="px-4 py-5">
@@ -204,7 +215,7 @@ export default function SellerStoreOrders() {
                       <p className="text-xs text-neutral-500">{order.buyer?.phone}</p>
                     </td>
                     <td className="px-4 py-5 text-sm text-neutral-600">
-                      {order.items
+                      {(order.items || [])
                         .map((i) => `${i.quantity} × ${i.product?.name || "Product"}`)
                         .join(", ")}
                     </td>
@@ -276,7 +287,7 @@ export default function SellerStoreOrders() {
                   <div className="flex items-center justify-between border-b px-6 py-4">
                     <div>
                       <h2 className="text-lg font-bold text-neutral-900">
-                        Order #{selectedOrder._id.slice(-6).toUpperCase()}
+                        Order #{(selectedOrder._id || "").slice(-6).toUpperCase() || "—"}
                       </h2>
                       <p className="text-xs text-neutral-500">{fmtDate(selectedOrder.createdAt)}</p>
                     </div>
@@ -423,7 +434,7 @@ export default function SellerStoreOrders() {
                   </div>
 
                   <div className="space-y-2 px-6 py-4">
-                    {newOrderAlert.items.map((item, idx) => (
+                    {(newOrderAlert.items || []).map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between text-sm">
                         <span className="text-neutral-600">
                           {item.quantity} × {item.product?.name || "Product"}
