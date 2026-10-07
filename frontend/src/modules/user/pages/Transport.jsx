@@ -18,7 +18,7 @@ export default function Transport() {
     <div className="pb-8">
       <PageHeader title="Horse Transport" titleClassName="text-[17px]" />
 
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-4 pt-4">
         <div className="flex items-center gap-3 rounded-2xl bg-[#0B1C33] p-4 text-white">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#C28D2E]/20">
             <Truck className="h-6 w-6 text-[#C28D2E]" />

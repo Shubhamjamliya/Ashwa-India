@@ -70,12 +70,12 @@ export default function ProviderProfile() {
 
   return (
     <div className="pb-28">
-      <div className="flex items-center gap-2 p-4">
-        <BackButton />
-        <h1 className="text-[17px] font-bold text-[#0F2238]">Provider profile</h1>
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
+        <h1 className="text-[17px] font-bold text-white">Provider profile</h1>
       </div>
 
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-4 pt-4">
         <div className="rounded-2xl bg-[#0B1C33] p-4">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#C28D2E] bg-[#132B4A]">

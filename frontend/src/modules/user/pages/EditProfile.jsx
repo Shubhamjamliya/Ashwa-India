@@ -36,11 +36,11 @@ export default function EditProfile() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center gap-2 p-4">
-        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
-          <ArrowLeft className="h-5 w-5 text-[#0F2238]" />
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25">
+          <ArrowLeft className="h-5 w-5 text-white" />
         </button>
-        <h1 className="text-[17px] font-bold text-[#0F2238]">Edit Profile</h1>
+        <h1 className="text-[17px] font-bold text-white">Edit Profile</h1>
       </div>
 
       <form onSubmit={handleSave} className="space-y-3 px-4">

@@ -51,7 +51,7 @@ export default function Marketplace() {
     <div className="pb-6">
       <PageHeader title="Horse Marketplace" />
 
-      <div className="flex gap-2 overflow-x-auto px-4 pb-3">
+      <div className="flex gap-2 overflow-x-auto px-4 pb-3 pt-3">
         {TABS.map((t) => (
           <button
             key={t.key}

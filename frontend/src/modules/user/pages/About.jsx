@@ -6,14 +6,14 @@ export default function About() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center gap-2 p-4">
-        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
-          <ArrowLeft className="h-5 w-5 text-[#0F2238]" />
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25">
+          <ArrowLeft className="h-5 w-5 text-white" />
         </button>
-        <h1 className="text-lg font-bold text-[#0F2238]">About Ashwa India</h1>
+        <h1 className="text-lg font-bold text-white">About Ashwa India</h1>
       </div>
 
-      <div className="px-4">
+      <div className="px-4 pt-4">
         <div className="mb-6 flex flex-col items-center rounded-2xl bg-[#0B1C33] py-6">
           <p className="text-2xl font-extrabold text-white">
             Ashwa<span className="text-[#C28D2E]">India</span>

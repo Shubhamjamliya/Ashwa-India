@@ -135,9 +135,9 @@ export default function Profile() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center justify-between border-b border-[#E4E1D8] bg-white px-4 py-3">
-        <BackButton />
-        <h1 className="text-base font-bold text-[#0F2238]">Profile</h1>
+      <div className="sticky top-0 z-30 flex items-center justify-between bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
+        <h1 className="text-base font-bold text-white">Profile</h1>
         <span className="h-9 w-9" />
       </div>
 

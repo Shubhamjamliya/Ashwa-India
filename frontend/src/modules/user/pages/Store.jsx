@@ -63,7 +63,7 @@ export default function Store() {
     <div className="pb-6">
       <PageHeader title="Accessories Store" right={<CartIconButton count={cartCount} onClick={() => navigate("/user/cart")} />} />
 
-      <div className="space-y-3 px-4 pb-3">
+      <div className="space-y-3 px-4 pb-3 pt-3">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />

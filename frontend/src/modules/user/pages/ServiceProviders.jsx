@@ -45,11 +45,11 @@ export default function ServiceProviders() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center gap-2 p-4">
-        <BackButton />
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
         <div className="min-w-0">
-          <h1 className="truncate text-[17px] font-bold text-[#0F2238]">{serviceName || "Service"}</h1>
-          <p className="text-[11px] text-neutral-500">
+          <h1 className="truncate text-[17px] font-bold text-white">{serviceName || "Service"}</h1>
+          <p className="truncate text-[11px] text-white/60">
             {location?.label ? `Providers serving ${location.label}` : "Choose a provider to see their profile"}
           </p>
         </div>

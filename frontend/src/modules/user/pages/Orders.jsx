@@ -30,9 +30,9 @@ export default function Orders() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center gap-2 px-4 pb-3 pt-4">
-        <BackButton />
-        <h1 className="text-xl font-bold text-[#0F2238]">Your orders</h1>
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
+        <h1 className="text-xl font-bold text-white">Your orders</h1>
       </div>
 
       {loading ? (

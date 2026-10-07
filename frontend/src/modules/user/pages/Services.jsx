@@ -21,9 +21,9 @@ export default function Services() {
 
   return (
     <div className="pb-6">
-      <div className="flex items-center gap-2 p-4">
-        <BackButton />
-        <h1 className="text-[17px] font-bold text-[#0F2238]">Services</h1>
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
+        <h1 className="text-[17px] font-bold text-white">Services</h1>
       </div>
 
       {loading ? (

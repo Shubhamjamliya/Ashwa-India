@@ -247,11 +247,11 @@ export default function Bookings() {
   const [tab, setTab] = useState("transport")
   return (
     <div>
-      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
-        <BackButton />
-        <h1 className="text-[17px] font-bold text-[#0F2238]">My Bookings</h1>
+      <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#0B1C33] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <BackButton variant="dark" />
+        <h1 className="text-[17px] font-bold text-white">My Bookings</h1>
       </div>
-      <div className="flex gap-1.5 px-4 pb-3">
+      <div className="flex gap-1.5 px-4 pb-3 pt-3">
         {[
           { key: "transport", label: "Transport" },
           { key: "services", label: "Services" },
