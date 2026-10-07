@@ -2,16 +2,14 @@ import { useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import AppSidebar from "@/shared/layout/AppSidebar"
 import AppNavbar from "@/shared/layout/AppNavbar"
+import ToastStack from "@/shared/layout/ToastStack"
 import { roles, sidebarMenus, getRoleForPath } from "@/shared/constants/sidebarMenus"
+import { SellerNotificationsProvider, useSellerNotifications } from "@/shared/context/SellerNotificationsContext"
 
-export default function AppLayout() {
-  const location = useLocation()
+function AppLayoutInner({ role, roleInfo, menu }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-
-  const role = getRoleForPath(location.pathname)
-  const roleInfo = roles[role]
-  const menu = sidebarMenus[role]
+  const { pendingInquiries, pendingVisits, toasts, dismissToast } = useSellerNotifications()
 
   useEffect(() => {
     try {
@@ -22,6 +20,9 @@ export default function AppLayout() {
       }
     } catch (e) { /* ignore */ }
   }, [])
+
+  // The seller "Inquiries" menu item covers both conversations and visit requests, so its badge sums both.
+  const badges = role === "horse-seller" ? { "/seller/horses/inquiries": pendingInquiries + pendingVisits } : {}
 
   return (
     <div className="h-screen bg-neutral-100 flex overflow-hidden">
@@ -36,6 +37,7 @@ export default function AppLayout() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onCollapseChange={setIsSidebarCollapsed}
+        badges={badges}
       />
 
       <div
@@ -48,6 +50,21 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
+  )
+}
+
+export default function AppLayout() {
+  const location = useLocation()
+  const role = getRoleForPath(location.pathname)
+  const roleInfo = roles[role]
+  const menu = sidebarMenus[role]
+
+  return (
+    <SellerNotificationsProvider role={role}>
+      <AppLayoutInner role={role} roleInfo={roleInfo} menu={menu} />
+    </SellerNotificationsProvider>
   )
 }

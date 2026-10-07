@@ -20,6 +20,7 @@ router.delete('/horses/:id', protect, authorize('horse-seller', 'admin'), market
 
 router.get('/sellers', protect, authorize('admin'), marketplaceController.listSellers);
 router.patch('/sellers/:id/status', protect, authorize('admin'), marketplaceController.updateSellerStatus);
+router.patch('/sellers/me', protect, authorize('horse-seller'), marketplaceController.updateMyProfile);
 
 router.get('/inquiries', protect, authorize('horse-seller', 'admin'), marketplaceController.listInquiries);
 router.post('/inquiries', protect, authorize('user'), marketplaceController.createInquiry);

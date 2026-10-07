@@ -5,6 +5,7 @@ import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import useLiveEvents from "@/shared/lib/useLiveEvents"
 import OfferPanel from "@/shared/inquiry/OfferPanel"
+import DateTimePicker from "@/shared/components/DateTimePicker"
 import BackButton from "../components/BackButton"
 
 const fmt = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
@@ -158,12 +159,7 @@ function Thread({ id, onBack }) {
         {visitOpen && !visitSent && (
           <div className="space-y-2 rounded-xl bg-[#F6F3EC] p-2.5">
             <p className="text-xs font-bold text-[#0F2238]">Request a visit</p>
-            <input
-              type="datetime-local"
-              value={visitAt}
-              onChange={(e) => setVisitAt(e.target.value)}
-              className="h-9 w-full rounded-lg border border-[#E4E1D8] bg-white px-2.5 text-xs text-[#0F2238] outline-none focus:border-[#C28D2E]"
-            />
+            <DateTimePicker value={visitAt} onChange={setVisitAt} />
             <textarea
               value={visitNote}
               onChange={(e) => setVisitNote(e.target.value)}

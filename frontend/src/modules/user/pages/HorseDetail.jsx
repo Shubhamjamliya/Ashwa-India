@@ -23,6 +23,7 @@ import {
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import { useBranding } from "@/shared/context/BrandingContext"
+import DateTimePicker from "@/shared/components/DateTimePicker"
 import { useWishlist } from "../context/WishlistContext"
 
 const SCOPE_LABEL = {
@@ -415,12 +416,7 @@ export default function HorseDetail() {
           {visitSent && <p className="text-sm text-emerald-700">Visit request sent. The seller will confirm soon. Track it under your conversations.</p>}
           {visitOpen && !visitSent && (
             <div className="space-y-2">
-              <input
-                type="datetime-local"
-                value={visitAt}
-                onChange={(e) => setVisitAt(e.target.value)}
-                className="h-10 w-full rounded-xl border border-[#E4E1D8] px-3 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
-              />
+              <DateTimePicker value={visitAt} onChange={setVisitAt} />
               <textarea
                 value={visitNote}
                 onChange={(e) => setVisitNote(e.target.value)}

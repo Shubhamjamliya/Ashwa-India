@@ -10,6 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/compo
 import { Input } from "@/shared/components/ui/input"
 import { roles } from "@/shared/constants/sidebarMenus"
 import { useAuth } from "@/shared/context/AuthContext"
+import { useSellerNotifications } from "@/shared/context/SellerNotificationsContext"
+
+const notifTime = (d) => {
+  const diffMs = Date.now() - new Date(d).getTime()
+  const mins = Math.round(diffMs / 60000)
+  if (mins < 1) return "Just now"
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.round(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+}
 
 export default function AppNavbar({ onMenuClick, role = "admin" }) {
   const navigate = useNavigate()
@@ -18,13 +29,13 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const searchInputRef = useRef(null)
+  const { items: notifications, unreadCount, markAllRead } = useSellerNotifications()
 
   const roleInfo = roles[role]
   const userData = {
     name: user?.name || user?.businessName || roleInfo.label,
     email: user?.email || user?.phone || "",
   }
-  const notifications = []
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -77,7 +88,13 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+            <Popover
+              open={notificationsOpen}
+              onOpenChange={(open) => {
+                setNotificationsOpen(open)
+                if (open && unreadCount > 0) markAllRead()
+              }}
+            >
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -85,9 +102,9 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
                   aria-label="Notifications"
                 >
                   <Bell className="w-5 h-5" />
-                  {notifications.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 min-w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
-                      {notifications.length}
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 min-w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                      {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
                 </button>
@@ -96,10 +113,33 @@ export default function AppNavbar({ onMenuClick, role = "admin" }) {
                 <div className="px-4 py-3 border-b border-neutral-200">
                   <p className="text-sm font-semibold text-neutral-900">Notifications</p>
                 </div>
-                <div className="max-h-80 overflow-y-auto flex flex-col items-center gap-2 px-6 py-10 text-center">
-                  <BellOff className="w-8 h-8 text-neutral-300" />
-                  <p className="text-sm text-neutral-500">No notifications yet</p>
-                </div>
+                {notifications.length === 0 ? (
+                  <div className="max-h-80 overflow-y-auto flex flex-col items-center gap-2 px-6 py-10 text-center">
+                    <BellOff className="w-8 h-8 text-neutral-300" />
+                    <p className="text-sm text-neutral-500">No notifications yet</p>
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto divide-y divide-neutral-100">
+                    {notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          setNotificationsOpen(false)
+                          if (n.link) navigate(n.link)
+                        }}
+                        className="w-full px-4 py-3 text-left hover:bg-neutral-50 flex items-start gap-2"
+                      >
+                        {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />}
+                        <div className={`min-w-0 flex-1 ${n.read ? "pl-3.5" : ""}`}>
+                          <p className="truncate text-sm font-semibold text-neutral-900">{n.title}</p>
+                          <p className="line-clamp-2 text-xs text-neutral-500">{n.body}</p>
+                          <p className="mt-0.5 text-[11px] text-neutral-400">{notifTime(n.time)}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
 

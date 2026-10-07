@@ -25,6 +25,7 @@ export default function AppSidebar({
   isOpen = false,
   onClose,
   onCollapseChange,
+  badges = {},
 }) {
   const location = useLocation()
   const itemRefs = useRef({})
@@ -92,6 +93,7 @@ export default function AppSidebar({
 
   const renderLink = (item, key, index, inSection = false) => {
     const Icon = iconMap[item.icon] || LayoutDashboard
+    const badgeCount = badges[item.path] || 0
     return (
       <Link
         key={key}
@@ -112,13 +114,23 @@ export default function AppSidebar({
           isCollapsed && "justify-center px-2"
         )}
         style={{ animationDelay: `${index * 0.04}s` }}
-        title={isCollapsed ? item.label : undefined}
+        title={isCollapsed ? (badgeCount > 0 ? `${item.label} (${badgeCount})` : item.label) : undefined}
       >
-        <Icon className={cn(
-          "w-4 h-4 shrink-0 transition-all duration-300",
-          isActive(item.path) ? "text-neutral-950 scale-110" : "text-white/85"
-        )} />
-        {!isCollapsed && <span className="truncate">{item.label}</span>}
+        <span className="relative shrink-0">
+          <Icon className={cn(
+            "w-4 h-4 transition-all duration-300",
+            isActive(item.path) ? "text-neutral-950 scale-110" : "text-white/85"
+          )} />
+          {isCollapsed && badgeCount > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-sidebar" />
+          )}
+        </span>
+        {!isCollapsed && <span className="truncate flex-1">{item.label}</span>}
+        {!isCollapsed && badgeCount > 0 && (
+          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+            {badgeCount > 99 ? "99+" : badgeCount}
+          </span>
+        )}
       </Link>
     )
   }

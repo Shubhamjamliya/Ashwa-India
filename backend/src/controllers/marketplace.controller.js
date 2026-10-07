@@ -94,6 +94,17 @@ exports.updateSellerStatus = asyncHandler(async (req, res) => {
   res.json({ seller });
 });
 
+// PATCH /api/marketplace/sellers/me  (horse-seller)
+exports.updateMyProfile = asyncHandler(async (req, res) => {
+  const { name, email, businessName, logo } = req.body;
+  const seller = await HorseSeller.findByIdAndUpdate(
+    req.user._id,
+    { name, email, businessName, logo },
+    { new: true, omitUndefined: true }
+  );
+  res.json({ seller: seller.toSafeObject() });
+});
+
 // GET /api/marketplace/inquiries
 exports.listInquiries = asyncHandler(async (req, res) => {
   const filter = {};
