@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, CalendarClock, CheckCheck, MessageSquare, Phone, Send } from "lucide-react"
+import { ArrowLeft, CalendarClock, CheckCheck, CheckCircle2, MessageSquare, Phone, Send, XCircle } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
 import useLiveEvents from "@/shared/lib/useLiveEvents"
@@ -8,6 +8,7 @@ import OfferPanel from "@/shared/inquiry/OfferPanel"
 import BackButton from "../components/BackButton"
 
 const fmt = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
 const fmtTime = (d) => new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
 
 const visitStyle = {
@@ -33,6 +34,13 @@ function Thread({ id, onBack }) {
   const [text, setText] = useState("")
   const [sending, setSending] = useState(false)
   const [error, setError] = useState("")
+  const [visitOpen, setVisitOpen] = useState(false)
+  const [visitAt, setVisitAt] = useState("")
+  const [visitNote, setVisitNote] = useState("")
+  const [visitSent, setVisitSent] = useState(false)
+  const [visitError, setVisitError] = useState("")
+  const [visitSending, setVisitSending] = useState(false)
+  const [answering, setAnswering] = useState(false)
   const bottomRef = useRef(null)
 
   const load = () =>
@@ -45,6 +53,24 @@ function Thread({ id, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  const requestVisit = async () => {
+    setVisitError("")
+    if (!visitAt) return setVisitError("Pick a date and time")
+    setVisitSending(true)
+    try {
+      await apiFetch("/marketplace/visits", {
+        method: "POST",
+        body: { horseId: inquiry.horse?._id, preferredAt: new Date(visitAt).toISOString(), message: visitNote.trim() || undefined },
+      })
+      setVisitSent(true)
+      setVisitOpen(false)
+    } catch (err) {
+      setVisitError(err.message || "Could not send the visit request")
+    } finally {
+      setVisitSending(false)
+    }
+  }
+
   useLiveEvents("user", {
     "inquiry:message": (p) => {
       if (p.inquiryId === id) load()
@@ -55,6 +81,19 @@ function Thread({ id, onBack }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [inquiry?.messages?.length])
+
+  const answerQuote = async (action) => {
+    setAnswering(true)
+    setError("")
+    try {
+      await apiFetch(`/marketplace/inquiries/${id}/quote`, { method: "PATCH", body: { action } })
+      await load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setAnswering(false)
+    }
+  }
 
   const send = async (e) => {
     e.preventDefault()
@@ -95,6 +134,15 @@ function Thread({ id, onBack }) {
           <p className="truncate text-[15px] font-bold leading-tight">{seller}</p>
           <p className="truncate text-[11px] text-[#A9B8CC]">About: {inquiry.horse?.name || inquiry.horse?.breed}</p>
         </div>
+        {!visitSent && (
+          <button
+            onClick={() => setVisitOpen((v) => !v)}
+            aria-label="Request a visit"
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${visitOpen ? "bg-[#C28D2E]" : "bg-white/10"}`}
+          >
+            <CalendarClock className="h-4 w-4" />
+          </button>
+        )}
         {sellerPhone && (
           <a href={`tel:${sellerPhone}`} aria-label="Call seller" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600">
             <Phone className="h-4 w-4" />
@@ -102,8 +150,37 @@ function Thread({ id, onBack }) {
         )}
       </div>
 
-      <div className="border-b border-[#E4E1D8] bg-white px-3 py-2">
+      <div className="space-y-2 border-b border-[#E4E1D8] bg-white px-3 py-2">
         <OfferPanel inquiry={inquiry} role="user" onChanged={load} />
+
+        {visitSent && <p className="text-xs font-semibold text-emerald-700">Visit request sent. The seller will confirm soon — check Visit requests for status.</p>}
+
+        {visitOpen && !visitSent && (
+          <div className="space-y-2 rounded-xl bg-[#F6F3EC] p-2.5">
+            <p className="text-xs font-bold text-[#0F2238]">Request a visit</p>
+            <input
+              type="datetime-local"
+              value={visitAt}
+              onChange={(e) => setVisitAt(e.target.value)}
+              className="h-9 w-full rounded-lg border border-[#E4E1D8] bg-white px-2.5 text-xs text-[#0F2238] outline-none focus:border-[#C28D2E]"
+            />
+            <textarea
+              value={visitNote}
+              onChange={(e) => setVisitNote(e.target.value)}
+              rows={2}
+              placeholder="Anything the seller should know (optional)"
+              className="w-full resize-none rounded-lg border border-[#E4E1D8] bg-white px-2.5 py-1.5 text-xs text-[#0F2238] outline-none focus:border-[#C28D2E]"
+            />
+            {visitError && <p className="text-[11px] text-destructive">{visitError}</p>}
+            <button
+              onClick={requestVisit}
+              disabled={visitSending}
+              className="w-full rounded-lg bg-[#0B1C33] py-2 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {visitSending ? "Sending..." : "Send visit request"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -115,6 +192,8 @@ function Thread({ id, onBack }) {
           const mine = m.sender === "user"
           const isOffer = m.kind === "offer"
           const isDeal = m.kind === "deal"
+          // Only the most recent offer can still be answered, and only when it's the seller's turn to wait on the buyer.
+          const canAnswer = isOffer && i === messages.length - 1 && !inquiry.agreedAmount && inquiry.quote?.status === "pending" && inquiry.quote.by !== "user"
           return (
             <div key={i}>
               {showDay && (
@@ -136,6 +215,24 @@ function Thread({ id, onBack }) {
                   <p className="mt-0.5 text-right text-[10px] text-neutral-500">{fmtTime(m.createdAt)}</p>
                 </div>
               </div>
+              {canAnswer && (
+                <div className={`mt-1.5 flex gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+                  <button
+                    disabled={answering}
+                    onClick={() => answerQuote("accept")}
+                    className="flex h-8 items-center gap-1 rounded-lg bg-[#0B1C33] px-3 text-xs font-bold text-white disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Accept {money(m.amount)}
+                  </button>
+                  <button
+                    disabled={answering}
+                    onClick={() => answerQuote("decline")}
+                    className="flex h-8 items-center gap-1 rounded-lg border border-[#E4E1D8] bg-white px-3 text-xs font-bold text-[#0F2238] disabled:opacity-50"
+                  >
+                    <XCircle className="h-3.5 w-3.5" /> Decline
+                  </button>
+                </div>
+              )}
             </div>
           )
         })}
