@@ -1,51 +1,37 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CalendarDays } from 'lucide-react-native';
 import { colors, radius, spacing } from '../../../theme/colors';
+import { apiFetch } from '../../../services/api';
+import { getMediaUrl } from '../../../services/media';
 
-type Action = {
-  key: string;
-  label: string;
-  image: number;
-  iconBg: string;
-  onPress?: () => void;
-};
+type TileKey = 'horses' | 'providers' | 'transport' | 'store' | 'events' | 'jobs';
 
-type Props = {
-  onHorsesPress: () => void;
-  onStorePress: () => void;
-  onTransportPress: () => void;
-};
+// Tile order, colours and destinations are fixed in the app; images and labels come from the
+// admin Explore section when set there, and a tile the admin switched off is hidden.
+const TILES: { key: TileKey; label: string; image: number | null; bg: string }[] = [
+  { key: 'horses', label: 'Horse\nMarketplace', image: require('../../../assets/horses-buy.png'), bg: '#FBEFD6' },
+  { key: 'providers', label: 'Service\nProviders', image: require('../../../assets/service-providers.png'), bg: '#E1ECFC' },
+  { key: 'transport', label: 'Horse\nTransport', image: require('../../../assets/transport.png'), bg: '#E0F4E7' },
+  { key: 'store', label: 'Accessories\nStore', image: require('../../../assets/accessories.png'), bg: '#F0E4FB' },
+  { key: 'events', label: 'Horse\nEvents', image: null, bg: '#FDE7E7' },
+  { key: 'jobs', label: 'Horse\nJobs', image: null, bg: '#E8E6F9' },
+];
 
-export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress }: Props) {
-  const actions: Action[] = [
-    {
-      key: 'horses',
-      label: 'Horse\nMarketplace',
-      image: require('../../../assets/horses-buy.png'),
-      iconBg: '#FBEFD6',
-      onPress: onHorsesPress,
-    },
-    {
-      key: 'providers',
-      label: 'Service\nProviders',
-      image: require('../../../assets/service-providers.png'),
-      iconBg: '#E1ECFC',
-    },
-    {
-      key: 'transport',
-      label: 'Horse\nTransport',
-      image: require('../../../assets/transport.png'),
-      iconBg: '#E0F4E7',
-      onPress: onTransportPress,
-    },
-    {
-      key: 'store',
-      label: 'Accessories\nStore',
-      image: require('../../../assets/accessories.png'),
-      iconBg: '#F0E4FB',
-      onPress: onStorePress,
-    },
-  ];
+type AdminTile = { key: string; label?: string; image?: string; active?: boolean };
+
+export function QuickActionsList({ onPress }: { onPress: (key: TileKey) => void }) {
+  const [adminTiles, setAdminTiles] = useState<Record<string, AdminTile>>({});
+
+  useEffect(() => {
+    apiFetch<{ items: AdminTile[] }>('/explore', { auth: false })
+      .then(data => {
+        const byKey: Record<string, AdminTile> = {};
+        for (const item of data.items || []) byKey[item.key] = item;
+        setAdminTiles(byKey);
+      })
+      .catch(() => setAdminTiles({}));
+  }, []);
 
   return (
     <View style={styles.wrapper}>
@@ -57,22 +43,31 @@ export function QuickActionsList({ onHorsesPress, onStorePress, onTransportPress
         <Text style={styles.viewAll}>View All →</Text>
       </View>
 
-      <View style={styles.row}>
-        {actions.map(action => (
-          <Pressable
-            key={action.key}
-            style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
-            disabled={!action.onPress}
-            onPress={action.onPress}>
-            <View style={[styles.iconWrap, { backgroundColor: action.iconBg }]}>
-              <Image source={action.image} style={styles.iconImage} resizeMode="cover" />
-            </View>
-            <Text style={styles.label} numberOfLines={2}>
-              {action.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+        {TILES.map(tile => {
+          const admin = adminTiles[tile.key];
+          if (admin && admin.active === false) return null;
+          const label = admin?.label ? admin.label.replace(/ /, '\n') : tile.label;
+          const source = admin?.image ? { uri: getMediaUrl(admin.image) } : tile.image;
+          return (
+            <Pressable
+              key={tile.key}
+              style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
+              onPress={() => onPress(tile.key)}>
+              <View style={[styles.iconWrap, { backgroundColor: tile.bg }]}>
+                {source ? (
+                  <Image source={source} style={styles.iconImage} resizeMode="cover" />
+                ) : (
+                  <CalendarDays color="#B5474A" size={24} />
+                )}
+              </View>
+              <Text style={styles.label} numberOfLines={2}>
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
@@ -110,13 +105,13 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
+    paddingBottom: 4,
   },
   item: {
     alignItems: 'center',
-    width: '23%',
+    width: 72,
   },
   itemPressed: {
     opacity: 0.6,

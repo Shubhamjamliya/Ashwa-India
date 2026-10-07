@@ -1,25 +1,14 @@
 import React from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, Globe, Share2, Users } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Globe, Share2, Users } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { colors, radius, spacing } from '../../../theme/colors';
-import type { HomeStackParamList } from '../../../navigation/types';
-
-type Nav = NativeStackNavigationProp<HomeStackParamList, 'About'>;
 
 export function AboutScreen() {
-  const navigation = useNavigation<Nav>();
-
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>About Ashwa India</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="About Ashwa India" titleSize={18} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.brandCard}>
@@ -62,30 +51,8 @@ export function AboutScreen() {
 
 const styles = StyleSheet.create({
   noPadding: { padding: 0 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
   content: {
     padding: spacing.md,
-    paddingTop: 0,
     paddingBottom: spacing.xl,
   },
   brandCard: {

@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ArrowLeft, Bell, LogOut, ShieldAlert, Trash2 } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Bell, LogOut, ShieldAlert, Trash2 } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { useAuth } from '../../../context/AuthContext';
-import type { HomeStackParamList } from '../../../navigation/types';
-
-type Nav = NativeStackNavigationProp<HomeStackParamList, 'Settings'>;
 
 const PUSH_PREF_KEY = 'ashwa_user_push_enabled';
 
 export function SettingsScreen() {
-  const navigation = useNavigation<Nav>();
   const { logout } = useAuth();
   const [pushEnabled, setPushEnabled] = useState(true);
 
@@ -45,13 +40,8 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>Settings</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Settings" titleSize={18} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>Preferences</Text>
@@ -105,30 +95,9 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   noPadding: { padding: 0 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
   content: {
     padding: spacing.md,
-    paddingTop: 0,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
   },
   sectionTitle: {

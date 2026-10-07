@@ -1,14 +1,11 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, Bell, Trash2, X } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Bell, Trash2, X } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
+import { HeaderIconButton } from '../../../components/CartIconButton';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { useNotifications } from '../../../context/NotificationContext';
-import type { HomeStackParamList } from '../../../navigation/types';
-
-type Nav = NativeStackNavigationProp<HomeStackParamList, 'Notifications'>;
 
 function timeAgo(dateStr: string) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -22,22 +19,21 @@ function timeAgo(dateStr: string) {
 }
 
 export function NotificationsScreen() {
-  const navigation = useNavigation<Nav>();
   const { notifications, loading, dismiss, dismissAll } = useNotifications();
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>Notifications</Text>
-        {notifications.length > 0 && (
-          <Pressable onPress={dismissAll} hitSlop={12} style={styles.clearBtn}>
-            <Trash2 color={colors.destructive} size={18} />
-          </Pressable>
-        )}
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader
+        title="Notifications"
+        titleSize={18}
+        right={
+          notifications.length > 0 ? (
+            <HeaderIconButton onPress={dismissAll}>
+              <Trash2 color={colors.destructive} size={18} />
+            </HeaderIconButton>
+          ) : undefined
+        }
+      />
 
       {loading && notifications.length === 0 ? (
         <View style={styles.center}>
@@ -76,38 +72,7 @@ export function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  clearBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
+  noPadding: { padding: 0 },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -121,7 +86,6 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: spacing.md,
-    paddingTop: 0,
     gap: spacing.sm,
     flexGrow: 1,
   },

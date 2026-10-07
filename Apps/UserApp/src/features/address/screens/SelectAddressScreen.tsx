@@ -15,12 +15,12 @@ import {
   MapPin,
   Plus,
   Search,
-  X,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getCurrentPosition } from '../../../services/location';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { Input } from '../../../components/Input';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { useAddresses, type Address } from '../../../context/AddressContext';
@@ -43,6 +43,7 @@ export function SelectAddressScreen() {
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const q = query.trim();
@@ -79,6 +80,7 @@ export function SelectAddressScreen() {
 
   const handleUseCurrentLocation = () => {
     setLocating(true);
+    setError('');
     getCurrentPosition(
       async position => {
         try {
@@ -97,7 +99,10 @@ export function SelectAddressScreen() {
           setLocating(false);
         }
       },
-      () => setLocating(false),
+      () => {
+        setLocating(false);
+        setError('Could not get your location. Allow location access and try again.');
+      },
       { enableHighAccuracy: true, timeout: 15000 },
     );
   };
@@ -107,13 +112,8 @@ export function SelectAddressScreen() {
   };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <X color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>Select delivery address</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Select delivery address" backIcon="close" />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.searchWrap}>
@@ -173,6 +173,8 @@ export function SelectAddressScreen() {
           </Pressable>
         </View>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <Text style={styles.sectionTitle}>Saved Addresses</Text>
         {addresses.length === 0 ? (
           <Text style={styles.emptyText}>No addresses saved yet.</Text>
@@ -212,31 +214,15 @@ export function SelectAddressScreen() {
 
 const styles = StyleSheet.create({
   noPadding: { padding: 0 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
   content: {
     padding: spacing.md,
-    paddingTop: 0,
     paddingBottom: spacing.xl,
+  },
+  errorText: {
+    fontSize: 13,
+    color: colors.destructive,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
   },
   searchWrap: {
     position: 'relative',

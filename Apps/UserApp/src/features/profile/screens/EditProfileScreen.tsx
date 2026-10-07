@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, User as UserIcon } from 'lucide-react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { User as UserIcon } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
 import { colors, radius, spacing } from '../../../theme/colors';
@@ -43,13 +44,8 @@ export function EditProfileScreen() {
   };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>Edit Profile</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Edit Profile" />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.avatarWrap}>
@@ -82,30 +78,8 @@ export function EditProfileScreen() {
 
 const styles = StyleSheet.create({
   noPadding: { padding: 0 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
   content: {
     padding: spacing.md,
-    paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
     gap: spacing.sm,
   },

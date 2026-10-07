@@ -3,7 +3,8 @@ import { apiFetch } from './api';
 import type { SessionUser } from './storage';
 import type { RazorpaySuccess } from 'react-native-razorpay';
 
-type CartLineItem = { productId: string; quantity: number };
+// One cart line as the server prices it. All lines in one payment must be from one seller.
+export type CartLineItem = { productId: string; variantId?: string; quantity: number };
 
 type PaymentOrderResponse = {
   paymentIntentId: string;
@@ -13,17 +14,23 @@ type PaymentOrderResponse = {
   keyId: string;
 };
 
-export async function payForCart(
-  items: CartLineItem[],
-  user: SessionUser | null,
-): Promise<{ paymentIntentId: string; result: RazorpaySuccess }> {
+function assertNative() {
   if (Platform.OS === 'web') {
     throw new Error('Payments are only available in the Ashwa India mobile app, not this web preview.');
   }
+}
+
+// Pays for one seller's cart with Razorpay. The order itself is created afterwards with this proof.
+export async function payForCart(
+  items: CartLineItem[],
+  user: SessionUser | null,
+  couponCode?: string,
+): Promise<{ paymentIntentId: string; result: RazorpaySuccess }> {
+  assertNative();
 
   const order = await apiFetch<PaymentOrderResponse>('/store/payments/razorpay-order', {
     method: 'POST',
-    body: { items },
+    body: { items, couponCode },
   });
 
   const { default: RazorpayCheckout } = await import('react-native-razorpay');
@@ -44,3 +51,42 @@ export async function payForCart(
 
   return { paymentIntentId: order.paymentIntentId, result };
 }
+
+// Adds money to the user's wallet: opens Razorpay, then has the backend verify the payment.
+export async function topUpWallet(amount: number, user: SessionUser | null): Promise<void> {
+  assertNative();
+
+  const order = await apiFetch<PaymentOrderResponse>('/payments/wallet/topup/razorpay-order', {
+    method: 'POST',
+    body: { amount },
+  });
+
+  const { default: RazorpayCheckout } = await import('react-native-razorpay');
+
+  const result = await RazorpayCheckout.open({
+    key: order.keyId,
+    amount: order.amount,
+    currency: order.currency,
+    order_id: order.razorpayOrderId,
+    name: 'Ashwa India',
+    description: 'Wallet top-up',
+    prefill: {
+      name: user?.name,
+      contact: user?.phone,
+    },
+    theme: { color: '#C28D2E' },
+  });
+
+  await apiFetch('/payments/wallet/topup/verify', {
+    method: 'POST',
+    body: {
+      paymentIntentId: order.paymentIntentId,
+      razorpayOrderId: result.razorpay_order_id,
+      razorpayPaymentId: result.razorpay_payment_id,
+      razorpaySignature: result.razorpay_signature,
+    },
+  });
+}
+
+// Razorpay rejects with { code: 2 } (or a description) when the user closes the payment sheet.
+export const isPaymentCancelled = (e: any) => e?.code === 2 || Boolean(e?.description);

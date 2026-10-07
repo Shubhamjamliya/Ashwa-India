@@ -1,27 +1,26 @@
 import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
-  ArrowLeft,
   ChevronRight,
   Heart,
   Info,
   LifeBuoy,
   LogOut,
   MapPin,
+  MessageSquare,
   Package,
   Pencil,
   Settings as SettingsIcon,
   User as UserIcon,
+  Wallet,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { useAuth } from '../../../context/AuthContext';
 import { useWishlist } from '../../../context/WishlistContext';
-import type { HomeStackParamList, MainTabParamList } from '../../../navigation/types';
-
-type Nav = BottomTabNavigationProp<MainTabParamList>;
+import type { AppNavigation } from '../../../navigation/types';
 
 type MenuItem = {
   key: string;
@@ -36,10 +35,7 @@ type MenuItem = {
 export function ProfileScreen() {
   const { user, logout } = useAuth();
   const { horses: savedHorses } = useWishlist();
-  const navigation = useNavigation<Nav>();
-
-  const openHomeStackScreen = (screen: keyof HomeStackParamList) =>
-    navigation.navigate('Home', { screen, params: undefined } as any);
+  const navigation = useNavigation<AppNavigation>();
 
   const accountItems: MenuItem[] = [
     {
@@ -49,7 +45,25 @@ export function ProfileScreen() {
       icon: MapPin,
       iconBg: '#E1ECFC',
       iconColor: '#2563EB',
-      onPress: () => openHomeStackScreen('SavedAddresses'),
+      onPress: () => navigation.navigate('SavedAddresses'),
+    },
+    {
+      key: 'wallet',
+      label: 'Wallet',
+      sublabel: 'Balance, add money and payments',
+      icon: Wallet,
+      iconBg: '#FBEFD6',
+      iconColor: colors.primary,
+      onPress: () => navigation.navigate('Wallet'),
+    },
+    {
+      key: 'enquiries',
+      label: 'Horse enquiries',
+      sublabel: 'Conversations with sellers and visit requests',
+      icon: MessageSquare,
+      iconBg: '#E0F4E7',
+      iconColor: '#16A34A',
+      onPress: () => navigation.navigate('Enquiry'),
     },
     {
       key: 'orders',
@@ -69,7 +83,7 @@ export function ProfileScreen() {
       icon: Heart,
       iconBg: '#FBEFD6',
       iconColor: colors.primary,
-      onPress: () => openHomeStackScreen('Wishlist'),
+      onPress: () => navigation.navigate('Wishlist'),
     },
   ];
 
@@ -80,7 +94,7 @@ export function ProfileScreen() {
       icon: LifeBuoy,
       iconBg: '#E0F4E7',
       iconColor: '#16A34A',
-      onPress: () => openHomeStackScreen('HelpSupport'),
+      onPress: () => navigation.navigate('HelpSupport'),
     },
     {
       key: 'about',
@@ -88,7 +102,7 @@ export function ProfileScreen() {
       icon: Info,
       iconBg: '#E1ECFC',
       iconColor: '#2563EB',
-      onPress: () => openHomeStackScreen('About'),
+      onPress: () => navigation.navigate('About'),
     },
     {
       key: 'settings',
@@ -96,7 +110,7 @@ export function ProfileScreen() {
       icon: SettingsIcon,
       iconBg: colors.muted,
       iconColor: colors.mutedForeground,
-      onPress: () => openHomeStackScreen('Settings'),
+      onPress: () => navigation.navigate('Settings'),
     },
   ];
 
@@ -108,17 +122,8 @@ export function ProfileScreen() {
   };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.topBar}>
-        <Pressable
-          style={styles.backBtn}
-          hitSlop={8}
-          onPress={() => navigation.canGoBack() && navigation.goBack()}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.topBarTitle}>Profile</Text>
-        <View style={styles.backBtn} />
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Profile" back="solid" titleSize={16} centerTitle />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileCard}>
@@ -135,7 +140,7 @@ export function ProfileScreen() {
 
         <Pressable
           style={({ pressed }) => [styles.editProfileBtn, pressed && styles.editProfileBtnPressed]}
-          onPress={() => openHomeStackScreen('EditProfile')}>
+          onPress={() => navigation.navigate('EditProfile')}>
           <Pencil color={colors.primary} size={15} />
           <Text style={styles.editProfileText}>Edit Profile</Text>
         </Pressable>
@@ -191,28 +196,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: spacing.xl,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topBarTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.foreground,
   },
   profileCard: {
     flexDirection: 'row',

@@ -17,9 +17,12 @@ export type AvailableTransporter = {
   };
   distanceFromSourceKm: number;
   tripDistanceKm: number | null;
+  quote?: { amount: number; pricePerKm: number; baseFare: number };
 };
 
-export type TransportRequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
+export type TransportRequestStatus = 'pending' | 'accepted' | 'completed' | 'rejected' | 'cancelled';
+
+export type TransportStage = 'scheduled' | 'to_pickup' | 'in_transit' | 'delivered';
 
 export type TransportRequest = {
   _id: string;
@@ -36,6 +39,13 @@ export type TransportRequest = {
   type: TransportType;
   message?: string;
   status: TransportRequestStatus;
+  stage?: TransportStage;
+  pickupOtp?: string;
+  dropOtp?: string;
+  pickupVerifiedAt?: string;
+  transporterLocation?: { lat: number; lng: number; updatedAt?: string };
+  quote?: { amount: number };
+  reviewed?: boolean;
   createdAt: string;
   respondedAt?: string;
 };

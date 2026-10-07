@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, Crosshair, MapPin, Search } from 'lucide-react-native';
+import { Crosshair, MapPin, Search } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { Input } from '../../../components/Input';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { searchPlaces, type PlaceSuggestion } from '../../../services/geocoding';
@@ -38,17 +39,8 @@ export function ChangeLocationScreen({ onSelect, onUseCurrentLocation, onClose }
   };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        {onClose ? (
-          <Pressable onPress={onClose} hitSlop={12} style={styles.backBtn}>
-            <ArrowLeft color={colors.foreground} size={20} />
-          </Pressable>
-        ) : (
-          <View style={styles.backBtnPlaceholder} />
-        )}
-        <Text style={styles.title}>Change Location</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Change Location" back={onClose ? 'outline' : 'none'} onBack={onClose} />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Pressable style={styles.currentLocationBtn} onPress={onUseCurrentLocation}>
@@ -88,34 +80,8 @@ export function ChangeLocationScreen({ onSelect, onUseCurrentLocation, onClose }
 
 const styles = StyleSheet.create({
   noPadding: { padding: 0 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backBtnPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
   content: {
     padding: spacing.md,
-    paddingTop: 0,
     paddingBottom: spacing.xl,
   },
   currentLocationBtn: {

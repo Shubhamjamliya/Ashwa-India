@@ -48,6 +48,15 @@ export function HomeScreen() {
     loadData();
   }, [loadData]);
 
+  const openTile = (key: 'horses' | 'providers' | 'transport' | 'store' | 'events' | 'jobs') => {
+    if (key === 'horses') navigation.navigate('HorseMarketplace', undefined);
+    else if (key === 'providers') navigation.navigate('Services');
+    else if (key === 'transport') navigation.navigate('TransportLocation');
+    else if (key === 'store') navigation.navigate('Store', undefined);
+    else if (key === 'events') navigation.navigate('Events');
+    else navigation.navigate('Jobs');
+  };
+
   const handleSearch = (filters: { categoryId?: string; location?: string }) => {
     navigation.navigate('HorseMarketplace', {
       category: filters.categoryId,
@@ -72,11 +81,7 @@ export function HomeScreen() {
 
         {banners.length > 0 ? <BannerCarousel banners={banners} /> : null}
 
-        <QuickActionsList
-          onHorsesPress={() => navigation.navigate('HorseMarketplace', undefined)}
-          onStorePress={() => navigation.navigate('Store', undefined)}
-          onTransportPress={() => navigation.navigate('TransportLocation')}
-        />
+        <QuickActionsList onPress={openTile} />
 
         <FeaturedHorses
           horses={horses}

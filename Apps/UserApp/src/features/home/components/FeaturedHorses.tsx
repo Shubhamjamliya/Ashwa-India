@@ -5,6 +5,7 @@ import { colors, radius, spacing } from '../../../theme/colors';
 import { getMediaUrl } from '../../../services/media';
 import { useWishlist } from '../../../context/WishlistContext';
 import type { Horse } from '../../marketplace/types';
+import { priceLabel } from '../../marketplace/price';
 
 const CARD_WIDTH = 170;
 const NEW_WITHIN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -74,7 +75,7 @@ export function FeaturedHorses({ horses, onViewAll, onPressHorse }: Props) {
                   <View />
                 )}
                 <View style={styles.priceBadge}>
-                  <Text style={styles.price}>₹{item.price.toLocaleString('en-IN')}</Text>
+                  <Text style={styles.price}>{priceLabel(item)}</Text>
                 </View>
               </View>
             </Pressable>

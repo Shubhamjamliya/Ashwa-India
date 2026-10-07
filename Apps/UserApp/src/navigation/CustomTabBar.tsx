@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, Calendar, Package, User } from 'lucide-react-native';
+import { Calendar, Home, MessageSquare, Package, User } from 'lucide-react-native';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { colors, radius, spacing } from '../theme/colors';
 
@@ -9,11 +10,17 @@ const icons: Record<string, typeof Home> = {
   Home: Home,
   Booking: Calendar,
   Orders: Package,
+  Enquiry: MessageSquare,
   Profile: User,
 };
 
+// Pages with their own bottom bar or a full-height chat hide the tab bar, as on the web.
+const HIDE_ON = new Set(['HorseDetail', 'InquiryThread']);
+
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const focusedPage = getFocusedRouteNameFromRoute(state.routes[state.index]);
+  if (focusedPage && HIDE_ON.has(focusedPage)) return null;
 
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
@@ -64,8 +71,9 @@ const styles = StyleSheet.create({
   },
   bar: {
     flexDirection: 'row',
+    gap: 4,
     backgroundColor: colors.navy,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     paddingVertical: 8,
     paddingHorizontal: 6,
     borderWidth: 1,
@@ -80,12 +88,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
     paddingVertical: 4,
   },
   iconWrap: {
-    width: 44,
-    height: 26,
+    width: 40,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,68 +1,53 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { Package } from 'lucide-react-native';
-import { useIsFocused } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ChevronRight, Package } from 'lucide-react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
+import { EmptyView, LoadingView } from '../../../components/StateViews';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
+import { money } from '../../../utils/format';
 import type { Order } from '../../store/types';
+import type { HomeStackParamList } from '../../../navigation/types';
+import { ORDER_STATUS } from '../status';
 
-const statusLabel: Record<Order['status'], string> = {
-  pending: 'Pending',
-  processing: 'Processing',
-  shipped: 'Shipped',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
-  returned: 'Returned',
-};
+type Nav = NativeStackNavigationProp<HomeStackParamList, 'OrdersMain'>;
 
-const statusColor: Record<Order['status'], string> = {
-  pending: colors.warning,
-  processing: colors.info,
-  shipped: colors.info,
-  delivered: colors.success,
-  cancelled: colors.destructive,
-  returned: colors.destructive,
-};
-
+// Order history, newest first. Tap an order for its tracking and invoice.
 export function OrdersScreen() {
-  const isFocused = useIsFocused();
+  const navigation = useNavigation<Nav>();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const data = await apiFetch<{ orders: Order[] }>('/store/orders');
-      setOrders(data.orders);
-    } catch {
-      setOrders([]);
-    }
-  }, []);
+  const load = useCallback(
+    () =>
+      apiFetch<{ orders: Order[] }>('/store/orders')
+        .then(data => setOrders(data.orders || []))
+        .catch(() => setOrders([])),
+    [],
+  );
 
-  useEffect(() => {
-    if (isFocused) {
-      setLoading(true);
+  useFocusEffect(
+    useCallback(() => {
       load().finally(() => setLoading(false));
-    }
-  }, [isFocused, load]);
+    }, [load]),
+  );
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
     await load();
     setRefreshing(false);
-  }, [load]);
+  };
 
   return (
-    <Screen style={styles.noPadding}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Your Orders</Text>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader title="Your orders" back="solid" titleSize={20} />
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
+        <LoadingView />
       ) : (
         <FlatList
           data={orders}
@@ -70,35 +55,38 @@ export function OrdersScreen() {
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Package color={colors.mutedForeground} size={32} />
-              <Text style={styles.title}>No orders yet</Text>
-              <Text style={styles.text}>
-                Your accessories store orders will show up here once you place one.
-              </Text>
-            </View>
+            <EmptyView
+              icon={<Package color="#A3A3A3" size={32} />}
+              title="No orders yet"
+              text="Your accessories store orders will show up here once you place one."
+            />
           }
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardTop}>
-                <Text style={styles.orderId}>Order #{item._id.slice(-6).toUpperCase()}</Text>
-                <View style={[styles.statusPill, { backgroundColor: `${statusColor[item.status]}20` }]}>
-                  <Text style={[styles.statusText, { color: statusColor[item.status] }]}>
-                    {statusLabel[item.status]}
-                  </Text>
+          renderItem={({ item }) => {
+            const meta = ORDER_STATUS[item.status] || ORDER_STATUS.pending;
+            return (
+              <Pressable
+                style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+                onPress={() => navigation.navigate('OrderDetail', { orderId: item._id })}>
+                <View style={styles.cardTop}>
+                  <Text style={styles.orderId}>Order #{item._id.slice(-6).toUpperCase()}</Text>
+                  <Text style={[styles.pill, { backgroundColor: `${meta.color}20`, color: meta.color }]}>{meta.label}</Text>
                 </View>
-              </View>
-              <Text style={styles.sellerName}>
-                {item.seller?.businessName || item.seller?.name}
-              </Text>
-              {item.items.map((orderItem, idx) => (
-                <Text key={idx} style={styles.itemLine}>
-                  {orderItem.quantity} × {typeof orderItem.product === 'object' ? orderItem.product.name : 'Item'}
+                <Text style={styles.seller}>{item.seller?.businessName || item.seller?.name}</Text>
+                <Text style={styles.items}>
+                  {item.items
+                    .map(i => `${i.quantity} × ${typeof i.product === 'object' ? i.product.name : 'Item'}`)
+                    .join(', ')}
                 </Text>
-              ))}
-              <Text style={styles.total}>Total: ₹{item.total.toLocaleString('en-IN')}</Text>
-            </View>
-          )}
+                <View style={styles.cardFoot}>
+                  <Text style={styles.total}>{money(item.total)}</Text>
+                  <View style={styles.details}>
+                    <Text style={styles.detailsText}>Details</Text>
+                    <ChevronRight color={colors.mutedForeground} size={14} />
+                  </View>
+                </View>
+              </Pressable>
+            );
+          }}
         />
       )}
     </Screen>
@@ -106,84 +94,31 @@ export function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  noPadding: {
-    padding: 0,
-  },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: spacing.xl,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.foreground,
-    marginTop: 8,
-  },
-  text: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-  list: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl,
-    gap: spacing.sm,
-  },
+  noPadding: { padding: 0 },
+  list: { padding: spacing.md, gap: 10 },
   card: {
-    backgroundColor: colors.card,
+    gap: 4,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.card,
     padding: spacing.md,
-    marginBottom: spacing.sm,
-    gap: 4,
   },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  orderId: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  statusPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: radius.full,
-  },
-  statusText: {
+  pressed: { backgroundColor: colors.muted },
+  cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  orderId: { fontSize: 13, fontWeight: '700', color: colors.foreground },
+  pill: {
     fontSize: 11,
     fontWeight: '700',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    overflow: 'hidden',
   },
-  sellerName: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginTop: 2,
-  },
-  itemLine: {
-    fontSize: 13,
-    color: colors.foreground,
-    marginTop: 4,
-  },
-  total: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.primary,
-    marginTop: 6,
-  },
+  seller: { fontSize: 12, color: colors.mutedForeground },
+  items: { fontSize: 12, color: '#525252' },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 },
+  total: { fontSize: 14, fontWeight: '800', color: colors.primary },
+  details: { flexDirection: 'row', alignItems: 'center' },
+  detailsText: { fontSize: 12, fontWeight: '700', color: colors.mutedForeground },
 });

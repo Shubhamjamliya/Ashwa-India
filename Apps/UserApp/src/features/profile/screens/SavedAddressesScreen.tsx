@@ -1,9 +1,10 @@
 import React from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, MapPin, Pencil, Plus, Trash2 } from 'lucide-react-native';
+import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../../../components/Screen';
+import { NavyHeader } from '../../../components/NavyHeader';
 import { Button } from '../../../components/Button';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { useAddresses } from '../../../context/AddressContext';
@@ -23,19 +24,15 @@ export function SavedAddressesScreen() {
   };
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
-          <ArrowLeft color={colors.foreground} size={20} />
-        </Pressable>
-        <Text style={styles.title}>Saved Addresses</Text>
-        <Pressable
-          onPress={() => navigation.navigate('AddressForm', undefined)}
-          hitSlop={12}
-          style={styles.addBtn}>
-          <Plus color={colors.white} size={18} />
-        </Pressable>
-      </View>
+    <Screen style={styles.noPadding} topColor={colors.navy}>
+      <NavyHeader
+        title="Saved Addresses"
+        right={
+          <Pressable onPress={() => navigation.navigate('AddressForm', undefined)} hitSlop={12} style={styles.addBtn}>
+            <Plus color={colors.white} size={18} />
+          </Pressable>
+        }
+      />
 
       <FlatList
         data={addresses}
@@ -60,7 +57,7 @@ export function SavedAddressesScreen() {
             <View style={styles.cardBody}>
               <Text style={styles.cardLabel}>{item.label}</Text>
               <Text style={styles.cardText}>
-                {item.line1}, {item.city}, {item.state} {item.pincode}
+                {[item.line1, item.city, item.state, item.pincode].filter(Boolean).join(', ')}
               </Text>
             </View>
             <View style={styles.cardActions}>
@@ -82,28 +79,7 @@ export function SavedAddressesScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
+  noPadding: { padding: 0 },
   addBtn: {
     width: 36,
     height: 36,
@@ -114,7 +90,6 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: spacing.md,
-    paddingTop: 0,
     gap: spacing.sm,
     flexGrow: 1,
   },
