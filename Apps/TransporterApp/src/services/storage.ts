@@ -6,13 +6,23 @@ const KEYS = {
   user: 'ashwa_transporter_profile',
 };
 
+export type ServiceType = 'private' | 'shared' | 'both';
+
 export type SessionUser = {
   id: string;
   name?: string;
   phone: string;
   email?: string;
   businessName?: string;
+  companyType?: 'individual' | 'company';
   vehicleTypes?: string[];
+  serviceArea?: string;
+  serviceType?: ServiceType;
+  isOnline?: boolean;
+  pricePerKm?: number;
+  baseFare?: number;
+  location?: { lat?: number; lng?: number };
+  rating?: { average: number; count: number };
   status: string;
   role: 'transporter';
 };

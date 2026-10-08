@@ -1,14 +1,20 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { IncomingRequestsScreen } from '../features/requests/screens/IncomingRequestsScreen';
-import type { MainStackParamList } from './types';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BookingsStack, HomeStack, ProfileStack, WalletStack } from './TabStacks';
+import { CustomTabBar } from './CustomTabBar';
+import type { MainTabParamList } from './types';
 
-const Stack = createNativeStackNavigator<MainStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const renderTabBar = (props: React.ComponentProps<typeof CustomTabBar>) => <CustomTabBar {...props} />;
 
 export function MainNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="IncomingRequests" component={IncomingRequestsScreen} />
-    </Stack.Navigator>
+    <Tab.Navigator tabBar={renderTabBar} screenOptions={{ headerShown: false, animation: 'shift' }}>
+      <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="Bookings" component={BookingsStack} />
+      <Tab.Screen name="Wallet" component={WalletStack} />
+      <Tab.Screen name="Profile" component={ProfileStack} />
+    </Tab.Navigator>
   );
 }

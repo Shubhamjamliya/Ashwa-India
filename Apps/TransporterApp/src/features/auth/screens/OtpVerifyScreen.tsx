@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { KeyRound } from 'lucide-react-native';
-import { Screen } from '../../../components/Screen';
-import { Input } from '../../../components/Input';
 import { Button } from '../../../components/Button';
-import { colors } from '../../../theme/colors';
+import { colors, radius } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import type { AuthStackParamList } from '../../../navigation/types';
+import { AuthLayout, IconInput, authStyles } from '../components/AuthLayout';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OtpVerify'>;
 
@@ -32,15 +31,10 @@ export function OtpVerifyScreen({ route, navigation }: Props) {
         auth: false,
         body: { phone, otp, role: 'transporter' },
       });
-
       if (data.requiresRegistration) {
-        navigation.navigate('Register', {
-          phone,
-          registrationToken: data.registrationToken,
-        });
+        navigation.navigate('Register', { phone, registrationToken: data.registrationToken });
         return;
       }
-
       await login(data);
     } catch (err: any) {
       setError(err.message || 'Invalid OTP');
@@ -50,94 +44,42 @@ export function OtpVerifyScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen style={styles.screen}>
-      <View style={styles.brand}>
-        <View style={styles.badge}>
-          <KeyRound color={colors.primary} size={28} />
-        </View>
-        <Text style={styles.title}>Verify OTP</Text>
-        <Text style={styles.subtitle}>
-          OTP sent to <Text style={styles.bold}>{phone}</Text>
+    <AuthLayout>
+      <View style={authStyles.gap}>
+        <Text style={styles.sent}>
+          OTP sent to <Text style={styles.bold}>{phone}</Text>.{' '}
+          <Text style={styles.change} onPress={() => navigation.goBack()}>
+            Change
+          </Text>
         </Text>
         {devOtp ? (
-          <View style={styles.devHint}>
-            <Text style={styles.devHintText}>
-              Dev mode: OTP is <Text style={styles.bold}>{devOtp}</Text>
+          <View style={styles.dev}>
+            <Text style={styles.devText}>
+              Dev mode: OTP is <Text style={styles.devBold}>{devOtp}</Text>
             </Text>
           </View>
         ) : null}
-      </View>
-
-      <View style={styles.form}>
-        <Input
+        <IconInput
           label="Enter OTP"
+          icon={KeyRound}
           placeholder="6-digit OTP"
           keyboardType="number-pad"
           maxLength={6}
           value={otp}
-          onChangeText={t => setOtp(t.replace(/\D/g, ''))}
+          onChangeText={t => setOtp(t.replace(/\D/g, '').slice(0, 6))}
         />
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button title="Verify OTP" onPress={handleVerify} loading={loading} />
-        <Button
-          title="Change phone number"
-          variant="outline"
-          onPress={() => navigation.goBack()}
-        />
+        {error ? <Text style={authStyles.error}>{error}</Text> : null}
+        <Button title={loading ? 'Verifying...' : 'Verify OTP'} onPress={handleVerify} loading={loading} />
       </View>
-    </Screen>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-  },
-  brand: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  badge: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.mutedForeground,
-    marginTop: 6,
-  },
-  bold: {
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  devHint: {
-    marginTop: 12,
-    backgroundColor: colors.accent,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  devHintText: {
-    color: colors.accentForeground,
-    fontSize: 12,
-  },
-  form: {
-    gap: 8,
-  },
-  errorText: {
-    color: colors.destructive,
-    fontSize: 13,
-    marginBottom: 4,
-  },
+  sent: { fontSize: 14, color: '#525252' },
+  bold: { fontWeight: '600' },
+  change: { fontWeight: '600', color: colors.primary },
+  dev: { borderRadius: radius.sm, borderWidth: 1, borderColor: '#FDE68A', backgroundColor: '#FFFBEB', paddingHorizontal: 12, paddingVertical: 8 },
+  devText: { fontSize: 12, color: '#D97706' },
+  devBold: { fontWeight: '700' },
 });

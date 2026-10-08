@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CheckCircle2 } from 'lucide-react-native';
-import { Screen } from '../../../components/Screen';
-import { Input } from '../../../components/Input';
+import { Building2, CheckCircle2, Mail, User } from 'lucide-react-native';
 import { Button } from '../../../components/Button';
-import { colors } from '../../../theme/colors';
+import { colors, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import type { AuthStackParamList } from '../../../navigation/types';
+import { AuthLayout, IconInput, authStyles } from '../components/AuthLayout';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
@@ -30,18 +29,14 @@ export function RegisterScreen({ route, navigation }: Props) {
     setError('');
     setLoading(true);
     try {
-      // Transporter accounts need admin approval, so this won't log in right
-      // away — it returns a pending message instead of tokens (unlike 'user').
+      // Transporter accounts need admin approval, so this usually returns no tokens.
       const data = await apiFetch<any>('/auth/register', {
         method: 'POST',
         auth: false,
-        body: { registrationToken, name, email, businessName },
+        body: { registrationToken, name, businessName, email },
       });
-      if (data.accessToken) {
-        await login(data);
-      } else {
-        setPending(true);
-      }
+      if (data.accessToken) await login(data);
+      else setPending(true);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -51,87 +46,62 @@ export function RegisterScreen({ route, navigation }: Props) {
 
   if (pending) {
     return (
-      <Screen style={styles.screen}>
-        <View style={styles.brand}>
-          <View style={styles.badge}>
-            <CheckCircle2 color={colors.success} size={28} />
+      <AuthLayout>
+        <View style={styles.pending}>
+          <View style={styles.pendingIcon}>
+            <CheckCircle2 color="#059669" size={28} />
           </View>
-          <Text style={styles.title}>Application Submitted</Text>
-          <Text style={styles.subtitle}>
+          <Text style={styles.pendingTitle}>Application Submitted</Text>
+          <Text style={styles.pendingText}>
             Your account is awaiting admin approval. You'll be able to sign in once it's approved.
           </Text>
+          <Button title="Back to Login" variant="outline" onPress={() => navigation.popToTop()} style={styles.full} />
         </View>
-        <Button title="Back to Login" onPress={() => navigation.popToTop()} />
-      </Screen>
+      </AuthLayout>
     );
   }
 
   return (
-    <Screen style={styles.screen}>
-      <View style={styles.brand}>
-        <Text style={styles.title}>Complete Your Profile</Text>
-        <Text style={styles.subtitle}>Tell us about your transport business</Text>
-      </View>
-
-      <View style={styles.form}>
-        <Input label="Full Name" placeholder="Your name" value={name} onChangeText={setName} />
-        <Input
+    <AuthLayout>
+      <View style={authStyles.gap}>
+        <Text style={styles.intro}>Tell us about your transport business.</Text>
+        <IconInput label="Full Name" icon={User} value={name} onChangeText={setName} placeholder="Your name" />
+        <IconInput
           label="Business Name (optional)"
-          placeholder="Your transport business name"
+          icon={Building2}
           value={businessName}
           onChangeText={setBusinessName}
+          placeholder="Your transport business name"
         />
-        <Input
+        <IconInput
           label="Email (optional)"
+          icon={Mail}
+          value={email}
+          onChangeText={setEmail}
           placeholder="you@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
         />
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button title="Submit Application" onPress={handleRegister} loading={loading} />
+        {error ? <Text style={authStyles.error}>{error}</Text> : null}
+        <Button title={loading ? 'Submitting...' : 'Submit Application'} onPress={handleRegister} loading={loading} />
       </View>
-    </Screen>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-  },
-  brand: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  badge: {
+  intro: { fontSize: 14, color: colors.mutedForeground },
+  pending: { alignItems: 'center', paddingVertical: spacing.md },
+  pendingIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
-    backgroundColor: colors.accent,
+    borderRadius: 28,
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.foreground,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.mutedForeground,
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  form: {
-    gap: 8,
-  },
-  errorText: {
-    color: colors.destructive,
-    fontSize: 13,
-    marginBottom: 4,
-  },
+  pendingTitle: { fontSize: 18, fontWeight: '700', color: '#171717', marginBottom: 4 },
+  pendingText: { fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: spacing.lg },
+  full: { alignSelf: 'stretch' },
 });

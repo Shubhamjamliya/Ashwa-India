@@ -9,10 +9,10 @@ import { useLocationContext } from "../context/LocationContext"
 
 // Tile order, colours and destinations are fixed in the app; images and labels come from the admin Explore section.
 const quickActions = [
-  { key: "horses", label: "Horse\nMarketplace", image: "/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
-  { key: "providers", label: "Service\nProviders", image: "/user/service-providers.png", bg: "#E1ECFC", path: "/user/services" },
-  { key: "transport", label: "Horse\nTransport", image: "/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
-  { key: "store", label: "Accessories\nStore", image: "/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
+  { key: "horses", label: "Horse\nMarketplace", image: "/images/user/horses-buy.png", bg: "#FBEFD6", path: "/user/horses" },
+  { key: "providers", label: "Service\nProviders", image: "/images/user/service-providers.png", bg: "#E1ECFC", path: "/user/services" },
+  { key: "transport", label: "Horse\nTransport", image: "/images/user/transport.png", bg: "#E0F4E7", path: "/user/transport" },
+  { key: "store", label: "Accessories\nStore", image: "/images/user/accessories.png", bg: "#F0E4FB", path: "/user/store" },
   { key: "events", label: "Horse\nEvents", image: null, bg: "#FDE7E7", path: "/user/events" },
   { key: "jobs", label: "Horse\nJobs", image: null, bg: "#E8E6F9", path: "/user/jobs" },
 ]
@@ -24,7 +24,7 @@ function HeroSection({ horsesCount, cartCount, wishlistCount }) {
   return (
     <div className="relative overflow-hidden bg-[#0B1C33] px-4 pb-6 pt-3">
       <img
-        src="/user/heroimage.png"
+        src="/images/user/heroimage.png"
         alt=""
         className="pointer-events-none absolute bottom-0 right-[-16px] h-[210px] w-[168px] object-contain"
       />
