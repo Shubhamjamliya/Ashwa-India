@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
-import { Activity, Bell, Briefcase, CheckCircle2, Clock, Layers, MapPin, Phone, Stethoscope, Wallet as WalletIcon, XCircle } from "lucide-react"
+import { Bell, Briefcase, CheckCircle2, ChevronRight, ClipboardList, Clock, MapPin, Phone, Sparkles, Star, Stethoscope, Wallet as WalletIcon, Wrench, XCircle } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
 
@@ -22,23 +22,32 @@ function getCurrentLocation() {
 }
 
 const statusChip = {
-  pending: { label: "Pending", className: "bg-amber-100 text-amber-700", bar: "bg-amber-400" },
-  accepted: { label: "Accepted", className: "bg-emerald-100 text-emerald-700", bar: "bg-emerald-500" },
+  pending: { label: "New", className: "bg-[#FBF6EC] text-[#8A6416] ring-[#EBD39A]", dot: "bg-[#C28D2E]" },
+  accepted: { label: "In progress", className: "bg-[#0B1C33] text-white ring-[#0B1C33]", dot: "bg-[#C28D2E]" },
 }
 
-function StatCard({ icon: Icon, label, value, gradient, onClick }) {
+const initials = (name) =>
+  String(name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("")
+
+// One tappable number: a soft pastel tile in the scrolling row.
+function StatTile({ icon: Icon, label, value, tint, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={!onClick}
-      className={`relative overflow-hidden rounded-2xl p-4 text-left shadow-sm ${gradient} disabled:cursor-default`}
+      className={`flex w-[132px] shrink-0 snap-start flex-col rounded-3xl p-4 text-left transition active:scale-[0.97] disabled:cursor-default ${tint.bg}`}
     >
-      <span className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-white/10" />
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
-        <Icon className="h-[18px] w-[18px] text-white" />
+      <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tint.icon}`}>
+        <Icon className="h-5 w-5" />
       </span>
-      <p className="mt-3 truncate text-2xl font-extrabold text-white">{value}</p>
-      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/75">{label}</p>
+      <span className={`mt-4 truncate text-[22px] font-extrabold leading-none ${tint.text}`}>{value}</span>
+      <span className="mt-1.5 text-[11px] font-semibold text-neutral-500">{label}</span>
     </button>
   )
 }
@@ -184,137 +193,159 @@ export default function ServiceDashboard() {
   const firstName = (user?.name || "there").split(" ")[0]
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
 
+  const quickLinks = [
+    { label: "Horse jobs", hint: "Browse and apply", icon: Briefcase, to: "/service/jobs", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
+    { label: "Earnings", hint: "See your income", icon: Sparkles, to: "/service/earnings", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
+    { label: "Reviews", hint: "What clients say", icon: Star, to: "/service/reviews", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
+    { label: "Bookings", hint: "Full history", icon: ClipboardList, to: "/service/bookings", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
+  ]
+
   return (
-    <div className="min-h-screen pb-4">
-      <div className="flex items-center justify-between px-4 pb-2 pt-4">
-        <div>
-          <p className="text-xs text-neutral-500">{today}</p>
-          <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate("/service/notifications")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
-            <Bell className="h-[17px] w-[17px] text-[#0F2238]" />
+    <div className="min-h-screen bg-[#FAF7F1] pb-6">
+      {/* Greeting */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#050B14] via-[#0B1C33] to-[#132B4A] px-5 pb-16 pt-5 text-white">
+        <span className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[#C28D2E]/15" />
+        <span className="pointer-events-none absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-white/10" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 text-base font-extrabold ring-2 ring-[#C28D2E]">
+              {initials(user?.name)}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[12px] text-white/75">{today}</p>
+              <h1 className="truncate text-xl font-extrabold leading-tight">Hello, {firstName}</h1>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/service/notifications")}
+            aria-label="Notifications"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur transition active:scale-95"
+          >
+            <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-white bg-red-500 px-1 text-[9px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#0B1C33] bg-[#C28D2E] px-1 text-[9px] font-bold">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
         </div>
-      </div>
 
-      <div className={`mx-4 mt-2 flex items-center justify-between rounded-2xl px-4 py-3.5 shadow-sm transition-colors ${isOnline ? "bg-emerald-600" : "bg-[#0B1C33]"}`}>
-        <div>
-          <p className="text-sm font-extrabold text-white">{isOnline ? "You're Online" : "You're Offline"}</p>
-          <p className="text-[11px] text-white/75">
-            {togglingOnline ? "Updating your location..." : isOnline ? "Receiving requests near you" : "Turn on to receive requests"}
-          </p>
+        <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
+          {(user?.serviceTypes || []).slice(0, 3).map((t) => (
+            <span key={t} className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur">
+              {t}
+            </span>
+          ))}
+          {user?.location && (
+            <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">
+              <MapPin className="h-3 w-3" /> {user.location}
+            </span>
+          )}
         </div>
-        <button
-          role="switch"
-          aria-checked={isOnline}
-          aria-label="Online status"
-          onClick={toggleOnline}
-          disabled={togglingOnline}
-          className={`flex h-7 w-12 shrink-0 items-center rounded-full p-[3px] transition-colors disabled:opacity-60 ${
-            isOnline ? "justify-end bg-white/40" : "justify-start bg-white/20"
-          }`}
-        >
-          <span className="block h-[22px] w-[22px] rounded-full bg-white shadow" />
-        </button>
       </div>
 
-      {locationError && <p className="mx-4 mt-2 text-xs text-destructive">{locationError}</p>}
-
-      <div className="mx-4 mt-3 flex items-center gap-4 rounded-2xl bg-[#0B1C33] p-4 shadow-[0_6px_12px_rgba(11,28,51,0.2)]">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#C28D2E]">
-          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#132B4A]">
-            <Stethoscope className="h-[26px] w-[26px] text-[#C28D2E]" />
+      {/* Availability: floats over the hero */}
+      <div className="relative -mt-9 px-4">
+        <div className="flex items-center gap-3 rounded-3xl bg-white p-4 shadow-[0_8px_24px_rgba(11,28,51,0.25)]">
+          <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${isOnline ? "bg-[#0B1C33] text-[#C28D2E]" : "bg-rose-50 text-rose-500"}`}>
+            <Stethoscope className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-extrabold text-[#0A0A0A]">{isOnline ? "Available for bookings" : "Not available"}</p>
+            <p className="text-[12px] text-neutral-500">
+              {togglingOnline ? "Updating your location..." : isOnline ? "Clients near you can book you" : "Switch on to receive requests"}
+            </p>
           </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isOnline}
+            aria-label="Availability"
+            onClick={toggleOnline}
+            disabled={togglingOnline}
+            className={`flex h-8 w-14 shrink-0 items-center rounded-full p-[3px] transition-colors duration-300 disabled:opacity-60 ${isOnline ? "bg-[#C28D2E]" : "bg-neutral-400"}`}
+          >
+            <span className={`block h-[26px] w-[26px] rounded-full bg-white shadow transition-transform duration-300 ${isOnline ? "translate-x-6" : "translate-x-0"}`} />
+          </button>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-bold text-white">{user?.businessName || user?.name || "Service Provider"}</p>
-          <p className="mt-0.5 text-[12px] text-[#A9B8CC]">{user?.phone}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {(user?.serviceTypes || []).slice(0, 3).map((s) => (
-              <span key={s} className="rounded-full bg-[#132B4A] px-2 py-0.5 text-[10px] font-bold capitalize text-[#C28D2E]">
-                {s}
-              </span>
-            ))}
-            {user?.location && (
-              <span className="flex items-center gap-1 rounded-full bg-[#132B4A] px-2 py-0.5 text-[10px] font-bold text-[#A9B8CC]">
-                <MapPin className="h-2.5 w-2.5" />
-                {user.location}
-              </span>
-            )}
-          </div>
-        </div>
+        {locationError && <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-600">{locationError}</p>}
       </div>
 
-      <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
-        <StatCard icon={Clock} label="Pending requests" value={loading ? "—" : pendingCount} gradient="bg-gradient-to-br from-amber-400 to-amber-600" />
-        <StatCard icon={Activity} label="Active jobs" value={loading ? "—" : acceptedCount} gradient="bg-gradient-to-br from-emerald-500 to-emerald-700" />
-        <StatCard
-          icon={WalletIcon}
-          label="Wallet balance"
-          value={loading ? "—" : fmt(wallet?.balance)}
-          gradient="bg-gradient-to-br from-[#C28D2E] to-[#8A6416]"
-          onClick={() => navigate("/service/wallet")}
-        />
-        <StatCard
-          icon={Layers}
-          label="Completed"
-          value={loading ? "—" : completedCount}
-          gradient="bg-gradient-to-br from-[#132B4A] to-[#0B1C33]"
-          onClick={() => navigate("/service/bookings")}
-        />
+      {/* Numbers */}
+      <div className="mt-5 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <StatTile icon={Clock} label="New requests" value={loading ? "—" : pendingCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} />
+        <StatTile icon={Wrench} label="Active jobs" value={loading ? "—" : acceptedCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} />
+        <StatTile icon={CheckCircle2} label="Completed" value={loading ? "—" : completedCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} onClick={() => navigate("/service/bookings")} />
+        <StatTile icon={WalletIcon} label="Wallet" value={loading ? "—" : fmt(wallet?.balance)} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} onClick={() => navigate("/service/wallet")} />
       </div>
 
-      <button
-        onClick={() => navigate("/service/jobs")}
-        className="mx-4 mt-4 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl border border-[#E4E1D8] bg-white p-4 text-left"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8E6F9]">
-          <Briefcase className="h-5 w-5 text-[#4B3FA6]" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-[#0F2238]">Horse Jobs</span>
-          <span className="block text-[12px] text-neutral-500">Browse trainer, groom, rider and vet roles and apply</span>
-        </span>
-        <span className="text-xs font-bold text-[#C28D2E]">Open →</span>
-      </button>
+      {/* Quick links */}
+      <div className="mt-5 grid grid-cols-2 gap-3 px-4">
+        {quickLinks.map(({ label, hint, icon: Icon, to, bg, iconBg }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => navigate(to)}
+            className={`flex items-center gap-3 rounded-2xl p-3 text-left transition active:scale-[0.97] ${bg}`}
+          >
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-bold text-[#0A0A0A]">{label}</span>
+              <span className="block truncate text-[11px] text-neutral-500">{hint}</span>
+            </span>
+          </button>
+        ))}
+      </div>
 
-      <div className="mt-6 flex items-center justify-between px-4">
-        <h2 className="text-[15px] font-extrabold text-[#0F2238]">Active Bookings</h2>
-        <span className="rounded-full bg-[#F6E9C9] px-2.5 py-0.5 text-[11px] font-bold text-[#8A6416]">{active.length}</span>
+      {/* Requests */}
+      <div className="mt-7 flex items-center justify-between px-5">
+        <h2 className="text-base font-extrabold text-[#0A0A0A]">Your bookings</h2>
+        <span className="rounded-full bg-[#0B1C33] px-2.5 py-0.5 text-[11px] font-bold text-[#C28D2E]">{active.length}</span>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#C28D2E] border-t-transparent" />
         </div>
       ) : active.length === 0 ? (
-        <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[#D8D3C5] bg-white px-6 py-10 text-center">
-          <Stethoscope className="h-8 w-8 text-neutral-400" />
-          <p className="text-sm font-semibold text-[#0F2238]">No active bookings</p>
-          <p className="text-[12px] text-neutral-500">New service requests from users will appear here and ring you in real time.</p>
+        <div className="ashwa-rise mx-4 mt-3 flex flex-col items-center gap-2 rounded-3xl bg-white px-6 py-10 text-center shadow-sm">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0B1C33]">
+            <Stethoscope className="h-7 w-7 text-[#C28D2E]" />
+          </span>
+          <p className="text-sm font-bold text-[#0A0A0A]">No bookings right now</p>
+          <p className="text-[12px] text-neutral-500">New service requests from clients will show up here.</p>
         </div>
       ) : (
         <div className="mt-3 space-y-3 px-4">
-          {active.map((req) => {
+          {active.map((req, idx) => {
             const chip = statusChip[req.status]
             return (
-              <div key={req._id} className="relative overflow-hidden rounded-2xl border border-[#E4E1D8] bg-white p-4 pl-5 shadow-sm">
-                <span className={`absolute inset-y-0 left-0 w-1 ${chip.bar}`} />
-                <div className="flex items-center justify-between gap-2">
-                  <p className="flex-1 truncate text-sm font-bold text-[#0F2238]">{req.user?.name || req.user?.phone}</p>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${chip.className}`}>{chip.label}</span>
+              <div
+                key={req._id}
+                style={{ animationDelay: `${Math.min(idx, 6) * 50}ms` }}
+                className="ashwa-rise rounded-3xl bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.06)]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0B1C33] text-sm font-extrabold text-[#C28D2E]">
+                    {initials(req.user?.name || req.user?.phone)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#0A0A0A]">{req.user?.name || req.user?.phone}</p>
+                    <p className="truncate text-[12px] font-medium capitalize text-neutral-500">{req.serviceType}</p>
+                  </div>
+                  <span className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ${chip.className}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${chip.dot}`} />
+                    {chip.label}
+                  </span>
                 </div>
-                <p className="mt-1.5 text-[12px] font-semibold capitalize text-neutral-600">{req.serviceType}</p>
-                {req.message && <p className="mt-1 line-clamp-2 text-[12px] text-neutral-500">{req.message}</p>}
+
+                {req.message && <p className="mt-3 line-clamp-2 rounded-2xl bg-neutral-50 p-3 text-[12px] leading-relaxed text-neutral-600">{req.message}</p>}
+
                 {req.user?.phone && (
-                  <a href={`tel:${req.user.phone}`} className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#C28D2E]">
-                    <Phone className="h-3 w-3" /> Call user
+                  <a href={`tel:${req.user.phone}`} className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#C28D2E]">
+                    <Phone className="h-3.5 w-3.5" /> Call {req.user.name?.split(" ")[0] || "client"}
                   </a>
                 )}
 
@@ -323,14 +354,14 @@ export default function ServiceDashboard() {
                     <button
                       onClick={() => respond(req._id, "reject")}
                       disabled={acting}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#F1EEE6] py-2.5 text-[13px] font-bold text-[#0F2238] disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-neutral-100 py-3 text-[13px] font-bold text-neutral-700 transition active:scale-[0.97] disabled:opacity-50"
                     >
                       <XCircle className="h-4 w-4" /> Decline
                     </button>
                     <button
                       onClick={() => openPricePrompt(req._id)}
                       disabled={acting}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#C28D2E] py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#0B1C33] py-3 text-[13px] font-bold text-white shadow-md shadow-[#0B1C33]/30 transition active:scale-[0.97] disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-4 w-4" /> Accept
                     </button>
@@ -340,9 +371,9 @@ export default function ServiceDashboard() {
                   <button
                     onClick={() => respond(req._id, "complete")}
                     disabled={acting}
-                    className="mt-3 w-full rounded-xl bg-[#0B1C33] py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
+                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#C28D2E] py-3 text-[13px] font-bold text-white shadow-md shadow-[#8A6416]/30 transition active:scale-[0.97] disabled:opacity-50"
                   >
-                    Mark as completed
+                    <CheckCircle2 className="h-4 w-4" /> Mark as completed
                   </button>
                 )}
               </div>
@@ -351,69 +382,76 @@ export default function ServiceDashboard() {
         </div>
       )}
 
-      {ringing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1C33]/90 p-6">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-8 text-center">
-            <div className="mx-auto mb-4 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#C28D2E]">
-              <Phone className="h-8 w-8 text-white" />
+      {/* New request: a sheet that slides up, instead of a full-screen takeover */}
+      {ringing && !pricingFor && (
+        <div className="ashwa-fade-in fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-3 backdrop-blur-[2px] sm:items-center">
+          <div className="ashwa-sheet-up w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0B1C33] text-base font-extrabold text-[#C28D2E]">
+                {initials(ringing.user?.name || ringing.user?.phone)}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#C28D2E]">New service request</p>
+                <p className="truncate text-lg font-extrabold text-[#0A0A0A]">{ringing.user?.name || ringing.user?.phone}</p>
+                <p className="text-[12px] capitalize text-neutral-500">{ringing.serviceType}</p>
+              </div>
             </div>
-            <h2 className="text-base font-bold text-[#0F2238]">New Service Request</h2>
-            <p className="mt-2 text-xl font-extrabold text-[#0F2238]">{ringing.user?.name || ringing.user?.phone}</p>
-            <p className="mt-1 text-[13px] capitalize text-neutral-500">{ringing.serviceType}</p>
-            <div className="mt-8 flex justify-center gap-6">
+            {ringing.message && <p className="mt-3 line-clamp-3 rounded-2xl bg-neutral-50 p-3 text-[12px] text-neutral-600">{ringing.message}</p>}
+            <div className="mt-5 flex gap-2">
               <button
                 onClick={() => respond(ringing._id, "reject")}
                 disabled={acting}
-                className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1.5 rounded-full bg-[#ef4444] text-white disabled:opacity-60"
+                className="flex-1 rounded-2xl bg-neutral-100 py-3.5 text-sm font-bold text-neutral-700 transition active:scale-[0.97] disabled:opacity-50"
               >
-                <XCircle className="h-[22px] w-[22px]" />
-                <span className="text-xs font-bold">Decline</span>
+                Decline
               </button>
               <button
                 onClick={() => openPricePrompt(ringing._id)}
                 disabled={acting}
-                className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1.5 rounded-full bg-[#16a34a] text-white disabled:opacity-60"
+                className="flex-1 rounded-2xl bg-[#0B1C33] py-3.5 text-sm font-bold text-white shadow-md shadow-[#0B1C33]/30 transition active:scale-[0.97] disabled:opacity-50"
               >
-                <CheckCircle2 className="h-[22px] w-[22px]" />
-                <span className="text-xs font-bold">Accept</span>
+                Accept
               </button>
             </div>
+            <button onClick={() => setRinging(null)} className="mt-3 flex w-full items-center justify-center gap-1 text-[12px] font-semibold text-neutral-400">
+              Decide later <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       )}
 
       {pricingFor && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#0B1C33]/70 p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6">
-            <h2 className="text-base font-bold text-[#0F2238]">Price for this service</h2>
-            <p className="mt-1 text-[12px] text-neutral-500">
-              Set the amount you will charge. Ashwa India keeps its commission from this, and the rest goes to your wallet when you mark the job completed.
+        <div className="ashwa-fade-in fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-3 backdrop-blur-[2px] sm:items-center">
+          <div className="ashwa-sheet-up w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-extrabold text-[#0A0A0A]">Set your price</h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+              This is what the client pays. Ashwa India keeps a small commission, and the rest goes to your wallet once you mark the job completed.
             </p>
             <div className="relative mt-4">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-neutral-500">₹</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-neutral-400">₹</span>
               <input
                 inputMode="numeric"
                 autoFocus
                 value={priceInput}
                 onChange={(e) => setPriceInput(e.target.value.replace(/[^0-9.]/g, ""))}
-                placeholder="e.g. 1500"
-                className="h-12 w-full rounded-xl border border-[#E4E1D8] pl-8 pr-4 text-lg font-bold text-[#0F2238] outline-none focus:border-[#C28D2E]"
+                placeholder="1500"
+                className="h-14 w-full rounded-2xl border-2 border-neutral-200 pl-9 pr-4 text-2xl font-extrabold text-[#0A0A0A] outline-none transition focus:border-[#C28D2E]"
               />
             </div>
-            {actionError && <p className="mt-2 text-xs text-destructive">{actionError}</p>}
+            {actionError && <p className="mt-2 text-xs font-medium text-rose-600">{actionError}</p>}
             <div className="mt-5 flex gap-2">
               <button
                 onClick={() => setPricingFor(null)}
-                className="flex-1 rounded-xl bg-[#F1EEE6] py-3 text-sm font-bold text-[#0F2238]"
+                className="flex-1 rounded-2xl bg-neutral-100 py-3.5 text-sm font-bold text-neutral-700 transition active:scale-[0.97]"
               >
                 Cancel
               </button>
               <button
                 onClick={submitPrice}
                 disabled={acting}
-                className="flex-1 rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-[#0B1C33] py-3.5 text-sm font-bold text-white shadow-md shadow-[#0B1C33]/30 transition active:scale-[0.97] disabled:opacity-50"
               >
-                {acting ? "Accepting..." : "Accept & set price"}
+                {acting ? "Accepting..." : "Accept & send"}
               </button>
             </div>
           </div>
