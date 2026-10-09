@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
-import { Bell, CheckCircle2, Clock, MapPin, Phone, Truck, Users, Wallet as WalletIcon, XCircle, Activity, Layers } from "lucide-react"
+import { Bell, CheckCircle2, ChevronRight, MapPin, Phone, Power, Truck, UserRound, Users, Wallet as WalletIcon, XCircle, TrendingUp } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
 import { getMediaUrl } from "@/shared/lib/media"
@@ -163,23 +163,6 @@ function EnquiryCard({ req, onRespond, busy }) {
   )
 }
 
-function StatCard({ icon: Icon, label, value, gradient, iconBg, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={!onClick}
-      className={`relative overflow-hidden rounded-2xl p-4 text-left shadow-sm ${gradient} disabled:cursor-default`}
-    >
-      <span className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-white/10" />
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBg}`}>
-        <Icon className="h-[18px] w-[18px] text-white" />
-      </span>
-      <p className="mt-3 truncate text-2xl font-extrabold text-white">{value}</p>
-      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/75">{label}</p>
-    </button>
-  )
-}
-
 export default function IncomingRequests() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
@@ -328,132 +311,149 @@ export default function IncomingRequests() {
   const firstName = (user?.name || "there").split(" ")[0]
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
 
+  // Today's work, from trips delivered today.
+  const todayKey = new Date().toDateString()
+  const deliveredToday = requests.filter((r) => r.status === "completed" && r.deliveredAt && new Date(r.deliveredAt).toDateString() === todayKey)
+  const earnedToday = deliveredToday.reduce((sum, r) => sum + (r.settlement?.netAmount ?? r.quote?.amount ?? 0), 0)
+  const onTripNow = counts.on_trip > 0
+
+  const shortcuts = [
+    { label: "Vehicles", icon: Truck, to: "/transporter/vehicles", hint: stats ? `${stats.availableVehicles}/${stats.vehicles} free` : "", card: "from-blue-500 to-blue-700" },
+    { label: "Drivers", icon: UserRound, to: "/transporter/drivers", hint: stats ? `${stats.drivers}` : "", card: "from-violet-500 to-violet-700" },
+    { label: "Earnings", icon: TrendingUp, to: "/transporter/earnings", hint: "", card: "from-emerald-500 to-emerald-700" },
+    { label: "Wallet", icon: WalletIcon, to: "/transporter/wallet", hint: loading ? "" : fmt(wallet?.balance), card: "from-orange-400 to-orange-600" },
+  ]
+
   return (
-    <div className="min-h-screen pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pb-2 pt-4">
-        <div>
-          <p className="text-xs text-neutral-500">{today}</p>
-          <h1 className="text-xl font-extrabold text-[#0F2238]">Hi, {firstName}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate("/transporter/notifications")} className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] bg-white">
-            <Bell className="h-[17px] w-[17px] text-[#0F2238]" />
+    <div className="min-h-screen bg-[#F6F4EF] pb-6">
+      {/* Captain-style header: who you are, your status, today's numbers */}
+      <div className="rounded-b-[28px] bg-[#0B1C33] px-4 pb-5 pt-4 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#C28D2E] bg-white/10">
+              <Truck className="h-5 w-5 text-[#C28D2E]" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-extrabold">Hi, {firstName}</p>
+              <p className="truncate text-[11px] text-white/60">
+                {today}
+                {user?.serviceArea ? ` · ${user.serviceArea}` : ""}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/transporter/notifications")}
+            aria-label="Notifications"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10"
+          >
+            <Bell className="h-[18px] w-[18px]" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-white bg-red-500 px-1 text-[9px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-[#0B1C33] bg-red-500 px-1 text-[9px] font-bold">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
         </div>
-      </div>
 
-      <div className={`mx-4 mt-2 flex items-center justify-between rounded-2xl px-4 py-3.5 shadow-sm transition-colors ${isOnline ? "bg-emerald-600" : "bg-[#0B1C33]"}`}>
-        <div>
-          <p className="text-sm font-extrabold text-white">{isOnline ? "You're Online" : "You're Offline"}</p>
-          <p className="text-[11px] text-white/75">
-            {togglingOnline ? "Updating your location..." : isOnline ? "Receiving requests near you" : "Turn on to receive requests"}
-          </p>
-        </div>
-        <button
-          role="switch"
-          aria-checked={isOnline}
-          aria-label="Online status"
-          onClick={toggleOnline}
-          disabled={togglingOnline}
-          className={`flex h-7 w-12 shrink-0 items-center rounded-full p-[3px] transition-colors disabled:opacity-60 ${
-            isOnline ? "justify-end bg-white/40" : "justify-start bg-white/20"
+        {/* Go online / offline */}
+        <div
+          className={`mt-5 flex w-full items-center gap-4 rounded-2xl p-3.5 text-left transition-colors ${
+            isOnline ? "bg-emerald-500/15 ring-1 ring-emerald-400/40" : "bg-red-500/15 ring-1 ring-red-400/40"
           }`}
         >
-          <span className="block h-[22px] w-[22px] rounded-full bg-white shadow" />
-        </button>
-      </div>
-
-      {locationError && <p className="mx-4 mt-2 text-xs text-destructive">{locationError}</p>}
-
-      {stats && (
-        <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
-          {[
-            ["Completed", counts.completed],
-            ["Free vehicles", `${stats.availableVehicles}/${stats.vehicles}`],
-            ["Drivers", stats.drivers],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-[#E4E1D8] bg-white p-2.5 text-center">
-              <p className="text-base font-extrabold text-[#0F2238]">{value}</p>
-              <p className="text-[10px] font-semibold text-neutral-500">{label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Profile card */}
-      <div className="mx-4 mt-3 flex items-center gap-4 rounded-2xl bg-[#0B1C33] p-4 shadow-[0_6px_12px_rgba(11,28,51,0.2)]">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#C28D2E]">
-          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-[#132B4A]">
-            <Truck className="h-[26px] w-[26px] text-[#C28D2E]" />
-          </div>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-bold text-white">{user?.businessName || user?.name || "Transporter"}</p>
-          <p className="mt-0.5 text-[12px] text-[#A9B8CC]">{user?.phone}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="rounded-full bg-[#132B4A] px-2 py-0.5 text-[10px] font-bold capitalize text-[#C28D2E]">
-              {user?.serviceType === "both" ? "Private & Shared" : user?.serviceType || "private"}
-            </span>
-            {user?.serviceArea && (
-              <span className="flex items-center gap-1 rounded-full bg-[#132B4A] px-2 py-0.5 text-[10px] font-bold text-[#A9B8CC]">
-                <MapPin className="h-2.5 w-2.5" />
-                {user.serviceArea}
-              </span>
+          <span
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full shadow-lg transition-colors ${
+              isOnline ? "bg-emerald-500" : "bg-red-500"
+            }`}
+          >
+            {togglingOnline ? (
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Power className="h-6 w-6 text-white" />
             )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-base font-extrabold">
+              {isOnline ? "You're online" : "You're offline"}
+              {isOnline && <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />}
+            </span>
+            <span className="block text-[12px] text-white/65">
+              {togglingOnline
+                ? "Updating your location..."
+                : isOnline
+                  ? onTripNow
+                    ? "On a trip. New requests can still reach you."
+                    : "Waiting for requests near you"
+                  : "Tap to go online and get requests"}
+            </span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isOnline}
+            aria-label="Online status"
+            onClick={toggleOnline}
+            disabled={togglingOnline}
+            className={`flex h-8 w-14 shrink-0 items-center rounded-full p-[3px] transition-colors disabled:opacity-60 ${
+              isOnline ? "justify-end bg-emerald-500" : "justify-start bg-red-500"
+            }`}
+          >
+            <span className="block h-[26px] w-[26px] rounded-full bg-white shadow" />
+          </button>
+        </div>
+        {locationError && <p className="mt-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs text-red-100">{locationError}</p>}
+
+        {/* Today */}
+        <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 rounded-2xl bg-white/10 py-3 text-center">
+          <div>
+            <p className="text-lg font-extrabold">{loading ? "—" : fmt(earnedToday)}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">Earned today</p>
+          </div>
+          <div>
+            <p className="text-lg font-extrabold">{loading ? "—" : deliveredToday.length}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">Trips today</p>
+          </div>
+          <div>
+            <p className="text-lg font-extrabold">{loading ? "—" : counts.upcoming + counts.on_trip}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">Lined up</p>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
-        <StatCard
-          icon={Clock}
-          label="New requests"
-          value={loading ? "—" : counts.new}
-          gradient="bg-gradient-to-br from-amber-400 to-amber-600"
-          iconBg="bg-white/20"
-        />
-        <StatCard
-          icon={Activity}
-          label="On trip now"
-          value={loading ? "—" : counts.on_trip}
-          gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
-          iconBg="bg-white/20"
-          onClick={() => navigate("/transporter/bookings")}
-        />
-        <StatCard
-          icon={WalletIcon}
-          label="Wallet balance"
-          value={loading ? "—" : fmt(wallet?.balance)}
-          gradient="bg-gradient-to-br from-[#C28D2E] to-[#8A6416]"
-          iconBg="bg-white/20"
-          onClick={() => navigate("/transporter/wallet")}
-        />
-        <StatCard
-          icon={Layers}
-          label="Upcoming"
-          value={loading ? "—" : counts.upcoming}
-          gradient="bg-gradient-to-br from-[#132B4A] to-[#0B1C33]"
-          iconBg="bg-white/15"
-          onClick={() => navigate("/transporter/bookings")}
-        />
+      {/* Shortcuts */}
+      <div className="-mt-3 grid grid-cols-4 gap-2 px-4 pt-6">
+        {shortcuts.map(({ label, icon: Icon, to, hint, card }) => (
+          <button
+            key={label}
+            onClick={() => navigate(to)}
+            className={`flex flex-col items-center gap-1 rounded-2xl bg-gradient-to-br px-1 py-3 shadow-md active:scale-95 ${card}`}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/25">
+              <Icon className="h-[18px] w-[18px] text-white" />
+            </span>
+            <span className="text-[11px] font-bold text-white">{label}</span>
+            <span className="h-3 text-[10px] font-semibold text-white/80">{hint}</span>
+          </button>
+        ))}
       </div>
 
       {/* New enquiries */}
       <div className="mt-6 flex items-center justify-between px-4">
-        <h2 className="text-[15px] font-extrabold text-[#0F2238]">New Enquiries</h2>
+        <h2 className="flex items-center gap-2 text-[15px] font-extrabold text-[#0F2238]">
+          New requests
+          {enquiries.length > 0 && <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />}
+        </h2>
         <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">{enquiries.length}</span>
       </div>
       {!loading && enquiries.length === 0 ? (
-        <p className="mx-4 mt-3 rounded-2xl border border-dashed border-[#D8D3C5] bg-white px-6 py-6 text-center text-[12px] text-neutral-500">
-          No new enquiries. Requests from users show up here.
-        </p>
+        <div className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-dashed border-[#D8D3C5] bg-white px-4 py-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F1EEE6]">
+            <Bell className="h-5 w-5 text-neutral-400" />
+          </span>
+          <p className="text-[12px] text-neutral-500">
+            {isOnline ? "No new requests yet. You'll hear about the next one here." : "You're offline. Go online to receive requests."}
+          </p>
+        </div>
       ) : (
         <div className="mt-3 space-y-3 px-4">
           {enquiries.map((req) => (
@@ -465,8 +465,8 @@ export default function IncomingRequests() {
       {/* Current and upcoming trips: a short view; the Bookings page has everything. */}
       <div className="mt-6 flex items-center justify-between px-4">
         <h2 className="text-[15px] font-extrabold text-[#0F2238]">Your trips</h2>
-        <button onClick={() => navigate("/transporter/bookings")} className="text-[12px] font-bold text-[#C28D2E]">
-          All bookings →
+        <button onClick={() => navigate("/transporter/bookings")} className="flex items-center text-[12px] font-bold text-[#C28D2E]">
+          All bookings <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
 
@@ -495,7 +495,6 @@ export default function IncomingRequests() {
           )}
         </div>
       )}
-
     </div>
   )
 }
