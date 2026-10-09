@@ -25,6 +25,7 @@ router.patch('/requests/:id/pause', protect, authorize('transporter'), trip.paus
 router.post('/requests/:id/proof', protect, authorize('transporter'), trip.uploadProof);
 
 router.get('/requests', protect, authorize('admin'), transportRequestController.listAll);
+router.get('/shared-runs', protect, authorize('admin'), transportRequestController.adminSharedRuns);
 router.patch('/requests/:id/cancel', protect, authorize('admin'), transportRequestController.cancel);
 
 module.exports = router;

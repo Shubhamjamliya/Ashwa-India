@@ -47,7 +47,7 @@ function StatTile({ icon: Icon, label, value, tint, onClick }) {
         <Icon className="h-5 w-5" />
       </span>
       <span className={`mt-4 truncate text-[22px] font-extrabold leading-none ${tint.text}`}>{value}</span>
-      <span className="mt-1.5 text-[11px] font-semibold text-neutral-500">{label}</span>
+      <span className="mt-1.5 text-[11px] font-semibold text-white/75">{label}</span>
     </button>
   )
 }
@@ -194,10 +194,10 @@ export default function ServiceDashboard() {
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
 
   const quickLinks = [
-    { label: "Horse jobs", hint: "Browse and apply", icon: Briefcase, to: "/service/jobs", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
-    { label: "Earnings", hint: "See your income", icon: Sparkles, to: "/service/earnings", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
-    { label: "Reviews", hint: "What clients say", icon: Star, to: "/service/reviews", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
-    { label: "Bookings", hint: "Full history", icon: ClipboardList, to: "/service/bookings", bg: "bg-white ring-1 ring-[#E4E1D8]", iconBg: "bg-[#0B1C33] text-[#C28D2E]" },
+    { label: "Horse jobs", hint: "Browse and apply", icon: Briefcase, to: "/service/jobs", bg: "bg-gradient-to-br from-[#132B4A] to-[#0B1C33]", iconBg: "bg-white/20 text-white" },
+    { label: "Earnings", hint: "See your income", icon: Sparkles, to: "/service/earnings", bg: "bg-gradient-to-br from-[#D9A441] to-[#A87822]", iconBg: "bg-white/20 text-white" },
+    { label: "Reviews", hint: "What clients say", icon: Star, to: "/service/reviews", bg: "bg-gradient-to-br from-[#2A2A2A] to-[#0A0A0A]", iconBg: "bg-white/20 text-white" },
+    { label: "Bookings", hint: "Full history", icon: ClipboardList, to: "/service/bookings", bg: "bg-gradient-to-br from-[#C28D2E] to-[#8A6416]", iconBg: "bg-white/20 text-white" },
   ]
 
   return (
@@ -273,10 +273,10 @@ export default function ServiceDashboard() {
 
       {/* Numbers */}
       <div className="mt-5 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <StatTile icon={Clock} label="New requests" value={loading ? "—" : pendingCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} />
-        <StatTile icon={Wrench} label="Active jobs" value={loading ? "—" : acceptedCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} />
-        <StatTile icon={CheckCircle2} label="Completed" value={loading ? "—" : completedCount} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} onClick={() => navigate("/service/bookings")} />
-        <StatTile icon={WalletIcon} label="Wallet" value={loading ? "—" : fmt(wallet?.balance)} tint={{ bg: "bg-white ring-1 ring-[#E4E1D8]", icon: "bg-[#0B1C33] text-[#C28D2E]", text: "text-[#0B1C33]" }} onClick={() => navigate("/service/wallet")} />
+        <StatTile icon={Clock} label="New requests" value={loading ? "—" : pendingCount} tint={{ bg: "bg-gradient-to-br from-[#D9A441] to-[#A87822] shadow-md", icon: "bg-white/20 text-white", text: "text-white" }} />
+        <StatTile icon={Wrench} label="Active jobs" value={loading ? "—" : acceptedCount} tint={{ bg: "bg-gradient-to-br from-[#132B4A] to-[#0B1C33] shadow-md", icon: "bg-white/20 text-white", text: "text-white" }} />
+        <StatTile icon={CheckCircle2} label="Completed" value={loading ? "—" : completedCount} tint={{ bg: "bg-gradient-to-br from-[#2A2A2A] to-[#0A0A0A] shadow-md", icon: "bg-white/20 text-white", text: "text-white" }} onClick={() => navigate("/service/bookings")} />
+        <StatTile icon={WalletIcon} label="Wallet" value={loading ? "—" : fmt(wallet?.balance)} tint={{ bg: "bg-gradient-to-br from-[#C28D2E] to-[#8A6416] shadow-md", icon: "bg-white/20 text-white", text: "text-white" }} onClick={() => navigate("/service/wallet")} />
       </div>
 
       {/* Quick links */}
@@ -286,14 +286,14 @@ export default function ServiceDashboard() {
             key={label}
             type="button"
             onClick={() => navigate(to)}
-            className={`flex items-center gap-3 rounded-2xl p-3 text-left transition active:scale-[0.97] ${bg}`}
+            className={`flex items-center gap-3 rounded-2xl p-3.5 text-left shadow-md transition active:scale-[0.97] ${bg}`}
           >
             <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
               <Icon className="h-5 w-5" />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-bold text-[#0A0A0A]">{label}</span>
-              <span className="block truncate text-[11px] text-neutral-500">{hint}</span>
+              <span className="block truncate text-[13px] font-bold text-white">{label}</span>
+              <span className="block truncate text-[11px] text-white/75">{hint}</span>
             </span>
           </button>
         ))}

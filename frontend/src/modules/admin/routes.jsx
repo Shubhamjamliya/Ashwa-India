@@ -20,6 +20,7 @@ import TransportRequests from "./pages/transport/Requests"
 import TransportWithdrawals from "./pages/transport/Withdrawals"
 import LiveTrips from "./pages/transport/LiveTrips"
 import TransportReports from "./pages/transport/Reports"
+import SharedRides from "./pages/transport/SharedRides"
 import VehicleTypes from "./pages/transport/VehicleTypes"
 import AdvanceSettings from "./pages/transport/AdvanceSettings"
 import JobManagement from "./pages/jobs/JobManagement"
@@ -50,7 +51,6 @@ import DeveloperSettings from "./pages/developer/Settings"
 
 const placeholderRoutes = [
   ["horses/inquiries", "Inquiries"],
-  ["transport/shared", "Shared Rides"],
   ["bookings", "Bookings"],
   ["payments", "Payments"],
   ["reviews", "Reviews"],
@@ -68,6 +68,7 @@ export const adminRoutes = (
     <Route path="providers" element={<ProvidersList />} />
     <Route path="transporters" element={<TransportersList />} />
     <Route path="transport/requests" element={<TransportRequests />} />
+    <Route path="transport/shared" element={<SharedRides />} />
     <Route path="transport/tracking" element={<LiveTrips />} />
     <Route path="transport/withdrawals" element={<TransportWithdrawals />} />
     <Route path="transport/reports" element={<TransportReports />} />

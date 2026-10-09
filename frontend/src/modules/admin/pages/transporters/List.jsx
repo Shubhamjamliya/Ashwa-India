@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import {
-  Search, Download, Eye, Mail, Phone, MapPin, Calendar as CalendarIcon, Truck, Check, X,
+  Search, Download, Eye, Mail, Phone, MapPin, Calendar as CalendarIcon, Check, X, Building2, Star, Users, Wallet,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
 import { Button } from "@/shared/components/ui/button"
@@ -41,8 +41,9 @@ export default function TransportersList() {
   const [error, setError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [statusTab, setStatusTab] = useState("")
-  const [selected, setSelected] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
   const [showDetails, setShowDetails] = useState(false)
+  const selected = useMemo(() => transporters.find((t) => t._id === selectedId) || null, [transporters, selectedId])
   const [actingId, setActingId] = useState(null)
 
   const tabs = [
@@ -96,7 +97,7 @@ export default function TransportersList() {
   }
 
   const handleViewDetails = (transporter) => {
-    setSelected(transporter)
+    setSelectedId(transporter._id)
     setShowDetails(true)
   }
 
@@ -228,23 +229,26 @@ export default function TransportersList() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {t.status === "pending" ? (
-                          <div className="flex justify-center gap-2">
-                            <Button size="sm" disabled={actingId === t._id} onClick={() => updateStatus(t._id, "approved")}>
-                              <Check className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="sm" variant="outline" disabled={actingId === t._id} onClick={() => updateStatus(t._id, "rejected")}>
-                              <X className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleViewDetails(t)}
+                            aria-label={`View ${t.name || "transporter"}`}
+                            title="View details"
                             className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                        )}
+                          {t.status === "pending" && (
+                            <>
+                              <Button size="sm" disabled={actingId === t._id} onClick={() => updateStatus(t._id, "approved")}>
+                                <Check className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button size="sm" variant="outline" disabled={actingId === t._id} onClick={() => updateStatus(t._id, "rejected")}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -255,67 +259,113 @@ export default function TransportersList() {
         </div>
       </div>
 
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-lg mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
-            <DialogTitle className="pr-12 text-xl font-bold text-neutral-900">Transporter Details</DialogTitle>
-          </DialogHeader>
+      <Dialog open={showDetails && Boolean(selected)} onOpenChange={setShowDetails}>
+        <DialogContent className="flex max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
           {selected && (
-            <div className="space-y-4 px-6 py-5">
-              <div className="bg-neutral-50 rounded-xl p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                  <div className="w-16 h-16 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-                    <Truck className="w-8 h-8 text-neutral-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="text-lg font-bold text-neutral-900">{selected.name || "Unnamed"}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${statusBadgeClass[selected.status]}`}>
+            <>
+              {/* Header */}
+              <DialogHeader className="shrink-0 bg-[#0B1C33] px-6 pb-5 pt-6 text-white">
+                <DialogTitle className="sr-only">Transporter details</DialogTitle>
+                <div className="flex items-center gap-4 pr-8">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-[#C28D2E] bg-white/10 text-lg font-extrabold text-[#C28D2E]">
+                    {getInitials(selected.name)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-lg font-bold">{selected.name || "Unnamed"}</h3>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize ${statusBadgeClass[selected.status]}`}>
                         {statusLabel[selected.status]}
                       </span>
                     </div>
-                    <p className="text-sm text-neutral-600 mb-3">{selected.businessName || "—"}</p>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Mail className="w-4 h-4" />
-                        <span className="truncate">{selected.email || "NA"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Phone className="w-4 h-4" />
-                        <span>{selected.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <MapPin className="w-4 h-4" />
-                        <span>{selected.serviceArea || "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600 min-w-0">
-                        <Truck className="w-4 h-4" />
-                        <span>{selected.vehicleTypes?.length ? selected.vehicleTypes.join(", ") : "No vehicle types listed"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>Joined: {formatDateTime(selected.createdAt)}</span>
-                      </div>
-                    </div>
+                    <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-white/70">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" /> {selected.businessName || "No business name"}
+                    </p>
                   </div>
                 </div>
+                <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 rounded-xl bg-white/10 py-2.5 text-center">
+                  <div>
+                    <p className="flex items-center justify-center gap-1 text-base font-extrabold">
+                      <Star className="h-4 w-4 fill-[#C28D2E] text-[#C28D2E]" /> {selected.rating?.count ? selected.rating.average.toFixed(1) : "—"}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">
+                      {selected.rating?.count ? `${selected.rating.count} review${selected.rating.count === 1 ? "" : "s"}` : "No reviews"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="flex items-center justify-center gap-1.5 text-base font-extrabold">
+                      <span className={`h-2 w-2 rounded-full ${selected.isOnline === false ? "bg-red-400" : "bg-emerald-400"}`} />
+                      {selected.isOnline === false ? "Offline" : "Online"}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">Availability</p>
+                  </div>
+                  <div>
+                    <p className="text-base font-extrabold capitalize">{selected.companyType || "—"}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">Account type</p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              {/* Scrolling body */}
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-neutral-50 px-6 py-5">
+                <section className="rounded-xl border border-neutral-200 bg-white p-4">
+                  <p className="mb-3 text-sm font-bold text-neutral-900">Contact and service</p>
+                  <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                    {[
+                      [Phone, "Phone", selected.phone, `tel:${selected.phone}`],
+                      [Mail, "Email", selected.email || "Not provided", selected.email ? `mailto:${selected.email}` : null],
+                      [MapPin, "Service area", selected.serviceArea || "Not set"],
+                      [Users, "Offers", selected.serviceType === "both" ? "Private and shared" : selected.serviceType || "private"],
+                      [CalendarIcon, "Joined", formatDateTime(selected.createdAt)],
+                      [Wallet, "Own rate", selected.pricePerKm ? `₹${selected.pricePerKm}/km (older bookings only)` : "Admin fares apply"],
+                    ].map(([Icon, label, value, href]) => (
+                      <div key={label} className="flex min-w-0 items-start gap-2.5">
+                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-100">
+                          <Icon className="h-3.5 w-3.5 text-neutral-500" />
+                        </span>
+                        <div className="min-w-0">
+                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{label}</dt>
+                          <dd className="break-words font-medium text-neutral-900">
+                            {href ? (
+                              <a href={href} className="hover:underline">
+                                {value}
+                              </a>
+                            ) : (
+                              value
+                            )}
+                          </dd>
+                        </div>
+                      </div>
+                    ))}
+                  </dl>
+                  {selected.vehicleTypes?.length > 0 && (
+                    <div className="mt-4 border-t border-neutral-100 pt-3">
+                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Vehicle types listed on profile</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selected.vehicleTypes.map((v) => (
+                          <span key={v} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+                            {v}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                <OpsPanel transporter={selected} onChanged={load} />
               </div>
 
+              {/* Pending transporters can be decided without leaving the modal */}
               {selected.status === "pending" && (
-                <div className="flex gap-2">
-                  <Button className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "approved")}>
-                    <Check className="w-4 h-4" />
-                    Approve
-                  </Button>
+                <div className="flex shrink-0 gap-2 border-t border-neutral-200 bg-white px-6 py-4">
                   <Button variant="outline" className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "rejected")}>
-                    <X className="w-4 h-4" />
-                    Reject
+                    <X className="h-4 w-4" /> Reject
+                  </Button>
+                  <Button className="flex-1" disabled={actingId === selected._id} onClick={() => updateStatus(selected._id, "approved")}>
+                    <Check className="h-4 w-4" /> Approve transporter
                   </Button>
                 </div>
               )}
-
-              <OpsPanel transporter={selected} onChanged={load} />
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

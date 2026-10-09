@@ -637,6 +637,116 @@ exports.listIncoming = asyncHandler(async (req, res) => {
   res.json({ requests: list });
 });
 
+// How far along a shared run is, for the admin. "waiting" = customers have asked to share but fewer than two are confirmed.
+function runState({ joined, pendingJoiners, started, finished, cancelled }) {
+  if (cancelled) return 'cancelled';
+  if (joined.length >= 2 || (joined.length === 1 && joined[0].status === 'completed' && finished)) {
+    if (finished) return 'completed';
+    return started ? 'on_trip' : 'upcoming';
+  }
+  return pendingJoiners.length ? 'waiting' : 'not_shared';
+}
+
+// GET /api/transport/shared-runs  (admin) — every shared run with customers, vehicle, stops and money
+// Optional ?state=upcoming|on_trip|completed|waiting|cancelled and ?q= (customer, transporter or place).
+exports.adminSharedRuns = asyncHandler(async (req, res) => {
+  const groups = await SharedTrip.find().sort({ createdAt: -1 }).limit(300).populate('transporter', 'name businessName phone');
+  const wanted = String(req.query.state || '');
+  const q = String(req.query.q || '').trim().toLowerCase();
+
+  const runs = [];
+  for (const group of groups) {
+    const members = await TransportRequest.find({ sharedGroup: group._id })
+      .populate('user', 'name phone')
+      .populate('vehicle', 'registrationNumber vehicleType')
+      .populate('driver', 'name phone')
+      .sort({ createdAt: 1 });
+    if (!members.length) continue;
+
+    const joined = members.filter((m) => ['accepted', 'completed'].includes(m.status));
+    const pendingJoiners = members.filter((m) => m.status === 'pending' && m.shareApproval !== 'declined');
+    const host = members.find((m) => String(m._id) === String(group.host)) || members[0];
+
+    let plan = { stops: [], next: null };
+    if (joined.length) plan = await sharedService.runPlan(group._id);
+    const started = joined.some((m) => m.stage && m.stage !== 'scheduled');
+    const finished = plan.stops.length > 0 && !plan.next;
+    const cancelled = joined.length === 0 && ['cancelled', 'rejected'].includes(host.status);
+    const state = runState({ joined, pendingJoiners, started, finished, cancelled });
+    if (state === 'not_shared') continue; // nobody ever joined: not a shared run
+
+    const lead = joined[0] || host;
+    const run = {
+      id: String(group._id),
+      state,
+      date: group.scheduledDate,
+      createdAt: group.createdAt,
+      transporter: group.transporter
+        ? { name: group.transporter.businessName || group.transporter.name, phone: group.transporter.phone }
+        : null,
+      vehicle: lead.vehicle ? { registration: lead.vehicle.registrationNumber, type: lead.vehicleType } : { type: host.vehicleType },
+      driver: lead.driver ? { name: lead.driver.name, phone: lead.driver.phone } : null,
+      from: placeName(group.source),
+      to: placeName(group.destination),
+      animals: joined.reduce((sum, m) => sum + (m.animals || 1), 0),
+      fareTotal: joined.reduce((sum, m) => sum + (m.quote?.amount || 0), 0),
+      advanceTotal: joined.reduce((sum, m) => sum + (m.advance?.status === 'paid' ? m.advance.amount || 0 : 0), 0),
+      stopsDone: plan.stops.filter((st) => st.done).length,
+      stopsTotal: plan.stops.length,
+      next: plan.next ? describeStop(plan.next) : null,
+      customers: members
+        .filter((m) => m.status !== 'cancelled' || m.hostRequest === undefined)
+        .map((m) => ({
+          requestId: String(m._id),
+          name: m.user?.name || m.user?.phone || 'Customer',
+          phone: m.user?.phone,
+          isHost: String(m._id) === String(group.host),
+          animals: m.animals || 1,
+          pickup: m.source?.address,
+          drop: m.destination?.address,
+          fare: m.quote?.amount || 0,
+          advance: m.advance?.status === 'paid' ? m.advance.amount || 0 : 0,
+          status: m.status,
+          stage: m.stage,
+          shareApproval: m.shareApproval,
+        })),
+      stops: plan.stops.map((st, i) => ({
+        position: i + 1,
+        kind: st.kind,
+        label: describeStop(st),
+        place: st.kind === 'pickup' ? st.member.source?.address : st.member.destination?.address,
+        done: st.done,
+        isNext: plan.next === st,
+      })),
+    };
+    runs.push(run);
+  }
+
+  const counts = { upcoming: 0, on_trip: 0, completed: 0, waiting: 0, cancelled: 0 };
+  for (const r of runs) counts[r.state] += 1;
+  const shown = runs.filter((r) => {
+    if (wanted && r.state !== wanted) return false;
+    if (!q) return true;
+    const hay = [r.from, r.to, r.transporter?.name, r.vehicle?.registration, r.driver?.name, ...r.customers.map((c) => c.name), ...r.customers.map((c) => c.phone)]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return hay.includes(q);
+  });
+  const real = runs.filter((r) => ['upcoming', 'on_trip', 'completed'].includes(r.state));
+
+  res.json({
+    runs: shown,
+    counts,
+    totals: {
+      runs: real.length,
+      customers: real.reduce((sum, r) => sum + r.customers.filter((c) => ['accepted', 'completed'].includes(c.status)).length, 0),
+      animals: real.reduce((sum, r) => sum + r.animals, 0),
+      fareValue: real.reduce((sum, r) => sum + r.fareTotal, 0),
+    },
+  });
+});
+
 // GET /api/transport/requests/:id  (transporter) — full booking detail for the job screen
 exports.getDetail = asyncHandler(async (req, res) => {
   const request = await TransportRequest.findById(req.params.id);
