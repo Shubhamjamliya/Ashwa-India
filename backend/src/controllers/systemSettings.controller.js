@@ -53,6 +53,29 @@ exports.updateCustomization = asyncHandler(async (req, res) => {
   res.json({ customization: settings.customization });
 });
 
+// ---- Transport ----
+
+exports.getTransportSettings = asyncHandler(async (req, res) => {
+  const settings = await getSingleton();
+  res.json({ transport: settings.transport });
+});
+
+// PUT { advanceType: 'fixed' | 'percent', advanceValue }
+exports.updateTransportSettings = asyncHandler(async (req, res) => {
+  const { advanceType, advanceValue } = req.body;
+  if (!['fixed', 'percent'].includes(advanceType)) {
+    return res.status(400).json({ message: 'advanceType must be "fixed" or "percent"' });
+  }
+  const value = Number(advanceValue);
+  if (!Number.isFinite(value) || value < 0) return res.status(400).json({ message: 'Advance must be 0 or more' });
+  if (advanceType === 'percent' && value > 100) return res.status(400).json({ message: 'Advance percent cannot be above 100' });
+
+  const settings = await getSingleton();
+  settings.transport = { advanceType, advanceValue: value };
+  await settings.save();
+  res.json({ transport: settings.transport });
+});
+
 // ---- Developer Settings ----
 
 exports.getDeveloperSettings = asyncHandler(async (req, res) => {

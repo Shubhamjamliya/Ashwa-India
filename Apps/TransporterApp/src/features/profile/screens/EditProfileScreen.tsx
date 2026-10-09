@@ -38,19 +38,12 @@ export function EditProfileScreen() {
   const [serviceArea, setServiceArea] = useState(user?.serviceArea || '');
   const [serviceType, setServiceType] = useState<ServiceType>(user?.serviceType || 'private');
   const [vehicleTypes, setVehicleTypes] = useState((user?.vehicleTypes || []).join(', '));
-  const [pricePerKm, setPricePerKm] = useState(user?.pricePerKm ? String(user.pricePerKm) : '');
-  const [baseFare, setBaseFare] = useState(user?.baseFare ? String(user.baseFare) : '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const handleSave = async () => {
     if (!name.trim()) {
       setError('Enter your name');
-      return;
-    }
-    const rate = Number(pricePerKm);
-    if (!(rate > 0)) {
-      setError('Set your price per km (more than ₹0) so users can book you');
       return;
     }
     setError('');
@@ -65,8 +58,6 @@ export function EditProfileScreen() {
           serviceArea: serviceArea.trim(),
           serviceType,
           vehicleTypes: vehicleTypes.split(',').map(v => v.trim()).filter(Boolean),
-          pricePerKm: rate,
-          baseFare: Number(baseFare) || 0,
         },
       });
       const t = data.transporter || {};
@@ -79,8 +70,6 @@ export function EditProfileScreen() {
           serviceArea: t.serviceArea,
           serviceType: t.serviceType,
           vehicleTypes: t.vehicleTypes,
-          pricePerKm: t.pricePerKm,
-          baseFare: t.baseFare,
         });
       }
       navigation.goBack();
@@ -136,20 +125,11 @@ export function EditProfileScreen() {
           </View>
 
           <View style={styles.pricing}>
-            <Text style={styles.pricingTitle}>Your pricing</Text>
+            <Text style={styles.pricingTitle}>Pricing</Text>
             <Text style={styles.pricingHint}>
-              Users see your estimate before they book. Price is trip distance × rate, plus base fare.
+              Fares are set by the admin for each vehicle type, so every transporter charges the same. Add your vehicles with
+              the right type to receive requests for it.
             </Text>
-            <View style={styles.row2}>
-              <View style={styles.flex}>
-                <Label>Price per km (₹)</Label>
-                <Box value={pricePerKm} onChangeText={t => setPricePerKm(t.replace(/[^\d.]/g, ''))} keyboardType="decimal-pad" placeholder="e.g. 25" />
-              </View>
-              <View style={styles.flex}>
-                <Label>Base fare (₹)</Label>
-                <Box value={baseFare} onChangeText={t => setBaseFare(t.replace(/[^\d.]/g, ''))} keyboardType="decimal-pad" placeholder="e.g. 500" />
-              </View>
-            </View>
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}

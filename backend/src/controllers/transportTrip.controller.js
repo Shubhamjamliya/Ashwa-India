@@ -66,6 +66,9 @@ exports.assign = asyncHandler(async (req, res) => {
   if (vehicleId) {
     const vehicle = await Vehicle.findOne({ _id: vehicleId, transporter: req.user._id, active: true });
     if (!vehicle) return res.status(400).json({ message: 'Choose one of your vehicles' });
+    if (request.vehicleType && vehicle.vehicleType !== request.vehicleType) {
+      return res.status(400).json({ message: 'This booking needs a vehicle of the type the customer booked' });
+    }
     const busy = !vehicle.isAvailable && String(request.vehicle) !== String(vehicle._id);
     if (busy) return res.status(400).json({ message: `${vehicle.registrationNumber} is already on another trip` });
     if (request.sharedGroup) {
@@ -113,6 +116,12 @@ exports.schedulePickup = asyncHandler(async (req, res) => {
   if (Number.isNaN(when.getTime())) return res.status(400).json({ message: 'Pick a valid pickup time' });
   request.pickupScheduledAt = when;
   await request.save();
+  if (request.sharedGroup) {
+    await TransportRequest.updateMany(
+      { sharedGroup: request.sharedGroup, _id: { $ne: request._id }, status: 'accepted', stage: 'scheduled' },
+      { pickupScheduledAt: when }
+    );
+  }
   const doc = await populated(request._id);
   notify(req, request, doc);
   res.json({ request: doc });
@@ -128,6 +137,20 @@ exports.pauseTrip = asyncHandler(async (req, res) => {
   if (typeof req.body.paused !== 'boolean') return res.status(400).json({ message: 'paused must be true or false' });
   request.paused = req.body.paused;
   await request.save();
+  // A shared run is one vehicle: pausing it pauses it for every customer still on it.
+  if (request.sharedGroup) {
+    const others = await TransportRequest.find({
+      sharedGroup: request.sharedGroup,
+      _id: { $ne: request._id },
+      status: 'accepted',
+      stage: { $in: ['to_pickup', 'in_transit'] },
+    });
+    for (const m of others) {
+      m.paused = request.paused;
+      await m.save();
+      notify(req, m, await populated(m._id));
+    }
+  }
   const doc = await populated(request._id);
   notify(req, request, doc);
   res.json({ request: doc });

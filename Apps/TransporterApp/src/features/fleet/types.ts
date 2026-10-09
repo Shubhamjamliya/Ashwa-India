@@ -1,4 +1,5 @@
-export type VehicleType = 'horse-trailer' | 'horse-van' | 'covered-truck' | 'open-truck' | 'mini-truck' | 'other';
+// The key of an admin-managed vehicle type (see services/vehicleTypes).
+export type VehicleType = string;
 
 export type VehicleDocument = { url?: string; expiresAt?: string };
 
@@ -27,11 +28,3 @@ export type Driver = {
   isAvailable?: boolean;
 };
 
-export const VEHICLE_TYPE_LABEL: Record<VehicleType, string> = {
-  'horse-trailer': 'Horse trailer',
-  'horse-van': 'Horse van',
-  'covered-truck': 'Covered truck',
-  'open-truck': 'Open truck',
-  'mini-truck': 'Mini truck',
-  other: 'Other',
-};

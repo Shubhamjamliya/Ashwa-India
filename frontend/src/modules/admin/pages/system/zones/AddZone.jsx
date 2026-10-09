@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, MapPin, Save, Search, Shapes, X } from "lucide-react"
-import { Loader } from "@googlemaps/js-api-loader"
 import { apiFetch } from "@/shared/lib/api"
 import { getGoogleMapsApiKey } from "@/shared/lib/googleMapsApiKey"
+import { loadGoogleMaps as loadGoogle } from "@/shared/lib/googleMaps"
 
 const MIN_POINTS = 3
 const MAX_POINTS = 10
@@ -110,8 +110,7 @@ export default function AddZone() {
       }
 
       if (apiKey) {
-        const loader = new Loader({ apiKey, version: "weekly", libraries: ["places"] })
-        const google = await loader.load()
+        const google = await loadGoogle()
         initializeMap(google)
       } else {
         setMapLoading(false)

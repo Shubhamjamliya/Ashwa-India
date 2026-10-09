@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useParams } from "react-router-dom"
-import { CheckCircle2, Map as MapIcon, MapPin, Navigation, Phone, Route } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
+import { CheckCircle2, MapPin, Navigation, Phone, Radar, Route, Users, XCircle } from "lucide-react"
 import { apiFetch } from "@/shared/lib/api"
-import { directionsUrl, distanceKm, mapEmbedUrl } from "@/shared/lib/geo"
+import { directionsUrl, distanceKm } from "@/shared/lib/geo"
+import TripMap from "@/shared/maps/TripMap"
 import BackButton from "../components/BackButton"
+import OtpStep from "../components/OtpStep"
+import RunJob from "../components/RunJob"
 import TripControls from "../components/TripControls"
 
 const LOCATION_PUSH_MS = 20000
@@ -41,6 +44,7 @@ function StageStepper({ stage }) {
 
 export default function Job() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [request, setRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -65,7 +69,13 @@ export default function Job() {
   }, [load])
 
   const stage = request?.stage
-  const tracking = request?.status === "accepted" && (stage === "to_pickup" || stage === "in_transit")
+  // A shared run with more than one customer is one trip, shown and driven by RunJob.
+  const run = request?.sharedRun?.customers > 1 ? request.sharedRun : null
+  const tracking = run
+    ? run.started && !run.finished
+    : request?.status === "accepted" && (stage === "to_pickup" || stage === "in_transit")
+  // The run's location goes through the next stop's booking, which is always still on the road.
+  const pushId = run ? run.next?.requestId : id
   const target = stage === "to_pickup" ? request?.source : stage === "in_transit" ? request?.destination : null
 
   // Share the transporter's live position with the user while the trip is active.
@@ -81,14 +91,32 @@ export default function Job() {
       { enableHighAccuracy: true, maximumAge: 10000 }
     )
     const pusher = setInterval(() => {
-      if (!latestHere.current) return
-      apiFetch(`/transport/requests/${id}/location`, { method: "POST", body: latestHere.current }).catch(() => {})
+      if (!latestHere.current || !pushId) return
+      apiFetch(`/transport/requests/${pushId}/location`, { method: "POST", body: latestHere.current }).catch(() => {})
     }, LOCATION_PUSH_MS)
     return () => {
       navigator.geolocation.clearWatch(watchId)
       clearInterval(pusher)
     }
-  }, [tracking, id])
+  }, [tracking, pushId])
+
+  // Accepting an open request can fail if another transporter got there first; declining it removes it from this transporter.
+  const respond = async (action) => {
+    if (action === "reject" && !window.confirm("Decline this request?")) return
+    setBusy(true)
+    setError("")
+    try {
+      const data = await apiFetch(`/transport/requests/${id}/respond`, { method: "PATCH", body: { action } })
+      if (data.request?.declined) return navigate("/transporter", { replace: true })
+      await load()
+    } catch (err) {
+      setError(err.message || "Could not update the request")
+      // Someone else accepted it: there is nothing left to do here.
+      if (/already accepted/i.test(err.message || "")) setTimeout(() => navigate("/transporter", { replace: true }), 1500)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const runAction = async (body) => {
     setBusy(true)
@@ -115,6 +143,8 @@ export default function Job() {
     return <p className="px-8 py-24 text-center text-sm text-destructive">{error || "Booking not found"}</p>
   }
 
+  if (run && request.status !== "pending") return <RunJob request={request} here={here} onChanged={load} />
+
   const user = request.user || {}
   const distance = here && target ? distanceKm(here, target) : null
   const mapPoint = target || request.source
@@ -137,7 +167,82 @@ export default function Job() {
           </div>
         ) : null}
 
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {request.status === "pending" && (
+          <div className="space-y-3 rounded-2xl border-2 border-[#C28D2E] bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${request.hostRequest ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                {request.hostRequest ? <Users className="h-3 w-3" /> : null}
+                {request.hostRequest ? "Shared ride request" : "New request"}
+              </span>
+              {request.openOffer && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">First to accept gets it</span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[
+                ["Travel date", request.scheduledDate ? new Date(`${request.scheduledDate}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Flexible"],
+                ["Horses", request.animals || 1],
+                ["Vehicle", request.vehicleTypeInfo?.name || "Any"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-[#F1EEE6] px-2 py-1.5">
+                  <p className="text-[10px] font-semibold text-neutral-500">{label}</p>
+                  <p className="truncate text-[12px] font-bold text-[#0F2238]">{value}</p>
+                </div>
+              ))}
+            </div>
+            {request.hostRequest && (
+              <p className="rounded-lg bg-blue-50 p-2.5 text-[11px] text-blue-900">
+                Joins your booking {request.hostRequest.source?.address?.split(",")[0]} → {request.hostRequest.destination?.address?.split(",")[0]}. The first
+                customer agreed to share.
+              </p>
+            )}
+            <div className="space-y-1 text-[12px]">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">{request.hostRequest ? "Customer's share" : "Fare"}</span>
+                <span className="font-extrabold text-[#0F2238]">{fmt(request.quote?.amount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Advance paid</span>
+                <span className="font-bold text-emerald-700">{fmt(request.advance?.status === "paid" ? request.advance.amount : 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Due at delivery</span>
+                <span className="font-bold text-[#0F2238]">
+                  {fmt(Math.max(0, (request.quote?.amount || 0) - (request.advance?.status === "paid" ? request.advance.amount : 0)))}
+                </span>
+              </div>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={() => respond("reject")}
+                disabled={busy}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#F1EEE6] py-3 text-sm font-bold text-[#0F2238] disabled:opacity-50"
+              >
+                <XCircle className="h-4 w-4" /> Decline
+              </button>
+              <button
+                onClick={() => respond("accept")}
+                disabled={busy}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" /> {busy ? "Please wait..." : "Accept"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {request.status === "accepted" && (
+          <button
+            onClick={() => navigate(`/transporter/track/${id}`)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0B1C33] py-3.5 text-sm font-bold text-white shadow-md"
+          >
+            <Radar className="h-4 w-4" />
+            {tracking ? "Open live tracking" : "Start tracking"}
+          </button>
+        )}
+
+        {error && request.status !== "pending" && <p className="text-xs text-destructive">{error}</p>}
 
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E4E1D8] bg-white p-4">
           <div className="min-w-0">
@@ -184,10 +289,17 @@ export default function Job() {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#E4E1D8] bg-white">
-          <iframe title="Map" src={mapEmbedUrl(mapPoint.lat, mapPoint.lng)} className="h-56 w-full border-0" loading="lazy" />
+          <TripMap
+            pickup={request.source}
+            drop={request.destination}
+            vehicle={tracking ? here : null}
+            trail={request.trail || []}
+            stage={finished ? "delivered" : stage}
+            className="h-56"
+          />
           <div className="flex items-center justify-between gap-2 p-3">
             <p className="text-xs text-neutral-500">
-              {target ? (distance != null ? `${distance.toFixed(1)} km to ${stage === "to_pickup" ? "pickup" : "drop-off"}` : "Locating you...") : "Map shows the pickup point"}
+              {target ? (distance != null ? `${distance.toFixed(1)} km to ${stage === "to_pickup" ? "pickup" : "drop-off"}` : "Locating you...") : "Pickup and drop-off"}
             </p>
             <a
               href={directionsUrl(mapPoint.lat, mapPoint.lng)}
@@ -199,25 +311,6 @@ export default function Job() {
             </a>
           </div>
         </div>
-
-        {request.sharedRun && (
-          <div className="space-y-2 rounded-2xl border border-[#E4E1D8] bg-white p-4">
-            <p className="text-sm font-bold text-[#0F2238]">Shared run · {request.sharedRun.animalsTotal} animal(s) in total</p>
-            <p className="text-[11px] text-neutral-500">Stops run in booking order. Each drop-off waits for the earlier one.</p>
-            {request.sharedRun.stops.map((s) => (
-              <div key={String(s.requestId)} className={`rounded-xl border p-3 text-[12px] ${s.isThis ? "border-[#C28D2E] bg-[#FBEFD6]" : "border-[#E4E1D8]"}`}>
-                <p className="font-bold text-[#0F2238]">
-                  {s.position}. {s.animals} animal(s) {s.isThis && <span className="text-[#C28D2E]">· this booking</span>}
-                </p>
-                <p className="text-neutral-600">Pick up: {s.pickup.address}</p>
-                <p className="text-neutral-600">Drop: {s.drop.address}</p>
-                <p className="mt-1 text-[11px] font-semibold text-neutral-500">
-                  {s.delivered ? "Delivered" : s.picked ? "On board" : s.status === "accepted" ? "Waiting for pickup" : s.status}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
 
         {request.status === "accepted" && !finished && stage !== "delivered" && (
           <TripControls request={request} onUpdated={() => load()} />
@@ -278,37 +371,13 @@ export default function Job() {
           </div>
         )}
 
-        {request.status === "pending" && (
-          <p className="rounded-2xl bg-[#F1EEE6] p-4 text-center text-xs text-neutral-600">Accept this booking from the Home tab to start the trip.</p>
+        {(request.status === "rejected" || request.status === "cancelled") && (
+          <p className="rounded-2xl bg-[#F1EEE6] p-4 text-center text-xs text-neutral-600">
+            {request.status === "rejected" ? "This request was declined." : "This booking was cancelled."}
+          </p>
         )}
       </div>
     </div>
   )
 }
 
-function OtpStep({ title, hint, value, onChange, onSubmit, busy, cta }) {
-  return (
-    <div className="space-y-3 rounded-2xl border border-[#E4E1D8] bg-white p-4">
-      <div className="flex items-center gap-2">
-        <MapIcon className="h-4 w-4 text-[#C28D2E]" />
-        <p className="text-sm font-bold text-[#0F2238]">{title}</p>
-      </div>
-      <p className="text-xs text-neutral-500">{hint}</p>
-      <input
-        inputMode="numeric"
-        maxLength={4}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 4))}
-        placeholder="4-digit OTP"
-        className="h-12 w-full rounded-xl border border-[#E4E1D8] px-4 text-center text-lg font-bold tracking-[0.5em] text-[#0F2238] outline-none focus:border-[#C28D2E]"
-      />
-      <button
-        onClick={onSubmit}
-        disabled={busy || value.length !== 4}
-        className="w-full rounded-xl bg-[#C28D2E] py-3 text-sm font-bold text-white disabled:opacity-50"
-      >
-        {busy ? "Verifying..." : cta}
-      </button>
-    </div>
-  )
-}

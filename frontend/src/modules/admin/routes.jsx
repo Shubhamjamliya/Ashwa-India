@@ -20,6 +20,8 @@ import TransportRequests from "./pages/transport/Requests"
 import TransportWithdrawals from "./pages/transport/Withdrawals"
 import LiveTrips from "./pages/transport/LiveTrips"
 import TransportReports from "./pages/transport/Reports"
+import VehicleTypes from "./pages/transport/VehicleTypes"
+import AdvanceSettings from "./pages/transport/AdvanceSettings"
 import JobManagement from "./pages/jobs/JobManagement"
 import ReportPage from "./pages/reports/ReportPage"
 import TaxSettings from "./pages/store/TaxSettings"
@@ -69,6 +71,8 @@ export const adminRoutes = (
     <Route path="transport/tracking" element={<LiveTrips />} />
     <Route path="transport/withdrawals" element={<TransportWithdrawals />} />
     <Route path="transport/reports" element={<TransportReports />} />
+    <Route path="transport/vehicle-types" element={<VehicleTypes />} />
+    <Route path="transport/advance" element={<AdvanceSettings />} />
     <Route path="jobs/manage" element={<JobManagement />} />
     <Route path="reports/sales" element={<ReportPage type="sales" title="Sales Reports" />} />
     <Route path="reports/transport" element={<ReportPage type="transport" title="Transport Reports" />} />

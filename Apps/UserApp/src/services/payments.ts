@@ -52,6 +52,38 @@ export async function payForCart(
   return { paymentIntentId: order.paymentIntentId, result };
 }
 
+// Pays a transport booking's advance with Razorpay. The booking itself is created afterwards with this proof.
+// `booking` is the same body the booking request takes.
+export async function payTransportAdvance(
+  booking: Record<string, unknown>,
+  user: SessionUser | null,
+): Promise<{ paymentIntentId: string; result: RazorpaySuccess }> {
+  assertNative();
+
+  const order = await apiFetch<PaymentOrderResponse>('/transport/advance/razorpay-order', {
+    method: 'POST',
+    body: booking,
+  });
+
+  const { default: RazorpayCheckout } = await import('react-native-razorpay');
+
+  const result = await RazorpayCheckout.open({
+    key: order.keyId,
+    amount: order.amount,
+    currency: order.currency,
+    order_id: order.razorpayOrderId,
+    name: 'Ashwa India',
+    description: 'Transport booking advance',
+    prefill: {
+      name: user?.name,
+      contact: user?.phone,
+    },
+    theme: { color: '#C28D2E' },
+  });
+
+  return { paymentIntentId: order.paymentIntentId, result };
+}
+
 // Adds money to the user's wallet: opens Razorpay, then has the backend verify the payment.
 export async function topUpWallet(amount: number, user: SessionUser | null): Promise<void> {
   assertNative();

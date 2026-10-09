@@ -41,21 +41,10 @@ exports.updateAvailability = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { businessName, vehicleTypes, serviceArea, serviceType, location, name, email, pricePerKm, baseFare } = req.body;
+  // Fares are set by the admin per vehicle type, so transporters cannot change pricePerKm or baseFare here.
+  const { businessName, vehicleTypes, serviceArea, serviceType, location, name, email } = req.body;
 
   const update = { businessName, vehicleTypes, serviceArea, serviceType, location, name, email };
-  if (pricePerKm !== undefined) {
-    if (typeof pricePerKm !== 'number' || pricePerKm <= 0) {
-      return res.status(400).json({ message: 'Price per km must be a number greater than 0' });
-    }
-    update.pricePerKm = pricePerKm;
-  }
-  if (baseFare !== undefined) {
-    if (typeof baseFare !== 'number' || baseFare < 0) {
-      return res.status(400).json({ message: 'Base fare must be a number, 0 or more' });
-    }
-    update.baseFare = baseFare;
-  }
 
   const transporter = await Transporter.findByIdAndUpdate(req.user._id, update, { new: true });
   res.json({ transporter });

@@ -2,16 +2,8 @@ import { useEffect, useState } from "react"
 import { Plus, Pencil, Trash2, Truck, X } from "lucide-react"
 import { apiFetch, apiUpload } from "@/shared/lib/api"
 import { getMediaUrl } from "@/shared/lib/media"
+import { useVehicleTypes } from "@/shared/lib/vehicleTypes"
 import BackButton from "../components/BackButton"
-
-export const VEHICLE_TYPE_LABEL = {
-  "horse-trailer": "Horse trailer",
-  "horse-van": "Horse van",
-  "covered-truck": "Covered truck",
-  "open-truck": "Open truck",
-  "mini-truck": "Mini truck",
-  other: "Other",
-}
 
 const DOCS = [
   { key: "registrationCertificate", label: "Registration certificate" },
@@ -20,7 +12,7 @@ const DOCS = [
 ]
 
 const blank = {
-  vehicleType: "horse-trailer",
+  vehicleType: "",
   registrationNumber: "",
   capacityKg: "",
   compartments: "1",
@@ -42,6 +34,7 @@ async function uploadPhoto(file) {
 }
 
 function VehicleForm({ initial, onCancel, onSaved }) {
+  const { types, iconOf } = useVehicleTypes()
   const [form, setForm] = useState(
     initial
       ? {
@@ -83,6 +76,10 @@ function VehicleForm({ initial, onCancel, onSaved }) {
 
   const submit = async (e) => {
     e.preventDefault()
+    if (!form.vehicleType) {
+      setError("Select a vehicle type")
+      return
+    }
     setSaving(true)
     setError("")
     try {
@@ -123,11 +120,28 @@ function VehicleForm({ initial, onCancel, onSaved }) {
 
       <div>
         <label className="mb-1 block text-xs font-semibold text-neutral-700">Vehicle type</label>
-        <select className={inputClass} value={form.vehicleType} onChange={(e) => set("vehicleType", e.target.value)}>
-          {Object.entries(VEHICLE_TYPE_LABEL).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
-          ))}
-        </select>
+        {types.length === 0 ? (
+          <p className="text-xs text-neutral-500">Loading vehicle types...</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {types.map((t) => {
+              const active = form.vehicleType === t.key
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => set("vehicleType", t.key)}
+                  className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-center ${active ? "border-[#C28D2E] bg-[#FBF6EC]" : "border-[#E4E1D8] bg-white"}`}
+                >
+                  <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#F1EEE6]">
+                    {iconOf(t.key) ? <img src={getMediaUrl(iconOf(t.key))} alt="" className="h-full w-full object-contain p-1" /> : <Truck className="h-5 w-5 text-[#C28D2E]" />}
+                  </span>
+                  <span className="text-[11px] font-semibold leading-tight text-[#0F2238]">{t.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
       <div>
         <label className="mb-1 block text-xs font-semibold text-neutral-700">Registration number</label>
@@ -197,6 +211,7 @@ function VehicleForm({ initial, onCancel, onSaved }) {
 }
 
 export default function Vehicles() {
+  const { labelOf, iconOf } = useVehicleTypes()
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
@@ -254,11 +269,17 @@ export default function Vehicles() {
           vehicles.map((v) => (
             <div key={v._id} className="flex items-center gap-3 rounded-2xl border border-[#E4E1D8] bg-white p-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#F1EEE6]">
-                {v.images?.[0] ? <img src={getMediaUrl(v.images[0])} alt="" className="h-full w-full object-cover" /> : <Truck className="m-4 h-6 w-6 text-neutral-400" />}
+                {v.images?.[0] ? (
+                  <img src={getMediaUrl(v.images[0])} alt="" className="h-full w-full object-cover" />
+                ) : iconOf(v.vehicleType) ? (
+                  <img src={getMediaUrl(iconOf(v.vehicleType))} alt="" className="h-full w-full object-contain p-2" />
+                ) : (
+                  <Truck className="m-4 h-6 w-6 text-neutral-400" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-[#0F2238]">{v.registrationNumber}</p>
-                <p className="text-[11px] text-neutral-500">{VEHICLE_TYPE_LABEL[v.vehicleType]} · {v.maxAnimals} animal{v.maxAnimals === 1 ? "" : "s"}</p>
+                <p className="text-[11px] text-neutral-500">{labelOf(v.vehicleType)} · {v.maxAnimals} animal{v.maxAnimals === 1 ? "" : "s"}</p>
                 <div className="mt-1 flex gap-1">
                   {v.dedicated && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">Dedicated</span>}
                   {v.shared && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">Shared</span>}

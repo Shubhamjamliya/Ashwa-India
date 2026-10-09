@@ -22,8 +22,6 @@ export default function EditProfile() {
   const [serviceArea, setServiceArea] = useState(user?.serviceArea || "")
   const [serviceType, setServiceType] = useState(user?.serviceType || "private")
   const [vehicleTypes, setVehicleTypes] = useState((user?.vehicleTypes || []).join(", "))
-  const [pricePerKm, setPricePerKm] = useState(user?.pricePerKm ? String(user.pricePerKm) : "")
-  const [baseFare, setBaseFare] = useState(user?.baseFare ? String(user.baseFare) : "")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -31,11 +29,6 @@ export default function EditProfile() {
     e.preventDefault()
     if (!name.trim()) {
       setError("Enter your name")
-      return
-    }
-    const rate = Number(pricePerKm)
-    if (!(rate > 0)) {
-      setError("Set your price per km (more than ₹0) so users can book you")
       return
     }
     setError("")
@@ -50,8 +43,6 @@ export default function EditProfile() {
           serviceArea: serviceArea.trim(),
           serviceType,
           vehicleTypes: vehicleTypes.split(",").map((v) => v.trim()).filter(Boolean),
-          pricePerKm: rate,
-          baseFare: Number(baseFare) || 0,
         },
       })
       const { accessToken, refreshToken } = getSession("transporter")
@@ -132,18 +123,11 @@ export default function EditProfile() {
         </div>
 
         <div className="rounded-2xl border border-[#E4E1D8] bg-white p-4">
-          <p className="text-sm font-bold text-[#0F2238]">Your pricing</p>
-          <p className="mb-3 mt-0.5 text-[11px] text-neutral-500">Users see your estimate before they book. Price is trip distance × rate, plus base fare.</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Price per km (₹)</label>
-              <Input type="number" min="0" value={pricePerKm} onChange={(e) => setPricePerKm(e.target.value)} placeholder="e.g. 25" />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Base fare (₹)</label>
-              <Input type="number" min="0" value={baseFare} onChange={(e) => setBaseFare(e.target.value)} placeholder="e.g. 500" />
-            </div>
-          </div>
+          <p className="text-sm font-bold text-[#0F2238]">Pricing</p>
+          <p className="mt-0.5 text-[11px] text-neutral-500">
+            Fares are set by the admin for each vehicle type, so every transporter charges the same. Add your vehicles with the right type
+            to receive requests for it.
+          </p>
         </div>
 
         {error && <p className="text-[13px] text-destructive">{error}</p>}

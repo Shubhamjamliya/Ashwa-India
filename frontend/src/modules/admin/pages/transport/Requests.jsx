@@ -159,7 +159,7 @@ export default function AdminTransportRequests() {
                     </td>
                     <td className="px-4 py-5">
                       <p className="text-sm font-semibold text-neutral-900">
-                        {req.transporter?.businessName || req.transporter?.name || "Transporter"}
+                        {req.transporter ? req.transporter.businessName || req.transporter.name || "Transporter" : `Open request · ${req.vehicleTypeInfo?.name || "vehicle"}`}
                       </p>
                       <p className="text-xs text-neutral-500">{req.transporter?.phone}</p>
                     </td>
@@ -243,13 +243,14 @@ export default function AdminTransportRequests() {
                       <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-500">Transporter</h3>
                       <div className="rounded-xl border border-neutral-200 p-4">
                         <p className="text-sm font-semibold text-neutral-900">
-                          {selected.transporter?.businessName || selected.transporter?.name || "Transporter"}
+                          {selected.transporter ? selected.transporter.businessName || selected.transporter.name || "Transporter" : `Not accepted yet · offered to ${selected.offeredTo?.length || 0} transporter(s)`}
                         </p>
                         {selected.transporter?.phone && (
                           <div className="mt-1 flex items-center gap-1.5 text-sm text-neutral-600">
                             <Phone className="h-3.5 w-3.5" /> {selected.transporter.phone}
                           </div>
                         )}
+                        {selected.vehicleTypeInfo && <p className="mt-1 text-xs font-semibold text-neutral-700">Booked: {selected.vehicleTypeInfo.name}</p>}
                         {selected.transporter?.vehicleTypes?.length > 0 && (
                           <p className="mt-1 text-xs text-neutral-500">{selected.transporter.vehicleTypes.join(", ")}</p>
                         )}

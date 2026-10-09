@@ -1,95 +1,78 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
-import { Calendar, CheckCircle2, Clock, MapPin, Navigation, Phone, ShieldCheck, Star, Truck, XCircle } from "lucide-react"
+import { Calendar, ChevronRight, MapPin, Phone, Radar, Star, Truck, Users } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
-import { directionsUrl, distanceKm, mapEmbedUrl } from "@/shared/lib/geo"
+import { getMediaUrl } from "@/shared/lib/media"
 import BackButton from "../components/BackButton"
+import { CancelPending, RateTrip, STAGE_TEXT, STATUS_META, dateLabel, fmt, pendingText } from "../components/TransportBookingParts"
 
 const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")
 
-const STATUS_META = {
-  pending: { label: "Waiting for response", color: "#f59e0b", icon: Clock },
-  accepted: { label: "Accepted", color: "#16a34a", icon: CheckCircle2 },
-  completed: { label: "Delivered", color: "#0B1C33", icon: CheckCircle2 },
-  rejected: { label: "Declined", color: "#ef4444", icon: XCircle },
-  cancelled: { label: "Cancelled", color: "#64748B", icon: XCircle },
-}
+// Another customer asks to share one of this user's accepted rides.
+function ShareRequestCard({ ask, onAnswered }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
 
-const STAGE_TEXT = {
-  scheduled: "Booking confirmed. The transporter will start soon.",
-  to_pickup: "The transporter is on the way to pick up your horse.",
-  in_transit: "Your horse is on the way to the drop-off.",
-  delivered: "Delivered.",
-}
+  const answer = async (action) => {
+    setBusy(true)
+    setError("")
+    try {
+      await apiFetch(`/transport/requests/${ask._id}/share-consent`, { method: "PATCH", body: { action } })
+      onAnswered(ask._id)
+    } catch (err) {
+      setError(err.message || "Could not send your answer")
+    } finally {
+      setBusy(false)
+    }
+  }
 
-const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`
-const timeOf = (d) => new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
-
-function OtpCard({ label, code, hint }) {
   return (
-    <div className="rounded-xl border border-dashed border-[#C28D2E] bg-[#FBF6EC] p-3">
-      <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-bold text-[#8A6416]">
-          <ShieldCheck className="h-3.5 w-3.5" /> {label}
+    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+      <p className="flex items-center gap-1.5 text-sm font-bold text-blue-900">
+        <Users className="h-4 w-4" /> Share your ride?
+      </p>
+      <p className="mt-1 text-xs text-blue-900">
+        A customer wants to share your transport on {dateLabel(ask.scheduledDate)} with {ask.animals} animal(s).
+      </p>
+      <p className="mt-1 flex items-start gap-1.5 text-[11px] text-blue-800">
+        <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+        {ask.source.address} → {ask.destination.address}
+      </p>
+      {ask.newAmount != null && ask.newAmount < ask.currentAmount && (
+        <p className="mt-2 text-xs text-blue-900">
+          Your price drops from <span className="line-through">{fmt(ask.currentAmount)}</span>{" "}
+          <span className="font-extrabold text-emerald-700">to about {fmt(ask.newAmount)}</span> if the transporter accepts.
         </p>
-        <p className="font-mono text-xl font-extrabold tracking-[0.3em] text-[#0F2238]">{code}</p>
+      )}
+      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+      <div className="mt-3 flex gap-2">
+        <button onClick={() => answer("decline")} disabled={busy} className="flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-[#0F2238] disabled:opacity-50">
+          Decline
+        </button>
+        <button onClick={() => answer("approve")} disabled={busy} className="flex-1 rounded-xl bg-blue-700 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+          Agree to share
+        </button>
       </div>
-      <p className="mt-1 text-[11px] text-neutral-600">{hint}</p>
     </div>
   )
 }
-
-function ActiveDetails({ req }) {
-  const stage = req.stage
-  const pickupVerified = Boolean(req.pickupVerifiedAt)
-  const loc = req.transporterLocation
-  const showTracking = req.status === "accepted" && (stage === "to_pickup" || stage === "in_transit") && loc?.lat != null
-  const target = stage === "to_pickup" ? req.source : stage === "in_transit" ? req.destination : null
-  const away = showTracking && target ? distanceKm({ lat: loc.lat, lng: loc.lng }, target) : null
-
-  return (
-    <div className="mt-3 space-y-3 border-t border-[#E4E1D8] pt-3">
-      {req.status === "accepted" && stage && <p className="text-xs text-neutral-600">{STAGE_TEXT[stage]}</p>}
-
-      {req.status === "accepted" && !pickupVerified && req.pickupOtp && (
-        <OtpCard label="Pickup OTP" code={req.pickupOtp} hint="Share this with the transporter when they reach you." />
-      )}
-      {req.status === "accepted" && stage === "in_transit" && req.dropOtp && (
-        <OtpCard label="Delivery OTP" code={req.dropOtp} hint="Share this with the transporter at the drop-off to complete the trip." />
-      )}
-
-      {showTracking && (
-        <div className="overflow-hidden rounded-xl border border-[#E4E1D8]">
-          <iframe title="Transporter location" src={mapEmbedUrl(loc.lat, loc.lng)} className="h-44 w-full border-0" loading="lazy" />
-          <div className="flex items-center justify-between gap-2 bg-white p-2.5">
-            <p className="text-[11px] text-neutral-500">
-              {away != null ? `${away.toFixed(1)} km to ${stage === "to_pickup" ? "you" : "drop-off"}` : "Live location"}
-              {loc.updatedAt ? ` · updated ${timeOf(loc.updatedAt)}` : ""}
-            </p>
-            <a href={directionsUrl(loc.lat, loc.lng)} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[11px] font-bold text-[#C28D2E]">
-              <Navigation className="h-3 w-3" /> Map
-            </a>
-          </div>
-        </div>
-      )}
-
-      {req.status === "accepted" && req.transporter?.phone && (
-        <a href={`tel:${req.transporter.phone}`} className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white">
-          <Phone className="h-4 w-4" /> Call transporter
-        </a>
-      )}
-    </div>
-  )
-}
-
 function TransportBookings() {
+  const navigate = useNavigate()
   const [requests, setRequests] = useState([])
+  const [shareRequests, setShareRequests] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const load = () =>
     apiFetch("/transport/requests/mine")
-      .then((data) => setRequests(data.requests || []))
+      .then((data) => {
+        setRequests(data.requests || [])
+        setShareRequests(data.shareRequests || [])
+      })
       .finally(() => setLoading(false))
+
+  useEffect(() => {
+    load()
   }, [])
 
   useEffect(() => {
@@ -104,11 +87,14 @@ function TransportBookings() {
         prev.map((r) => (r._id === requestId ? { ...r, transporterLocation: { lat, lng, updatedAt } } : r))
       )
     }
+    const onShareRequest = () => load()
     socket.on("transport:update", onUpdate)
     socket.on("transport:location", onLocation)
+    socket.on("transport:share-request", onShareRequest)
     return () => {
       socket.off("transport:update", onUpdate)
       socket.off("transport:location", onLocation)
+      socket.off("transport:share-request", onShareRequest)
       socket.disconnect()
     }
   }, [])
@@ -119,7 +105,7 @@ function TransportBookings() {
         <div className="flex justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
         </div>
-      ) : requests.length === 0 ? (
+      ) : requests.length === 0 && shareRequests.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 px-8 py-20 text-center">
           <Calendar className="h-8 w-8 text-neutral-400" />
           <p className="text-base font-semibold text-[#0F2238]">No bookings yet</p>
@@ -127,16 +113,38 @@ function TransportBookings() {
         </div>
       ) : (
         <div className="space-y-2.5 px-4 pb-4">
+          {shareRequests.map((ask) => (
+            <ShareRequestCard
+              key={ask._id}
+              ask={ask}
+              onAnswered={(id) => {
+                setShareRequests((prev) => prev.filter((a) => a._id !== id))
+                load()
+              }}
+            />
+          ))}
           {requests.map((item) => {
             const meta = STATUS_META[item.status] || STATUS_META.pending
             const StatusIcon = meta.icon
             const active = item.status === "accepted"
             return (
               <div key={item._id} className="rounded-2xl border border-[#E4E1D8] bg-white p-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/user/bookings/${item._id}`)}
+                  className="block w-full text-left"
+                  aria-label="Open booking details"
+                >
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex flex-1 items-center gap-1.5 truncate text-sm font-bold text-[#0F2238]">
-                    <Truck className="h-4 w-4 shrink-0 text-[#C28D2E]" />
-                    <span className="truncate">{item.transporter?.businessName || item.transporter?.name || "Transporter"}</span>
+                    {item.vehicleTypeInfo?.icon ? (
+                      <img src={getMediaUrl(item.vehicleTypeInfo.icon)} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                    ) : (
+                      <Truck className="h-4 w-4 shrink-0 text-[#C28D2E]" />
+                    )}
+                    <span className="truncate">
+                      {item.transporter ? item.transporter.businessName || item.transporter.name || "Transporter" : "Finding a transporter"}
+                    </span>
                   </p>
                   <span
                     className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold"
@@ -151,10 +159,44 @@ function TransportBookings() {
                   {item.source.address} → {item.destination.address}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between text-[11px] font-semibold text-neutral-500">
-                  <span>{item.type === "shared" ? "Shared ride" : "Private transport"}</span>
-                  <span className="font-extrabold text-[#C28D2E]">{fmt(item.quote?.amount)}</span>
+                  <span>
+                    {item.vehicleTypeInfo?.name ? `${item.vehicleTypeInfo.name} · ` : ""}
+                    {item.type === "shared" || item.sharedGroup ? "Shared ride" : "Private"}
+                    {item.scheduledDate ? ` · ${dateLabel(item.scheduledDate)}` : ""}
+                    {item.animals > 1 ? ` · ${item.animals} animals` : ""}
+                  </span>
+                  <span className="flex items-center gap-0.5 font-extrabold text-[#C28D2E]">
+                    {fmt(item.quote?.amount)}
+                    <ChevronRight className="h-3.5 w-3.5 text-neutral-400" />
+                  </span>
                 </div>
-                {active && <ActiveDetails req={item} />}
+                </button>
+                {item.advance?.amount > 0 && (
+                  <p className="mt-1 text-[11px] text-neutral-500">
+                    {item.advance.status === "refunded"
+                      ? `Advance ${fmt(item.advance.amount)} refunded to your wallet`
+                      : `Advance paid ${fmt(item.advance.amount)} · ${fmt(Math.max(0, (item.quote?.amount || 0) - item.advance.amount))} at delivery`}
+                  </p>
+                )}
+                {item.status === "pending" && pendingText(item) && <p className="mt-1 text-[11px] font-semibold text-amber-700">{pendingText(item)}</p>}
+                {(item.status === "rejected" || item.status === "cancelled") && item.rejectReason && (
+                  <p className="mt-1 text-[11px] text-red-600">{item.rejectReason}</p>
+                )}
+                {item.status === "pending" && (
+                  <CancelPending id={item._id} onCancelled={(updated) => setRequests((prev) => prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r)))} />
+                )}
+                {active && (
+                  <div className="mt-3 space-y-2 border-t border-[#E4E1D8] pt-3">
+                    {item.stage && <p className="text-xs text-neutral-600">{STAGE_TEXT[item.stage]}</p>}
+                    <button
+                      onClick={() => navigate(`/user/bookings/${item._id}`)}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#0B1C33] py-2.5 text-sm font-bold text-white"
+                    >
+                      <Radar className="h-4 w-4" />
+                      {item.stage === "to_pickup" || item.stage === "in_transit" ? "Track live" : "View details & OTP"}
+                    </button>
+                  </div>
+                )}
                 {item.status === "completed" && <RateTrip requestId={item._id} reviewed={item.reviewed} />}
               </div>
             )
@@ -270,57 +312,6 @@ export default function Bookings() {
   )
 }
 
-
-function RateTrip({ requestId, reviewed }) {
-  const [rating, setRating] = useState(0)
-  const [comment, setComment] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [done, setDone] = useState(Boolean(reviewed))
-  const [error, setError] = useState("")
-
-  const submit = async () => {
-    setSaving(true)
-    setError("")
-    try {
-      await apiFetch(`/transport/requests/${requestId}/review`, { method: "POST", body: { rating, comment } })
-      setDone(true)
-    } catch (err) {
-      setError(err.message || "Could not save your review")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (done) return <p className="mt-3 text-center text-xs font-bold text-emerald-700">Thanks for rating this trip</p>
-
-  return (
-    <div className="mt-3 space-y-2 border-t border-[#E4E1D8] pt-3">
-      <p className="text-xs font-bold text-[#0F2238]">How was the transport?</p>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`}>
-            <Star className={`h-6 w-6 ${n <= rating ? "fill-[#C28D2E] text-[#C28D2E]" : "text-neutral-300"}`} />
-          </button>
-        ))}
-      </div>
-      {rating > 0 && (
-        <>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            rows={2}
-            placeholder="Share a few words (optional)"
-            className="w-full resize-none rounded-xl border border-[#E4E1D8] px-3 py-2 text-sm text-[#0F2238] outline-none focus:border-[#C28D2E]"
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <button onClick={submit} disabled={saving} className="w-full rounded-xl bg-[#0B1C33] py-2.5 text-sm font-bold text-white disabled:opacity-50">
-            {saving ? "Saving..." : "Submit rating"}
-          </button>
-        </>
-      )}
-    </div>
-  )
-}
 
 function RateService({ requestId }) {
   const [rating, setRating] = useState(0)

@@ -4,14 +4,14 @@ import { Pencil, Plus, Trash2, Truck, X } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
 import { NavyHeader } from '../../../components/NavyHeader';
 import { LoadingView } from '../../../components/StateViews';
-import { SelectField } from '../../../components/SelectField';
 import { ExpiryDateField } from '../../../components/ExpiryDateField';
 import { Checkbox, FieldLabel, TextField, UploadChip } from '../../../components/FormControls';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { getMediaUrl } from '../../../services/media';
 import { choosePhotos, uploadPhoto } from '../../../services/images';
-import { VEHICLE_TYPE_LABEL, type Vehicle, type VehicleType } from '../types';
+import { useVehicleTypes } from '../../../services/vehicleTypes';
+import type { Vehicle, VehicleType } from '../types';
 
 const DOCS = [
   { key: 'registrationCertificate', label: 'Registration certificate' },
@@ -22,8 +22,6 @@ const DOCS = [
 type DocKey = (typeof DOCS)[number]['key'];
 type DocState = Partial<Record<DocKey, { url?: string; expiresAt?: string }>>;
 
-const TYPE_OPTIONS = (Object.entries(VEHICLE_TYPE_LABEL) as [VehicleType, string][]).map(([value, label]) => ({ value, label }));
-
 function VehicleForm({
   initial,
   onCancel,
@@ -33,7 +31,8 @@ function VehicleForm({
   onCancel: () => void;
   onSaved: (vehicle: Vehicle, wasEdit: boolean) => void;
 }) {
-  const [vehicleType, setVehicleType] = useState<VehicleType>(initial?.vehicleType || 'horse-trailer');
+  const { types } = useVehicleTypes();
+  const [vehicleType, setVehicleType] = useState<VehicleType>(initial?.vehicleType || '');
   const [registrationNumber, setRegistrationNumber] = useState(initial?.registrationNumber || '');
   const [capacityKg, setCapacityKg] = useState(initial?.capacityKg != null ? String(initial.capacityKg) : '');
   const [compartments, setCompartments] = useState(String(initial?.compartments ?? 1));
@@ -83,6 +82,10 @@ function VehicleForm({
   };
 
   const submit = async () => {
+    if (!vehicleType) {
+      setError('Select a vehicle type');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -125,7 +128,29 @@ function VehicleForm({
 
       <View>
         <FieldLabel>Vehicle type</FieldLabel>
-        <SelectField title="Vehicle type" value={vehicleType} options={TYPE_OPTIONS} onChange={setVehicleType} />
+        {types.length === 0 ? (
+          <Text style={styles.empty}>Loading vehicle types...</Text>
+        ) : (
+          <View style={styles.typeGrid}>
+            {types.map(t => {
+              const active = vehicleType === t.key;
+              return (
+                <Pressable key={t.key} style={[styles.typeTile, active && styles.typeTileActive]} onPress={() => setVehicleType(t.key)}>
+                  <View style={styles.typeIcon}>
+                    {t.icon ? (
+                      <Image source={{ uri: getMediaUrl(t.icon) }} style={styles.fill} resizeMode="contain" />
+                    ) : (
+                      <Truck color={colors.primary} size={20} />
+                    )}
+                  </View>
+                  <Text style={styles.typeName} numberOfLines={2}>
+                    {t.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </View>
       <TextField
         label="Registration number"
@@ -212,6 +237,7 @@ function VehicleForm({
 
 // The transporter's fleet: vehicles, their documents and whether each is free or on a trip.
 export function VehiclesScreen() {
+  const { labelOf, iconOf } = useVehicleTypes();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Vehicle | null>(null);
@@ -279,14 +305,20 @@ export function VehiclesScreen() {
             vehicles.map(v => (
               <View key={v._id} style={styles.item}>
                 <View style={styles.thumb}>
-                  {v.images?.[0] ? <Image source={{ uri: getMediaUrl(v.images[0]) }} style={styles.fill} /> : <Truck color="#A3A3A3" size={24} />}
+                  {v.images?.[0] ? (
+                    <Image source={{ uri: getMediaUrl(v.images[0]) }} style={styles.fill} />
+                  ) : iconOf(v.vehicleType) ? (
+                    <Image source={{ uri: getMediaUrl(iconOf(v.vehicleType)) }} style={styles.fill} resizeMode="contain" />
+                  ) : (
+                    <Truck color="#A3A3A3" size={24} />
+                  )}
                 </View>
                 <View style={styles.flex}>
                   <Text style={styles.itemTitle} numberOfLines={1}>
                     {v.registrationNumber}
                   </Text>
                   <Text style={styles.itemMeta}>
-                    {VEHICLE_TYPE_LABEL[v.vehicleType]} · {v.maxAnimals} animal{v.maxAnimals === 1 ? '' : 's'}
+                    {labelOf(v.vehicleType)} · {v.maxAnimals} animal{v.maxAnimals === 1 ? '' : 's'}
                   </Text>
                   <View style={styles.tags}>
                     {v.dedicated ? <Text style={[styles.tag, styles.tagAmber]}>Dedicated</Text> : null}
@@ -317,6 +349,28 @@ export function VehiclesScreen() {
 }
 
 const styles = StyleSheet.create({
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  typeTile: {
+    width: '31%',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    padding: spacing.sm,
+  },
+  typeTileActive: { borderColor: colors.primary, backgroundColor: '#FBF6EC' },
+  typeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.muted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeName: { fontSize: 11, fontWeight: '600', color: colors.foreground, textAlign: 'center' },
   noPadding: { padding: 0 },
   flex: { flex: 1, minWidth: 0 },
   fill: { width: '100%', height: '100%' },

@@ -20,7 +20,10 @@ router.put('/business-setup', businessLogoUpload, systemSettingsController.updat
 router.get('/customization', systemSettingsController.getCustomization);
 router.put('/customization', systemSettingsController.updateCustomization);
 
-router.get('/developer', systemSettingsController.getDeveloperSettings);
+router.get('/transport', systemSettingsController.getTransportSettings);
+router.put('/transport', systemSettingsController.updateTransportSettings);
+
+router.get('/developer',systemSettingsController.getDeveloperSettings);
 router.put('/developer', systemSettingsController.updateDeveloperSettings);
 router.get('/developer/operational-data', operationalData.operationalCounts);
 router.post('/developer/clear-operational-data', operationalData.clearOperationalData);

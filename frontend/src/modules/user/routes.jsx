@@ -15,6 +15,7 @@ import JobDetail from "@/shared/jobs/JobDetail"
 import PostJob from "@/shared/jobs/PostJob"
 import ManageJob from "@/shared/jobs/ManageJob"
 import Bookings from "./pages/Bookings"
+import BookingDetail from "./pages/BookingDetail"
 import Events from "./pages/Events"
 import Services from "./pages/Services"
 import Inquiries from "./pages/Inquiries"
@@ -45,6 +46,7 @@ export const userRoutes = (
     <Route path="transport" element={<Transport />} />
     <Route path="transport/results" element={<TransportResults />} />
     <Route path="bookings" element={<Bookings />} />
+    <Route path="bookings/:id" element={<BookingDetail />} />
     <Route path="events" element={<Events />} />
     <Route path="inquiries" element={<Inquiries />} />
     <Route path="inquiries/:id" element={<Inquiries />} />

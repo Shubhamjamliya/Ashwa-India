@@ -68,6 +68,7 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/transporters', transporterRoutes);
 app.use('/api/transport', transportRequestRoutes);
 app.use('/api/transporter-ops', transporterOpsRoutes);
+app.use('/api/vehicle-types', require('./routes/vehicleType.routes'));
 app.use('/api/jobs', jobRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/services', serviceRequestRoutes);

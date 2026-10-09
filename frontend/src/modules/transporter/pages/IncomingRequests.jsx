@@ -2,9 +2,12 @@ import { useEffect, useMemo, useState } from "react"
 
 import { useNavigate } from "react-router-dom"
 import { io } from "socket.io-client"
-import { Bell, CheckCircle2, Clock, MapPin, Phone, Truck, Wallet as WalletIcon, XCircle, Activity, Layers } from "lucide-react"
+import { Bell, CheckCircle2, Clock, MapPin, Phone, Truck, Users, Wallet as WalletIcon, XCircle, Activity, Layers } from "lucide-react"
 import { apiFetch, getSession } from "@/shared/lib/api"
 import { useAuth } from "@/shared/context/AuthContext"
+import { getMediaUrl } from "@/shared/lib/media"
+import BookingCard from "../components/BookingCard"
+import { countByGroup, groupOf, sortForGroup, toTrips } from "../lib/bookingStatus"
 
 const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")
 const DISMISSED_KEY = "ashwa_transporter_notifications_dismissed"
@@ -22,9 +25,142 @@ function getCurrentLocation() {
   })
 }
 
-const statusChip = {
-  pending: { label: "Pending", className: "bg-amber-100 text-amber-700", bar: "bg-amber-400" },
-  accepted: { label: "Accepted", className: "bg-emerald-100 text-emerald-700", bar: "bg-emerald-500" },
+
+const dateLabel = (d) => (d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) : null)
+
+function RouteLines({ source, destination }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex flex-col items-center pt-1">
+        <span className="h-2.5 w-2.5 rounded-full border-2 border-emerald-500 bg-white" />
+        <span className="my-0.5 w-px flex-1 bg-[#E4E1D8]" />
+        <MapPin className="h-3 w-3 text-rose-500" />
+      </div>
+      <div className="min-w-0 flex-1 space-y-2">
+        <p className="text-[12px] text-neutral-600">{source.address}</p>
+        <p className="text-[12px] text-neutral-600">{destination.address}</p>
+      </div>
+    </div>
+  )
+}
+
+// A new booking request, shown in full so the transporter can decide from the card itself.
+function EnquiryCard({ req, onRespond, busy }) {
+  const [error, setError] = useState("")
+  const shared = Boolean(req.hostRequest)
+  const open = !req.transporter
+  const advance = req.advance?.status === "paid" ? req.advance.amount : 0
+  const fare = req.quote?.amount || 0
+
+  const respond = async (action) => {
+    setError("")
+    try {
+      await onRespond(req._id, action)
+    } catch (err) {
+      setError(err.message || "Could not update the request")
+    }
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E4E1D8] bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-2 border-b border-[#F1EEE6] bg-[#FBF6EC] px-4 py-2.5">
+        <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${shared ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+          {shared ? <Users className="h-3 w-3" /> : <Truck className="h-3 w-3" />}
+          {shared ? "Shared ride request" : "Private transport"}
+        </span>
+        {open && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">First to accept gets it</span>}
+        <span className="text-[10px] font-semibold text-neutral-500">
+          {new Date(req.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 flex-1 truncate text-sm font-bold text-[#0F2238]">{req.user?.name || req.user?.phone || "Customer"}</p>
+          {req.user?.phone && (
+            <a href={`tel:${req.user.phone}`} className="flex items-center gap-1 text-[11px] font-bold text-[#C28D2E]">
+              <Phone className="h-3 w-3" /> Call
+            </a>
+          )}
+        </div>
+
+        {req.vehicleTypeInfo && (
+          <div className="flex items-center gap-2 rounded-lg bg-[#F1EEE6] px-2.5 py-1.5">
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-md bg-white">
+              {req.vehicleTypeInfo.icon ? (
+                <img src={getMediaUrl(req.vehicleTypeInfo.icon)} alt="" className="h-full w-full object-contain p-0.5" />
+              ) : (
+                <Truck className="h-4 w-4 text-[#C28D2E]" />
+              )}
+            </span>
+            <p className="text-[12px] font-bold text-[#0F2238]">{req.vehicleTypeInfo.name}</p>
+          </div>
+        )}
+
+        <RouteLines source={req.source} destination={req.destination} />
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-[#F1EEE6] px-2 py-1.5">
+            <p className="text-[10px] font-semibold text-neutral-500">Travel date</p>
+            <p className="text-[12px] font-bold text-[#0F2238]">{dateLabel(req.scheduledDate) || "Flexible"}</p>
+          </div>
+          <div className="rounded-lg bg-[#F1EEE6] px-2 py-1.5">
+            <p className="text-[10px] font-semibold text-neutral-500">Animals</p>
+            <p className="text-[12px] font-bold text-[#0F2238]">{req.animals || 1}</p>
+          </div>
+          <div className="rounded-lg bg-[#F1EEE6] px-2 py-1.5">
+            <p className="text-[10px] font-semibold text-neutral-500">Distance</p>
+            <p className="text-[12px] font-bold text-[#0F2238]">{req.quote?.tripKm ?? "—"} km</p>
+          </div>
+        </div>
+
+        {shared && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-2.5 text-[11px] text-blue-900">
+            <p className="font-bold">Joins your accepted booking on {dateLabel(req.hostRequest.scheduledDate)}</p>
+            <p className="mt-0.5 text-blue-800">
+              {req.hostRequest.source?.address} → {req.hostRequest.destination?.address} · {req.hostRequest.animals || 1} animal(s) already booked
+            </p>
+            <p className="mt-0.5 text-blue-800">The first customer agreed to share. Accepting splits the fare between both customers.</p>
+          </div>
+        )}
+
+        <div className="space-y-1 rounded-lg border border-[#E4E1D8] p-2.5 text-[12px]">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">{shared ? "Customer's share" : "Fare"}</span>
+            <span className="font-extrabold text-[#0F2238]">{fmt(fare)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Advance paid</span>
+            <span className="font-bold text-emerald-700">{fmt(advance)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Due at delivery</span>
+            <span className="font-bold text-[#0F2238]">{fmt(Math.max(0, fare - advance))}</span>
+          </div>
+        </div>
+
+        {req.message && <p className="rounded-lg bg-[#F1EEE6] p-2.5 text-[12px] text-neutral-700">"{req.message}"</p>}
+        {error && <p className="text-xs text-destructive">{error}</p>}
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => respond("reject")}
+            disabled={busy}
+            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#F1EEE6] py-2.5 text-[13px] font-bold text-[#0F2238] disabled:opacity-50"
+          >
+            <XCircle className="h-4 w-4" /> Decline
+          </button>
+          <button
+            onClick={() => respond("accept")}
+            disabled={busy}
+            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#C28D2E] py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
+          >
+            <CheckCircle2 className="h-4 w-4" /> Accept
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function StatCard({ icon: Icon, label, value, gradient, iconBg, onClick }) {
@@ -52,7 +188,6 @@ export default function IncomingRequests() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [responding, setResponding] = useState(false)
-  const [ringing, setRinging] = useState(null)
   const [isOnline, setIsOnline] = useState(user?.isOnline !== false)
   const [togglingOnline, setTogglingOnline] = useState(false)
   const [locationError, setLocationError] = useState("")
@@ -89,16 +224,26 @@ export default function IncomingRequests() {
     const socket = io(SOCKET_URL, { auth: { token: accessToken }, transports: ["websocket", "polling"] })
     const onNew = (request) => {
       setRequests((prev) => [request, ...prev.filter((r) => r._id !== request._id)])
-      setRinging(request)
     }
     const onUpdate = (updated) => {
-      setRequests((prev) => prev.map((r) => (r._id === updated._id ? updated : r)))
+      // A change to one customer on a shared run changes the whole run's status, which the server works out.
+      if (updated.sharedGroup) {
+        apiFetch("/transport/requests/incoming")
+          .then((data) => setRequests(data.requests || []))
+          .catch(() => {})
+        return
+      }
+      setRequests((prev) => prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r)))
     }
+    // An open request another transporter accepted (or the user cancelled) leaves this list.
+    const onTaken = ({ requestId }) => setRequests((prev) => prev.filter((r) => r._id !== requestId))
     socket.on("transport:new", onNew)
     socket.on("transport:update", onUpdate)
+    socket.on("transport:taken", onTaken)
     return () => {
       socket.off("transport:new", onNew)
       socket.off("transport:update", onUpdate)
+      socket.off("transport:taken", onTaken)
       socket.disconnect()
     }
   }, [])
@@ -107,8 +252,13 @@ export default function IncomingRequests() {
     setResponding(true)
     try {
       const data = await apiFetch(`/transport/requests/${id}/respond`, { method: "PATCH", body: { action } })
-      setRequests((prev) => prev.map((r) => (r._id === id ? data.request : r)))
-      if (ringing?._id === id) setRinging(null)
+      setRequests((prev) =>
+        data.request.declined ? prev.filter((r) => r._id !== id) : prev.map((r) => (r._id === id ? data.request : r))
+      )
+    } catch (err) {
+      // Someone else accepted first: drop it from the list.
+      if (err.status === 409 || /already accepted/i.test(err.message || "")) setRequests((prev) => prev.filter((r) => r._id !== id))
+      throw err
     } finally {
       setResponding(false)
     }
@@ -160,12 +310,20 @@ export default function IncomingRequests() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline])
 
-  const active = useMemo(
-    () => requests.filter((r) => r.status === "pending" || r.status === "accepted"),
-    [requests]
+  // Every number and list on this page comes from the same bookings list and the same status rules as the Bookings page.
+  // A shared run is one trip, so it is counted and listed once.
+  const allTrips = useMemo(() => toTrips(requests), [requests])
+  const counts = useMemo(() => countByGroup(allTrips), [allTrips])
+  const enquiries = useMemo(() => requests.filter((r) => r.status === "pending"), [requests])
+  // Home shows what is happening now: trips on the road first, then the next upcoming ones.
+  const trips = useMemo(
+    () => [
+      ...sortForGroup(allTrips.filter((t) => groupOf(t) === "on_trip"), "on_trip"),
+      ...sortForGroup(allTrips.filter((t) => groupOf(t) === "upcoming"), "upcoming"),
+    ],
+    [allTrips]
   )
-  const pendingCount = requests.filter((r) => r.status === "pending").length
-  const acceptedCount = requests.filter((r) => r.status === "accepted").length
+  const HOME_TRIPS = 3
 
   const firstName = (user?.name || "there").split(" ")[0]
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
@@ -214,12 +372,11 @@ export default function IncomingRequests() {
       {locationError && <p className="mx-4 mt-2 text-xs text-destructive">{locationError}</p>}
 
       {stats && (
-        <div className="mx-4 mt-3 grid grid-cols-4 gap-2">
+        <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
           {[
-            ["Active", stats.active],
-            ["Upcoming", stats.upcoming],
-            ["Completed", stats.completed],
+            ["Completed", counts.completed],
             ["Free vehicles", `${stats.availableVehicles}/${stats.vehicles}`],
+            ["Drivers", stats.drivers],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl border border-[#E4E1D8] bg-white p-2.5 text-center">
               <p className="text-base font-extrabold text-[#0F2238]">{value}</p>
@@ -257,17 +414,18 @@ export default function IncomingRequests() {
       <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
         <StatCard
           icon={Clock}
-          label="Pending requests"
-          value={loading ? "—" : pendingCount}
+          label="New requests"
+          value={loading ? "—" : counts.new}
           gradient="bg-gradient-to-br from-amber-400 to-amber-600"
           iconBg="bg-white/20"
         />
         <StatCard
           icon={Activity}
-          label="Active bookings"
-          value={loading ? "—" : acceptedCount}
+          label="On trip now"
+          value={loading ? "—" : counts.on_trip}
           gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
           iconBg="bg-white/20"
+          onClick={() => navigate("/transporter/bookings")}
         />
         <StatCard
           icon={WalletIcon}
@@ -279,130 +437,65 @@ export default function IncomingRequests() {
         />
         <StatCard
           icon={Layers}
-          label="Total requests"
-          value={loading ? "—" : requests.length}
+          label="Upcoming"
+          value={loading ? "—" : counts.upcoming}
           gradient="bg-gradient-to-br from-[#132B4A] to-[#0B1C33]"
           iconBg="bg-white/15"
           onClick={() => navigate("/transporter/bookings")}
         />
       </div>
 
-      {/* Active bookings */}
+      {/* New enquiries */}
       <div className="mt-6 flex items-center justify-between px-4">
-        <h2 className="text-[15px] font-extrabold text-[#0F2238]">Active Bookings</h2>
-        <span className="rounded-full bg-[#F6E9C9] px-2.5 py-0.5 text-[11px] font-bold text-[#8A6416]">{active.length}</span>
+        <h2 className="text-[15px] font-extrabold text-[#0F2238]">New Enquiries</h2>
+        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">{enquiries.length}</span>
+      </div>
+      {!loading && enquiries.length === 0 ? (
+        <p className="mx-4 mt-3 rounded-2xl border border-dashed border-[#D8D3C5] bg-white px-6 py-6 text-center text-[12px] text-neutral-500">
+          No new enquiries. Requests from users show up here.
+        </p>
+      ) : (
+        <div className="mt-3 space-y-3 px-4">
+          {enquiries.map((req) => (
+            <EnquiryCard key={req._id} req={req} onRespond={respond} busy={responding} />
+          ))}
+        </div>
+      )}
+
+      {/* Current and upcoming trips: a short view; the Bookings page has everything. */}
+      <div className="mt-6 flex items-center justify-between px-4">
+        <h2 className="text-[15px] font-extrabold text-[#0F2238]">Your trips</h2>
+        <button onClick={() => navigate("/transporter/bookings")} className="text-[12px] font-bold text-[#C28D2E]">
+          All bookings →
+        </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#C28D2E] border-t-transparent" />
         </div>
-      ) : active.length === 0 ? (
+      ) : trips.length === 0 ? (
         <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[#D8D3C5] bg-white px-6 py-10 text-center">
           <Truck className="h-8 w-8 text-neutral-400" />
-          <p className="text-sm font-semibold text-[#0F2238]">No active bookings</p>
-          <p className="text-[12px] text-neutral-500">New enquiries from users will appear here and ring you in real time.</p>
+          <p className="text-sm font-semibold text-[#0F2238]">No trips right now</p>
+          <p className="text-[12px] text-neutral-500">Requests you accept appear here.</p>
         </div>
       ) : (
         <div className="mt-3 space-y-3 px-4">
-          {active.map((req) => {
-            const chip = statusChip[req.status]
-            return (
-              <div key={req._id} className="relative overflow-hidden rounded-2xl border border-[#E4E1D8] bg-white p-4 pl-5 shadow-sm">
-                <span className={`absolute inset-y-0 left-0 w-1 ${chip.bar}`} />
-                <div className="flex items-center justify-between gap-2">
-                  <p className="flex-1 truncate text-sm font-bold text-[#0F2238]">{req.user?.name || req.user?.phone}</p>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${chip.className}`}>{chip.label}</span>
-                </div>
-
-                <div className="mt-3 flex gap-3">
-                  <div className="flex flex-col items-center pt-1">
-                    <span className="h-2.5 w-2.5 rounded-full border-2 border-emerald-500 bg-white" />
-                    <span className="my-0.5 w-px flex-1 bg-[#E4E1D8]" />
-                    <MapPin className="h-3 w-3 text-rose-500" />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <p className="truncate text-[12px] text-neutral-600">{req.source.address}</p>
-                    <p className="truncate text-[12px] text-neutral-600">{req.destination.address}</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="rounded-md bg-[#F1EEE6] px-2 py-0.5 text-[10px] font-semibold text-neutral-600">
-                    {req.type === "shared" ? "Shared ride" : "Private transport"}
-                  </span>
-                  {req.user?.phone && (
-                    <a href={`tel:${req.user.phone}`} className="flex items-center gap-1 text-[11px] font-bold text-[#C28D2E]">
-                      <Phone className="h-3 w-3" /> Call user
-                    </a>
-                  )}
-                </div>
-
-                {req.status === "accepted" && (
-                  <button
-                    onClick={() => navigate(`/transporter/jobs/${req._id}`)}
-                    className="mt-3 w-full rounded-xl bg-[#0B1C33] py-2.5 text-[13px] font-bold text-white"
-                  >
-                    Open booking
-                  </button>
-                )}
-
-                {req.status === "pending" && (
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={() => respond(req._id, "reject")}
-                      disabled={responding}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#F1EEE6] py-2.5 text-[13px] font-bold text-[#0F2238] disabled:opacity-50"
-                    >
-                      <XCircle className="h-4 w-4" /> Decline
-                    </button>
-                    <button
-                      onClick={() => respond(req._id, "accept")}
-                      disabled={responding}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#C28D2E] py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="h-4 w-4" /> Accept
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {trips.slice(0, HOME_TRIPS).map((req) => (
+            <BookingCard key={req._id} req={req} />
+          ))}
+          {trips.length > HOME_TRIPS && (
+            <button
+              onClick={() => navigate("/transporter/bookings")}
+              className="w-full rounded-xl border border-[#E4E1D8] bg-white py-2.5 text-xs font-bold text-[#0F2238]"
+            >
+              See {trips.length - HOME_TRIPS} more
+            </button>
+          )}
         </div>
       )}
 
-      {ringing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1C33]/90 p-6">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-8 text-center">
-            <div className="mx-auto mb-4 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#C28D2E]">
-              <Phone className="h-8 w-8 text-white" />
-            </div>
-            <h2 className="text-base font-bold text-[#0F2238]">New Transport Enquiry</h2>
-            <p className="mt-2 text-xl font-extrabold text-[#0F2238]">{ringing.user?.name || ringing.user?.phone}</p>
-            <p className="mt-1 text-[13px] text-neutral-500">
-              {ringing.source.address} → {ringing.destination.address}
-            </p>
-            <div className="mt-8 flex justify-center gap-6">
-              <button
-                onClick={() => respond(ringing._id, "reject")}
-                disabled={responding}
-                className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1.5 rounded-full bg-[#ef4444] text-white disabled:opacity-60"
-              >
-                <XCircle className="h-[22px] w-[22px]" />
-                <span className="text-xs font-bold">Decline</span>
-              </button>
-              <button
-                onClick={() => respond(ringing._id, "accept")}
-                disabled={responding}
-                className="flex h-[88px] w-[88px] flex-col items-center justify-center gap-1.5 rounded-full bg-[#16a34a] text-white disabled:opacity-60"
-              >
-                <CheckCircle2 className="h-[22px] w-[22px]" />
-                <span className="text-xs font-bold">Accept</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

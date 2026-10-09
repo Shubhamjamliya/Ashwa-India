@@ -36,15 +36,33 @@ const quoteSchema = new mongoose.Schema(
 const transportRequestSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    transporter: { type: mongoose.Schema.Types.ObjectId, ref: 'Transporter', required: true },
+    // Empty while a private request is being offered to nearby transporters; set by whoever accepts first.
+    transporter: { type: mongoose.Schema.Types.ObjectId, ref: 'Transporter', index: true },
+    // Admin vehicle type the user picked (its `key`). The fare comes from that type's admin price.
+    vehicleType: { type: String },
+    offeredTo: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transporter', index: true }],
+    declinedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transporter' }],
     source: { type: pointSchema, required: true },
     destination: { type: pointSchema, required: true },
     type: { type: String, enum: ['private', 'shared'], default: 'private' },
     // Shared bookings: how many animals this customer books, the day of the run,
     // and the group they ride in. Private bookings keep the defaults.
     animals: { type: Number, min: 1, default: 1 },
-    scheduledDate: { type: String }, // YYYY-MM-DD
+    scheduledDate: { type: String }, // YYYY-MM-DD, the travel day the user picked
     sharedGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'SharedTrip', index: true },
+    // A shared booking joins an earlier, accepted booking (the host) on the same route and day.
+    // The host's customer approves first; only then does the transporter see the enquiry.
+    hostRequest: { type: mongoose.Schema.Types.ObjectId, ref: 'TransportRequest', index: true },
+    shareApproval: { type: String, enum: ['pending', 'approved', 'declined'] },
+    rejectReason: { type: String },
+    // Advance collected at booking time; refunded to the user's wallet if the booking never goes ahead.
+    advance: {
+      amount: { type: Number, default: 0 },
+      method: { type: String, enum: ['wallet', 'razorpay'] },
+      paymentIntent: { type: mongoose.Schema.Types.ObjectId, ref: 'PaymentIntent' },
+      status: { type: String, enum: ['none', 'paid', 'refunded'], default: 'none' },
+      refundedAt: { type: Date },
+    },
     message: { type: String },
     quote: { type: quoteSchema, required: true },
     status: {
@@ -62,7 +80,16 @@ const transportRequestSchema = new mongoose.Schema(
     transporterLocation: {
       lat: { type: Number },
       lng: { type: Number },
+      heading: { type: Number },
       updatedAt: { type: Date },
+    },
+    // Google's encoded road route from pickup to drop, cached the first time shared rides are matched against it.
+    routePolyline: { type: String, select: false },
+    // Path the vehicle has driven during the trip, for the tracking map. Capped; read only by the detail endpoints.
+    trail: {
+      type: [{ lat: Number, lng: Number, at: Date, _id: false }],
+      select: false,
+      default: undefined,
     },
     paymentStatus: { type: String, enum: ['unpaid', 'settled'], default: 'unpaid' },
     settlement: { type: settlementSchema },

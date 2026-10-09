@@ -25,6 +25,11 @@ const systemSettingsSchema = new mongoose.Schema(
     tax: {
       gstPercent: { type: Number, default: 0, min: 0, max: 100 },
     },
+    // Advance the user pays when booking transport. The rest is paid to the transporter at delivery.
+    transport: {
+      advanceType: { type: String, enum: ['fixed', 'percent'], default: 'percent' },
+      advanceValue: { type: Number, default: 0, min: 0 },
+    },
     customization: {
       horseMarketplace: { type: Boolean, default: true },
       accessoriesStore: { type: Boolean, default: true },

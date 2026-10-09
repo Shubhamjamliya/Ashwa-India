@@ -1,17 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import {
-  Activity,
-  Bell,
-  CheckCircle2,
-  Clock,
-  Layers,
-  MapPin,
-  Phone,
-  Truck,
-  Wallet as WalletIcon,
-  XCircle,
-} from 'lucide-react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Activity, Bell, Calendar, Clock, Layers, MapPin, Phone, Truck, Wallet as WalletIcon } from 'lucide-react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Screen } from '../../../components/Screen';
 import { GradientBox } from '../../../components/GradientBox';
@@ -24,15 +13,12 @@ import { getCurrentLocation, watchLocation, type LatLng } from '../../../service
 import { money } from '../../../utils/format';
 import type { AppNavigation } from '../../../navigation/types';
 import type { TransportRequest } from '../../trips/types';
+import { EnquiryCard, RouteLines, dateLabel } from '../components/EnquiryCard';
 
 // While online, the saved location is refreshed this often so users are matched against where
 // the transporter is now.
 const LOCATION_SYNC_MS = 60000;
 
-const STATUS_CHIP = {
-  pending: { label: 'Pending', bg: '#FEF3C7', fg: '#B45309', bar: '#FBBF24' },
-  accepted: { label: 'Accepted', bg: '#D1FAE5', fg: '#047857', bar: '#10B981' },
-} as const;
 
 type Dashboard = { active: number; upcoming: number; completed: number; vehicles: number; availableVehicles: number };
 
@@ -76,7 +62,6 @@ export function HomeScreen() {
   const [stats, setStats] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState(false);
-  const [ringing, setRinging] = useState<TransportRequest | null>(null);
   const [isOnline, setIsOnline] = useState(user?.isOnline !== false);
   const [togglingOnline, setTogglingOnline] = useState(false);
   const [locationError, setLocationError] = useState('');
@@ -106,24 +91,29 @@ export function HomeScreen() {
   useSocketEvents({
     'transport:new': (request: TransportRequest) => {
       setRequests(prev => [request, ...prev.filter(r => r._id !== request._id)]);
-      setRinging(request);
     },
     'transport:update': (updated: TransportRequest) => {
-      setRequests(prev => prev.map(r => (r._id === updated._id ? updated : r)));
+      setRequests(prev => prev.map(r => (r._id === updated._id ? { ...r, ...updated } : r)));
+    },
+    // An open request another transporter accepted (or the user cancelled) leaves this list.
+    'transport:taken': ({ requestId }: { requestId: string }) => {
+      setRequests(prev => prev.filter(r => r._id !== requestId));
     },
   });
 
+  // Errors reach the enquiry card, which shows them (e.g. the vehicle is already full).
   const respond = async (id: string, action: 'accept' | 'reject') => {
     setResponding(true);
     try {
-      const data = await apiFetch<{ request: TransportRequest }>(`/transport/requests/${id}/respond`, {
+      const data = await apiFetch<{ request: TransportRequest & { declined?: boolean } }>(`/transport/requests/${id}/respond`, {
         method: 'PATCH',
         body: { action },
       });
-      setRequests(prev => prev.map(r => (r._id === id ? data.request : r)));
-      setRinging(prev => (prev?._id === id ? null : prev));
-    } catch {
-      // The request may have been taken or cancelled meanwhile; the list refreshes on focus.
+      setRequests(prev => (data.request.declined ? prev.filter(r => r._id !== id) : prev.map(r => (r._id === id ? data.request : r))));
+    } catch (e: any) {
+      // Someone else accepted first: drop it from the list.
+      if (/already accepted/i.test(e?.message || '')) setRequests(prev => prev.filter(r => r._id !== id));
+      throw e;
     } finally {
       setResponding(false);
     }
@@ -170,7 +160,8 @@ export function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline]);
 
-  const active = useMemo(() => requests.filter(r => r.status === 'pending' || r.status === 'accepted'), [requests]);
+  const enquiries = useMemo(() => requests.filter(r => r.status === 'pending'), [requests]);
+  const active = useMemo(() => requests.filter(r => r.status === 'accepted'), [requests]);
   const pendingCount = requests.filter(r => r.status === 'pending').length;
   const acceptedCount = requests.filter(r => r.status === 'accepted').length;
   const firstName = (user?.name || 'there').split(' ')[0];
@@ -278,6 +269,20 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>New Enquiries</Text>
+          <Text style={[styles.countPill, styles.enquiryPill]}>{enquiries.length}</Text>
+        </View>
+        {!loading && enquiries.length === 0 ? (
+          <Text style={styles.noEnquiries}>No new enquiries. Requests from users show up here.</Text>
+        ) : (
+          <View style={styles.list}>
+            {enquiries.map(req => (
+              <EnquiryCard key={req._id} req={req} busy={responding} onRespond={respond} />
+            ))}
+          </View>
+        )}
+
+        <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>Active Bookings</Text>
           <Text style={styles.countPill}>{active.length}</Text>
         </View>
@@ -290,38 +295,33 @@ export function HomeScreen() {
           <View style={styles.empty}>
             <Truck color="#A3A3A3" size={32} />
             <Text style={styles.emptyTitle}>No active bookings</Text>
-            <Text style={styles.emptyText}>New enquiries from users will appear here and ring you in real time.</Text>
+            <Text style={styles.emptyText}>Enquiries you accept appear here.</Text>
           </View>
         ) : (
           <View style={styles.list}>
             {active.map(req => {
-              const chip = STATUS_CHIP[req.status as 'pending' | 'accepted'];
               return (
                 <View key={req._id} style={styles.card}>
-                  <View style={[styles.cardBar, { backgroundColor: chip.bar }]} />
+                  <View style={[styles.cardBar, styles.cardBarAccepted]} />
                   <View style={styles.cardTop}>
                     <Text style={styles.cardUser} numberOfLines={1}>
                       {req.user?.name || req.user?.phone}
                     </Text>
-                    <Text style={[styles.chip, { backgroundColor: chip.bg, color: chip.fg }]}>{chip.label}</Text>
+                    <Text style={[styles.chip, styles.chipAccepted]}>Accepted</Text>
                   </View>
-                  <View style={styles.route}>
-                    <View style={styles.routeRail}>
-                      <View style={styles.dotStart} />
-                      <View style={styles.routeLine} />
-                      <MapPin color="#F43F5E" size={12} />
-                    </View>
-                    <View style={styles.routeText}>
-                      <Text style={styles.address} numberOfLines={1}>
-                        {req.source.address}
-                      </Text>
-                      <Text style={styles.address} numberOfLines={1}>
-                        {req.destination.address}
+                  <View style={styles.routeWrap}>
+                    <RouteLines source={req.source} destination={req.destination} />
+                  </View>
+                  {req.scheduledDate ? (
+                    <View style={[styles.inline, styles.dateRow]}>
+                      <Calendar color={colors.mutedForeground} size={12} />
+                      <Text style={styles.dateText}>
+                        {dateLabel(req.scheduledDate)} · {req.animals || 1} animal(s) · {money(req.quote?.amount)}
                       </Text>
                     </View>
-                  </View>
+                  ) : null}
                   <View style={styles.cardFoot}>
-                    <Text style={styles.typePill}>{req.type === 'shared' ? 'Shared ride' : 'Private transport'}</Text>
+                    <Text style={styles.typePill}>{req.type === 'shared' || req.sharedRun ? 'Shared ride' : 'Private transport'}</Text>
                     {req.user?.phone ? (
                       <Pressable style={styles.inline} onPress={() => Linking.openURL(`tel:${req.user?.phone}`)}>
                         <Phone color={colors.primary} size={12} />
@@ -329,69 +329,15 @@ export function HomeScreen() {
                       </Pressable>
                     ) : null}
                   </View>
-                  {req.status === 'accepted' ? (
-                    <Pressable style={styles.openBtn} onPress={() => navigation.navigate('Trip', { requestId: req._id })}>
+                  <Pressable style={styles.openBtn} onPress={() => navigation.navigate('Trip', { requestId: req._id })}>
                       <Text style={styles.openText}>Open booking</Text>
                     </Pressable>
-                  ) : (
-                    <View style={styles.actions}>
-                      <Pressable
-                        style={[styles.actionBtn, styles.declineBtn, responding && styles.faded]}
-                        disabled={responding}
-                        onPress={() => respond(req._id, 'reject')}>
-                        <XCircle color={colors.foreground} size={16} />
-                        <Text style={styles.declineText}>Decline</Text>
-                      </Pressable>
-                      <Pressable
-                        style={[styles.actionBtn, styles.acceptBtn, responding && styles.faded]}
-                        disabled={responding}
-                        onPress={() => respond(req._id, 'accept')}>
-                        <CheckCircle2 color={colors.white} size={16} />
-                        <Text style={styles.acceptText}>Accept</Text>
-                      </Pressable>
-                    </View>
-                  )}
                 </View>
               );
             })}
           </View>
         )}
       </ScrollView>
-
-      <Modal visible={Boolean(ringing)} transparent animationType="fade" onRequestClose={() => setRinging(null)}>
-        <View style={styles.ringOverlay}>
-          <View style={styles.ringCard}>
-            <View style={styles.ringIcon}>
-              <Phone color={colors.white} size={32} />
-            </View>
-            <Text style={styles.ringTitle}>New Transport Enquiry</Text>
-            {ringing ? (
-              <>
-                <Text style={styles.ringUser}>{ringing.user?.name || ringing.user?.phone}</Text>
-                <Text style={styles.ringRoute}>
-                  {ringing.source.address} → {ringing.destination.address}
-                </Text>
-                <View style={styles.ringActions}>
-                  <Pressable
-                    style={[styles.ringBtn, styles.ringDecline, responding && styles.faded]}
-                    disabled={responding}
-                    onPress={() => respond(ringing._id, 'reject')}>
-                    <XCircle color={colors.white} size={22} />
-                    <Text style={styles.ringBtnText}>Decline</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.ringBtn, styles.ringAccept, responding && styles.faded]}
-                    disabled={responding}
-                    onPress={() => respond(ringing._id, 'accept')}>
-                    <CheckCircle2 color={colors.white} size={22} />
-                    <Text style={styles.ringBtnText}>Accept</Text>
-                  </Pressable>
-                </View>
-              </>
-            ) : null}
-          </View>
-        </View>
-      </Modal>
     </Screen>
   );
 }
@@ -592,6 +538,8 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   cardBar: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 4 },
+  cardBarAccepted: { backgroundColor: '#10B981' },
+  chipAccepted: { backgroundColor: '#D1FAE5', color: '#047857' },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   cardUser: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.foreground },
   chip: {
@@ -622,6 +570,23 @@ const styles = StyleSheet.create({
   callText: { fontSize: 11, fontWeight: '700', color: colors.primary },
   openBtn: { marginTop: 12, borderRadius: radius.md, backgroundColor: colors.navy, paddingVertical: 10, alignItems: 'center' },
   openText: { fontSize: 13, fontWeight: '700', color: colors.white },
+  routeWrap: { marginTop: 12 },
+  dateRow: { marginTop: spacing.sm },
+  dateText: { fontSize: 11, fontWeight: '600', color: colors.mutedForeground },
+  enquiryPill: { backgroundColor: '#FEF3C7', color: '#92400E' },
+  noEnquiries: {
+    marginHorizontal: spacing.md,
+    marginTop: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#D8D3C5',
+    backgroundColor: colors.card,
+    padding: spacing.md,
+    fontSize: 12,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: 12 },
   actionBtn: {
     flex: 1,
@@ -636,29 +601,4 @@ const styles = StyleSheet.create({
   declineText: { fontSize: 13, fontWeight: '700', color: colors.foreground },
   acceptBtn: { backgroundColor: colors.primary },
   acceptText: { fontSize: 13, fontWeight: '700', color: colors.white },
-  ringOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(11,28,51,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  ringCard: { width: '100%', maxWidth: 384, borderRadius: radius.xl, backgroundColor: colors.card, padding: spacing.xl, alignItems: 'center' },
-  ringIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  ringTitle: { fontSize: 16, fontWeight: '700', color: colors.foreground },
-  ringUser: { fontSize: 20, fontWeight: '800', color: colors.foreground, marginTop: spacing.sm },
-  ringRoute: { fontSize: 13, color: colors.mutedForeground, textAlign: 'center', marginTop: 4 },
-  ringActions: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xl },
-  ringBtn: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  ringDecline: { backgroundColor: '#ef4444' },
-  ringAccept: { backgroundColor: '#16a34a' },
-  ringBtnText: { fontSize: 12, fontWeight: '700', color: colors.white },
 });

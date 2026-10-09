@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/shared/components/ui/button"
 import { apiFetch } from "@/shared/lib/api"
+import { useVehicleTypes } from "@/shared/lib/vehicleTypes"
 
 const KYC_LABEL = {
   not_submitted: "Not submitted",
@@ -14,18 +15,10 @@ const DOC_LINKS = [
   ["businessLicense", "Business licence"],
 ]
 
-const VEHICLE_LABEL = {
-  "horse-trailer": "Horse trailer",
-  "horse-van": "Horse van",
-  "covered-truck": "Covered truck",
-  "open-truck": "Open truck",
-  "mini-truck": "Mini truck",
-  other: "Other",
-}
-
 // Admin-side KYC review, dedicated/shared switches and fleet view for one transporter.
 // Rendered inside the transporter details dialog.
 export default function OpsPanel({ transporter, onChanged }) {
+  const { labelOf } = useVehicleTypes()
   const [kyc, setKyc] = useState(transporter.kyc || {})
   const [controls, setControls] = useState({
     dedicatedEnabled: transporter.dedicatedEnabled !== false,
@@ -142,7 +135,7 @@ export default function OpsPanel({ transporter, onChanged }) {
         {fleet.vehicles.length === 0 && fleet.drivers.length === 0 && <p className="text-xs text-neutral-500">No vehicles or drivers added yet.</p>}
         {fleet.vehicles.map((v) => (
           <p key={v._id} className="text-xs text-neutral-700">
-            {v.registrationNumber} · {VEHICLE_LABEL[v.vehicleType] || v.vehicleType} · {v.maxAnimals} animal(s) ·{" "}
+            {v.registrationNumber} · {labelOf(v.vehicleType)} · {v.maxAnimals} animal(s) ·{" "}
             <span className={v.isAvailable ? "text-emerald-700" : "text-neutral-500"}>{v.isAvailable ? "Available" : "On trip"}</span>
           </p>
         ))}

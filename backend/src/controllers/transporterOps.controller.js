@@ -6,13 +6,14 @@ const TransportRequest = require('../models/TransportRequest');
 const TransportReview = require('../models/TransportReview');
 const asyncHandler = require('../utils/asyncHandler');
 const paymentService = require('../services/payment.service');
-const { VEHICLE_TYPES } = require('../models/Vehicle');
+const VehicleType = require('../models/VehicleType');
+const { listTypes } = require('./vehicleType.controller');
+const { isUploadedUrl: isUrl } = require('../utils/isUploadedUrl');
 
 const EXPIRY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 const ACTIVE_STAGES = ['to_pickup', 'in_transit'];
 
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
-const isUrl = (v) => typeof v === 'string' && /^\/?[\w\-./]+$/.test(v) && v.length < 500;
 
 // ---- KYC ----
 
@@ -97,9 +98,12 @@ exports.updateControls = asyncHandler(async (req, res) => {
 
 // ---- Vehicles ----
 
-function vehicleFields(body, { partial = false } = {}) {
+async function vehicleFields(body, { partial = false } = {}) {
   const out = pick(body, ['vehicleType', 'registrationNumber', 'capacityKg', 'compartments', 'maxAnimals', 'dedicated', 'shared', 'isAvailable']);
-  if (out.vehicleType !== undefined && !VEHICLE_TYPES.includes(out.vehicleType)) return { error: 'Unknown vehicle type' };
+  if (!partial && !out.vehicleType) return { error: 'Select a vehicle type' };
+  if (out.vehicleType !== undefined && !(await VehicleType.exists({ key: out.vehicleType, active: true }))) {
+    return { error: 'Select a vehicle type from the list' };
+  }
   if (!partial && !out.registrationNumber) return { error: 'Registration number is required' };
   if (out.registrationNumber) out.registrationNumber = String(out.registrationNumber).trim().toUpperCase();
   if (body.images !== undefined) {
@@ -126,7 +130,7 @@ exports.listVehicles = asyncHandler(async (req, res) => {
 
 // POST /api/transporter-ops/vehicles  (transporter)
 exports.createVehicle = asyncHandler(async (req, res) => {
-  const { error, update } = vehicleFields(req.body);
+  const { error, update } = await vehicleFields(req.body);
   if (error) return res.status(400).json({ message: error });
   try {
     const vehicle = await Vehicle.create({ ...update, transporter: req.user._id });
@@ -141,7 +145,7 @@ exports.createVehicle = asyncHandler(async (req, res) => {
 exports.updateVehicle = asyncHandler(async (req, res) => {
   const vehicle = await Vehicle.findOne({ _id: req.params.id, transporter: req.user._id });
   if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
-  const { error, update } = vehicleFields(req.body, { partial: true });
+  const { error, update } = await vehicleFields(req.body, { partial: true });
   if (error) return res.status(400).json({ message: error });
   Object.assign(vehicle, update);
   await vehicle.save();
@@ -381,4 +385,4 @@ exports.adminFleet = asyncHandler(async (req, res) => {
   res.json({ vehicles, drivers });
 });
 
-exports.vehicleTypes = (req, res) => res.json({ vehicleTypes: VEHICLE_TYPES });
+exports.vehicleTypes = asyncHandler(async (req, res) => res.json({ vehicleTypes: await listTypes({ active: true }) }));

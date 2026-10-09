@@ -72,6 +72,8 @@ const adminMenu = [
       { type: "link", label: "Transporters", icon: "Truck", path: "/admin/transporters" },
       { type: "link", label: "Transport Requests", icon: "FileText", path: "/admin/transport/requests" },
       { type: "link", label: "Shared Rides", icon: "Route", path: "/admin/transport/shared" },
+      { type: "link", label: "Vehicle Types", icon: "Tag", path: "/admin/transport/vehicle-types" },
+      { type: "link", label: "Advance Payment", icon: "CreditCard", path: "/admin/transport/advance" },
       { type: "link", label: "Live Tracking", icon: "MapPin", path: "/admin/transport/tracking" },
       { type: "link", label: "Withdrawals", icon: "DollarSign", path: "/admin/transport/withdrawals" },
       { type: "link", label: "Reports", icon: "Receipt", path: "/admin/transport/reports" },

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   Calendar,
@@ -10,6 +10,7 @@ import {
   Phone,
   ShieldCheck,
   Truck,
+  Users,
   XCircle,
 } from 'lucide-react-native';
 import { Screen } from '../../../components/Screen';
@@ -19,10 +20,107 @@ import { EmptyView, LoadingView } from '../../../components/StateViews';
 import { colors, radius, spacing } from '../../../theme/colors';
 import { apiFetch } from '../../../services/api';
 import { useSocketEvents } from '../../../services/useSocketEvents';
+import { getMediaUrl } from '../../../services/media';
 import { fmtTime, money } from '../../../utils/format';
 import { directionsUrl, distanceKm } from '../../../utils/geo';
 import { RateForm } from '../components/RateForm';
-import type { TransportRequest, TransportRequestStatus, TransportStage } from '../../transport/types';
+import type { ShareRequest, TransportRequest, TransportRequestStatus, TransportStage } from '../../transport/types';
+
+const dateLabel = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+
+// Why a booking is still pending, in the user's words.
+function pendingText(item: TransportRequest) {
+  if (item.hostRequest && item.shareApproval === 'pending') return 'Waiting for the other customer to agree to share';
+  if (item.hostRequest) return 'The other customer agreed. Waiting for the transporter';
+  if (!item.transporter) return 'Finding a transporter near you. The first to accept gets your booking';
+  return null;
+}
+
+// Lets the user call off a request no transporter has accepted yet; the advance goes back to the wallet.
+function CancelPending({ id, onCancelled }: { id: string; onCancelled: (r: TransportRequest) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const cancel = () =>
+    Alert.alert('Cancel request?', 'Any advance goes back to your wallet.', [
+      { text: 'Keep', style: 'cancel' },
+      {
+        text: 'Cancel request',
+        style: 'destructive',
+        onPress: async () => {
+          setBusy(true);
+          setError('');
+          try {
+            const d = await apiFetch<{ request: TransportRequest }>(`/transport/requests/${id}/cancel-mine`, { method: 'PATCH' });
+            onCancelled(d.request);
+          } catch (e: any) {
+            setError(e.message || 'Could not cancel');
+          } finally {
+            setBusy(false);
+          }
+        },
+      },
+    ]);
+  return (
+    <View>
+      <Pressable style={[styles.cancelBtn, busy && styles.faded]} disabled={busy} onPress={cancel}>
+        <Text style={styles.cancelText}>{busy ? 'Cancelling...' : 'Cancel request'}</Text>
+      </Pressable>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    </View>
+  );
+}
+
+// Another customer asks to share one of this user's accepted rides.
+function ShareRequestCard({ ask, onAnswered }: { ask: ShareRequest; onAnswered: (id: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const answer = async (action: 'approve' | 'decline') => {
+    setBusy(true);
+    setError('');
+    try {
+      await apiFetch(`/transport/requests/${ask._id}/share-consent`, { method: 'PATCH', body: { action } });
+      onAnswered(ask._id);
+    } catch (e: any) {
+      setError(e.message || 'Could not send your answer');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={styles.shareCard}>
+      <View style={styles.inline}>
+        <Users color="#1E3A8A" size={16} />
+        <Text style={styles.shareTitle}>Share your ride?</Text>
+      </View>
+      <Text style={styles.shareText}>
+        A customer wants to share your transport on {dateLabel(ask.scheduledDate)} with {ask.animals} animal(s).
+      </Text>
+      <View style={styles.routeRow}>
+        <MapPin size={12} color="#1E40AF" />
+        <Text style={[styles.routeText, styles.shareRoute]}>
+          {ask.source.address} → {ask.destination.address}
+        </Text>
+      </View>
+      {ask.newAmount != null && ask.newAmount < ask.currentAmount ? (
+        <Text style={styles.shareText}>
+          Your price drops from <Text style={styles.struck}>{money(ask.currentAmount)}</Text>{' '}
+          <Text style={styles.drop}>to about {money(ask.newAmount)}</Text> if the transporter accepts.
+        </Text>
+      ) : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      <View style={styles.shareActions}>
+        <Pressable style={[styles.shareBtn, styles.shareDecline, busy && styles.faded]} disabled={busy} onPress={() => answer('decline')}>
+          <Text style={styles.shareDeclineText}>Decline</Text>
+        </Pressable>
+        <Pressable style={[styles.shareBtn, styles.shareApprove, busy && styles.faded]} disabled={busy} onPress={() => answer('approve')}>
+          <Text style={styles.shareApproveText}>Agree to share</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
 
 const STATUS_META: Record<TransportRequestStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'Waiting for response', color: colors.warning, icon: Clock },
@@ -129,16 +227,20 @@ function ActiveDetails({ req }: { req: TransportRequest }) {
 
 function TransportBookings() {
   const [requests, setRequests] = useState<TransportRequest[]>([]);
+  const [shareRequests, setShareRequests] = useState<ShareRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      apiFetch<{ requests: TransportRequest[] }>('/transport/requests/mine')
-        .then(d => setRequests(d.requests || []))
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, []),
-  );
+  const load = useCallback(() => {
+    apiFetch<{ requests: TransportRequest[]; shareRequests?: ShareRequest[] }>('/transport/requests/mine')
+      .then(d => {
+        setRequests(d.requests || []);
+        setShareRequests(d.shareRequests || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useFocusEffect(load);
 
   useSocketEvents({
     'transport:update': (updated: TransportRequest) =>
@@ -149,6 +251,7 @@ function TransportBookings() {
             : r,
         ),
       ),
+    'transport:share-request': () => load(),
     'transport:location': ({ requestId, lat, lng, updatedAt }: any) =>
       setRequests(prev =>
         prev.map(r => (r._id === requestId ? { ...r, transporterLocation: { lat, lng, updatedAt } } : r)),
@@ -162,6 +265,22 @@ function TransportBookings() {
       data={requests}
       keyExtractor={item => item._id}
       contentContainerStyle={styles.list}
+      ListHeaderComponent={
+        shareRequests.length ? (
+          <View style={styles.shareList}>
+            {shareRequests.map(ask => (
+              <ShareRequestCard
+                key={ask._id}
+                ask={ask}
+                onAnswered={id => {
+                  setShareRequests(prev => prev.filter(a => a._id !== id));
+                  load();
+                }}
+              />
+            ))}
+          </View>
+        ) : undefined
+      }
       ListEmptyComponent={
         <EmptyView
           icon={<Calendar color={colors.mutedForeground} size={32} />}
@@ -176,9 +295,13 @@ function TransportBookings() {
           <View style={styles.card}>
             <View style={styles.between}>
               <View style={[styles.inline, styles.flex]}>
-                <Truck color={colors.primary} size={16} />
+                {item.vehicleTypeInfo?.icon ? (
+                  <Image source={{ uri: getMediaUrl(item.vehicleTypeInfo.icon) }} style={styles.typeIcon} resizeMode="contain" />
+                ) : (
+                  <Truck color={colors.primary} size={16} />
+                )}
                 <Text style={styles.name} numberOfLines={1}>
-                  {item.transporter?.businessName || item.transporter?.name || 'Transporter'}
+                  {item.transporter ? item.transporter.businessName || item.transporter.name || 'Transporter' : 'Finding a transporter'}
                 </Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: `${meta.color}1A` }]}>
@@ -193,9 +316,31 @@ function TransportBookings() {
               </Text>
             </View>
             <View style={[styles.between, styles.mt6]}>
-              <Text style={styles.typeText}>{item.type === 'shared' ? 'Shared ride' : 'Private transport'}</Text>
+              <Text style={[styles.typeText, styles.flex]}>
+                {item.vehicleTypeInfo?.name ? `${item.vehicleTypeInfo.name} · ` : ''}
+                {item.type === 'shared' || item.sharedGroup ? 'Shared ride' : 'Private'}
+                {item.scheduledDate ? ` · ${dateLabel(item.scheduledDate)}` : ''}
+                {item.animals && item.animals > 1 ? ` · ${item.animals} animals` : ''}
+              </Text>
               {item.quote?.amount != null ? <Text style={styles.amount}>{money(item.quote.amount)}</Text> : null}
             </View>
+            {item.advance?.amount ? (
+              <Text style={styles.note}>
+                {item.advance.status === 'refunded'
+                  ? `Advance ${money(item.advance.amount)} refunded to your wallet`
+                  : `Advance paid ${money(item.advance.amount)} · ${money(Math.max(0, (item.quote?.amount || 0) - item.advance.amount))} at delivery`}
+              </Text>
+            ) : null}
+            {item.status === 'pending' && pendingText(item) ? <Text style={styles.pendingNote}>{pendingText(item)}</Text> : null}
+            {(item.status === 'rejected' || item.status === 'cancelled') && item.rejectReason ? (
+              <Text style={styles.rejectNote}>{item.rejectReason}</Text>
+            ) : null}
+            {item.status === 'pending' ? (
+              <CancelPending
+                id={item._id}
+                onCancelled={updated => setRequests(prev => prev.map(r => (r._id === updated._id ? { ...r, ...updated } : r)))}
+              />
+            ) : null}
             {item.status === 'accepted' ? <ActiveDetails req={item} /> : null}
             {item.status === 'completed' ? (
               <RateForm
@@ -314,6 +459,34 @@ export function BookingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  typeIcon: { width: 20, height: 20 },
+  cancelBtn: {
+    marginTop: 12,
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 8,
+  },
+  cancelText: { fontSize: 12, fontWeight: '700', color: colors.destructive },
+  faded: { opacity: 0.6 },
+  note: { fontSize: 11, color: colors.mutedForeground, marginTop: 4 },
+  pendingNote: { fontSize: 11, fontWeight: '600', color: '#B45309', marginTop: 4 },
+  rejectNote: { fontSize: 11, color: colors.destructive, marginTop: 4 },
+  errorText: { fontSize: 12, color: colors.destructive },
+  shareList: { gap: 10, marginBottom: 10 },
+  shareCard: { gap: 6, borderRadius: radius.lg, borderWidth: 1, borderColor: '#BFDBFE', backgroundColor: '#EFF6FF', padding: spacing.md },
+  shareTitle: { fontSize: 14, fontWeight: '700', color: '#1E3A8A' },
+  shareText: { fontSize: 12, color: '#1E3A8A' },
+  shareRoute: { color: '#1E40AF' },
+  struck: { textDecorationLine: 'line-through' },
+  drop: { fontWeight: '800', color: '#047857' },
+  shareActions: { flexDirection: 'row', gap: spacing.sm, marginTop: 6 },
+  shareBtn: { flex: 1, alignItems: 'center', borderRadius: radius.md, paddingVertical: 10 },
+  shareDecline: { backgroundColor: colors.white },
+  shareDeclineText: { fontSize: 14, fontWeight: '700', color: colors.foreground },
+  shareApprove: { backgroundColor: '#1D4ED8' },
+  shareApproveText: { fontSize: 14, fontWeight: '700', color: colors.white },
   noPadding: { padding: 0 },
   flex: { flex: 1, minWidth: 0 },
   mt6: { marginTop: 6 },
