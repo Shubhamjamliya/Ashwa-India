@@ -24,7 +24,7 @@ export default function TransporterLogin() {
 
   const goHome = () => {
     const from = location.state?.from
-    navigate(from && from.startsWith("/transporter") ? from : "/transporter", { replace: true })
+    navigate(typeof from === "string" && from.startsWith("/transporter") ? from : "/transporter", { replace: true })
   }
 
   const handleRequestOtp = async (e) => {

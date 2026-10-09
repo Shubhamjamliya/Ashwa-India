@@ -24,7 +24,7 @@ export default function ServiceLogin() {
 
   const goHome = () => {
     const from = location.state?.from
-    navigate(from && from.startsWith("/service") ? from : "/service", { replace: true })
+    navigate(typeof from === "string" && from.startsWith("/service") ? from : "/service", { replace: true })
   }
 
   const handleRequestOtp = async (e) => {

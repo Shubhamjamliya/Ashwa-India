@@ -85,7 +85,7 @@ export default function SellerLogin() {
       // in as horse-seller instead) must not send you to the wrong dashboard.
       const homePath = `/seller/${sellerType === "horse-seller" ? "horses" : "store"}`
       const from = location.state?.from
-      navigate(from && from.startsWith(homePath) ? from : homePath, { replace: true })
+      navigate(typeof from === "string" && from.startsWith(homePath) ? from : homePath, { replace: true })
     } catch (err) {
       setError(err.message || "Invalid OTP")
     } finally {

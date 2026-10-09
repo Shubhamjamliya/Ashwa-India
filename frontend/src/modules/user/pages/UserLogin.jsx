@@ -74,7 +74,7 @@ export default function UserLogin() {
 
   const goHome = () => {
     const from = location.state?.from
-    navigate(from && from.startsWith("/user") ? from : "/user", { replace: true })
+    navigate(typeof from === "string" && from.startsWith("/user") ? from : "/user", { replace: true })
   }
 
   const handleRequestOtp = async (e) => {

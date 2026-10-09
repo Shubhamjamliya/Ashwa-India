@@ -34,7 +34,7 @@ export default function AdminLogin() {
       })
       login(data)
       const from = location.state?.from
-      navigate(from && from.startsWith("/admin") ? from : "/admin", { replace: true })
+      navigate(typeof from === "string" && from.startsWith("/admin") ? from : "/admin", { replace: true })
     } catch (err) {
       setError(err.message || "Login failed")
     } finally {
