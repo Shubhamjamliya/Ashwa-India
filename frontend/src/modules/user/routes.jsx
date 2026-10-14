@@ -18,6 +18,7 @@ import Bookings from "./pages/Bookings"
 import BookingDetail from "./pages/BookingDetail"
 import Events from "./pages/Events"
 import Services from "./pages/Services"
+import ServiceCheckout from "./pages/ServiceCheckout"
 import Inquiries from "./pages/Inquiries"
 import ServiceProviders from "./pages/ServiceProviders"
 import ProviderProfile from "./pages/ProviderProfile"
@@ -55,6 +56,7 @@ export const userRoutes = (
     <Route path="jobs/new" element={<PostJob basePath="/user/jobs" />} />
     <Route path="jobs/:id" element={<JobDetail />} />
     <Route path="jobs/:id/manage" element={<ManageJob />} />
+    <Route path="services/checkout" element={<ServiceCheckout />} />
     <Route path="services/:key" element={<ServiceProviders />} />
     <Route path="services/:key/providers/:id" element={<ProviderProfile />} />
     <Route path="orders" element={<Orders />} />

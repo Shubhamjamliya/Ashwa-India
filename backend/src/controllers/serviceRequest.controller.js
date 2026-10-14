@@ -21,7 +21,7 @@ function emitToRequestParties(req, request, event) {
   const io = req.app.get('io');
   if (!io) return;
   io.to(`user:${request.user._id || request.user}`).emit(event, request);
-  io.to(`provider:${request.provider._id || request.provider}`).emit(event, request);
+  if (request.provider) io.to(`provider:${request.provider._id || request.provider}`).emit(event, request);
 }
 
 // POST /api/services/requests  (user)
@@ -64,6 +64,53 @@ exports.createRequest = asyncHandler(async (req, res) => {
   res.status(201).json({ request: populated });
 });
 
+// POST /api/services/requests/broadcast  (user)
+// { serviceKeys: [..], message, address, coords: { lat, lng } }
+// Sends one booking for the selected services to every approved, online provider nearby.
+exports.createBroadcast = asyncHandler(async (req, res) => {
+  const keys = [...new Set((req.body.serviceKeys || []).map((k) => String(k).toLowerCase().trim()).filter(Boolean))];
+  if (keys.length === 0) return res.status(400).json({ message: 'Select at least one service' });
+
+  const lat = Number(req.body.coords?.lat);
+  const lng = Number(req.body.coords?.lng);
+  const hasCoords = req.body.coords && !Number.isNaN(lat) && !Number.isNaN(lng);
+
+  const filter = { status: 'approved', isOnline: { $ne: false }, serviceTypes: { $in: keys } };
+  if (hasCoords) {
+    const zones = await zonesContaining(lat, lng);
+    filter.serviceZones = { $in: zones.map((z) => z._id) };
+  }
+  const providers = await Provider.find(filter).select('_id');
+  if (providers.length === 0) {
+    return res.status(404).json({ message: 'No service providers are available near you right now' });
+  }
+
+  const request = await ServiceRequest.create({
+    user: req.user._id,
+    serviceType: keys.join(', '),
+    serviceTypes: keys,
+    notifiedProviders: providers.map((p) => p._id),
+    message: req.body.message ? String(req.body.message).trim().slice(0, 500) : undefined,
+    address: req.body.address ? String(req.body.address).trim().slice(0, 300) : undefined,
+    coords: hasCoords ? { lat, lng } : undefined,
+  });
+  const populated = await populateRequest(request);
+
+  const io = req.app.get('io');
+  providers.forEach((p) => {
+    if (io) io.to(`provider:${p._id}`).emit('service:new', populated);
+    pushService
+      .sendPushToAccount('provider', p._id, {
+        title: 'New service request nearby',
+        body: `${populated.user?.name || 'A user'} needs ${keys.join(', ')}`,
+        data: { type: 'service:new', requestId: String(request._id) },
+      })
+      .catch(() => {});
+  });
+
+  res.status(201).json({ request: populated, notified: providers.length });
+});
+
 // GET /api/services/requests/mine  (user)
 exports.listMine = asyncHandler(async (req, res) => {
   const requests = await ServiceRequest.find({ user: req.user._id })
@@ -74,11 +121,77 @@ exports.listMine = asyncHandler(async (req, res) => {
 
 // GET /api/services/requests/incoming  (provider)
 exports.listIncoming = asyncHandler(async (req, res) => {
-  const requests = await ServiceRequest.find({ provider: req.user._id })
+  const requests = await ServiceRequest.find({
+    $or: [
+      { provider: req.user._id },
+      { provider: null, status: 'pending', notifiedProviders: req.user._id, declinedBy: { $ne: req.user._id } },
+    ],
+  })
     .populate('user', USER_FIELDS)
     .sort({ createdAt: -1 });
   res.json({ requests });
 });
+
+async function respondToBroadcast(req, res, request, action, amount) {
+  const me = req.user._id;
+  if (!request.notifiedProviders.some((id) => String(id) === String(me))) {
+    return res.status(403).json({ message: 'Not your request' });
+  }
+  if (request.status !== 'pending') {
+    return res.status(409).json({ message: 'This request has already been taken by another provider' });
+  }
+  const io = req.app.get('io');
+
+  if (action === 'reject') {
+    await ServiceRequest.updateOne({ _id: request._id }, { $addToSet: { declinedBy: me } });
+    const fresh = await ServiceRequest.findById(request._id);
+    // Everyone nearby said no: tell the user.
+    if (fresh.status === 'pending' && fresh.declinedBy.length >= fresh.notifiedProviders.length) {
+      fresh.status = 'rejected';
+      fresh.respondedAt = new Date();
+      await fresh.save();
+      const populated = await populateRequest(fresh);
+      emitToRequestParties(req, populated, 'service:update');
+      pushService
+        .sendPushToAccount('user', fresh.user, {
+          title: 'Service request declined',
+          body: `No provider was available for your ${fresh.serviceType} request`,
+          data: { type: 'service:update', requestId: String(fresh._id) },
+        })
+        .catch(() => {});
+    }
+    return res.json({ request: await populateRequest(fresh) });
+  }
+
+  const price = Number(amount);
+  if (!(price > 0)) {
+    return res.status(400).json({ message: 'Enter the price for this service before accepting' });
+  }
+  // First provider to accept wins; the update only matches while the request is still unclaimed.
+  const claimed = await ServiceRequest.findOneAndUpdate(
+    { _id: request._id, status: 'pending', provider: null },
+    { provider: me, status: 'accepted', amount: price, respondedAt: new Date() },
+    { new: true }
+  );
+  if (!claimed) {
+    return res.status(409).json({ message: 'This request has already been taken by another provider' });
+  }
+  const populated = await populateRequest(claimed);
+  emitToRequestParties(req, populated, 'service:update');
+  if (io) {
+    claimed.notifiedProviders
+      .filter((id) => String(id) !== String(me))
+      .forEach((id) => io.to(`provider:${id}`).emit('service:taken', { _id: claimed._id }));
+  }
+  pushService
+    .sendPushToAccount('user', claimed.user, {
+      title: 'Service request accepted',
+      body: `${populated.provider?.businessName || populated.provider?.name || 'A provider'} accepted your ${claimed.serviceType} request`,
+      data: { type: 'service:update', requestId: String(claimed._id) },
+    })
+    .catch(() => {});
+  res.json({ request: populated });
+}
 
 // PATCH /api/services/requests/:id/respond  (provider)
 // { action: 'accept', amount } | { action: 'reject' } | { action: 'complete' }
@@ -90,6 +203,11 @@ exports.respond = asyncHandler(async (req, res) => {
 
   const request = await ServiceRequest.findById(req.params.id);
   if (!request) return res.status(404).json({ message: 'Request not found' });
+
+  // Broadcast booking nobody has claimed yet.
+  if (!request.provider && action !== 'complete') {
+    return respondToBroadcast(req, res, request, action, amount);
+  }
   if (String(request.provider) !== String(req.user._id)) {
     return res.status(403).json({ message: 'Not your request' });
   }
