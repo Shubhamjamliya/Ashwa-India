@@ -266,7 +266,7 @@ function ServiceBookings() {
                 {meta.label}
               </span>
             </div>
-            <p className="mt-1 text-xs text-neutral-600">{item.provider?.businessName || item.provider?.name || "Provider"}</p>
+            <p className="mt-1 text-xs text-neutral-600">{item.provider ? item.provider.businessName || item.provider.name || "Provider" : item.status === "pending" ? "Looking for a nearby provider..." : "No provider available"}</p>
             {item.message && <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{item.message}</p>}
             <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-neutral-500">
               <span>{new Date(item.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>

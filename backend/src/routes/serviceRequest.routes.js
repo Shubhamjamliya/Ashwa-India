@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 
 router.get('/providers', protect, authorize('user'), serviceRequestController.listProvidersForService);
 router.get('/providers/:id', protect, authorize('user'), serviceRequestController.getProviderProfile);
+router.post('/requests/broadcast', protect, authorize('user'), serviceRequestController.createBroadcast);
 router.post('/requests', protect, authorize('user'), serviceRequestController.createRequest);
 router.get('/requests/mine', protect, authorize('user'), serviceRequestController.listMine);
 router.post('/requests/:id/review', protect, authorize('user'), serviceRequestController.createReview);

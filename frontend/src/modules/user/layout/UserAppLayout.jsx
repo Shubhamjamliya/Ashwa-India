@@ -5,12 +5,14 @@ import BottomTabBar from "./BottomTabBar"
 const CHAT_ROUTE = /^\/user\/inquiries\/[^/]+$/
 // The horse detail screen has its own fixed price/contact bar, so the tab bar would collide with it.
 const HORSE_DETAIL_ROUTE = /^\/user\/horses\/[^/]+$/
+// Service selection and checkout have their own fixed action bar.
+const SERVICE_FLOW_ROUTE = /^\/user\/services(\/checkout)?\/?$/
 
 // Mirrors the native UserApp shell: no top nav bar, a phone-width content
 // column, and a floating bottom tab bar (see CustomTabBar.tsx in Apps/UserApp).
 export default function UserAppLayout() {
   const { pathname } = useLocation()
-  const hideTabBar = CHAT_ROUTE.test(pathname) || HORSE_DETAIL_ROUTE.test(pathname)
+  const hideTabBar = CHAT_ROUTE.test(pathname) || HORSE_DETAIL_ROUTE.test(pathname) || SERVICE_FLOW_ROUTE.test(pathname)
 
   return (
     <div className="min-h-screen bg-[#FAF7F1]">

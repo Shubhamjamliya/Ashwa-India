@@ -3,7 +3,14 @@ const mongoose = require('mongoose');
 const serviceRequestSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider', required: true },
+    // Empty for a broadcast booking until a nearby provider accepts it.
+    provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider' },
+    // Broadcast bookings: several services, sent to every nearby provider; the first to accept wins.
+    serviceTypes: [{ type: String, trim: true }],
+    notifiedProviders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Provider' }],
+    declinedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Provider' }],
+    address: { type: String, trim: true },
+    coords: { lat: Number, lng: Number },
     serviceType: { type: String, required: true, trim: true },
     message: { type: String, trim: true },
     status: {
@@ -35,5 +42,6 @@ const serviceRequestSchema = new mongoose.Schema(
 
 serviceRequestSchema.index({ provider: 1, status: 1, createdAt: -1 });
 serviceRequestSchema.index({ user: 1, createdAt: -1 });
+serviceRequestSchema.index({ notifiedProviders: 1, status: 1 });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);
