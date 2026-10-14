@@ -81,10 +81,17 @@ export default function ServiceDashboard() {
       setRequests((prev) => prev.map((r) => (r._id === updated._id ? updated : r)))
     }
     socket.on("service:new", onNew)
+    // Another nearby provider accepted this booking first.
+    const onTaken = ({ _id }) => {
+      setRequests((prev) => prev.filter((r) => r._id !== _id || r.provider))
+      setRinging((cur) => (cur?._id === _id ? null : cur))
+    }
     socket.on("service:update", onUpdate)
+    socket.on("service:taken", onTaken)
     return () => {
       socket.off("service:new", onNew)
       socket.off("service:update", onUpdate)
+      socket.off("service:taken", onTaken)
       socket.disconnect()
     }
   }, [])
@@ -100,6 +107,11 @@ export default function ServiceDashboard() {
       return true
     } catch (err) {
       setActionError(err.message || "Action failed")
+      if (err.message?.includes("already been taken")) {
+        setRequests((prev) => prev.filter((r) => r._id !== id))
+        setPricingFor(null)
+        setRinging(null)
+      }
       return false
     } finally {
       setActing(false)
@@ -352,6 +364,8 @@ export default function ServiceDashboard() {
                         {chip.label}
                       </span>
                     </div>
+
+                    {req.address && <p className="mt-3 flex items-start gap-1.5 text-[12px] text-neutral-600"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500" />{req.address}</p>}
 
                     {req.message && <p className="mt-3 line-clamp-2 rounded-xl bg-neutral-50 p-3 text-[12px] leading-relaxed text-neutral-600">{req.message}</p>}
 
