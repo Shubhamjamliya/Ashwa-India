@@ -140,6 +140,29 @@ exports.register = asyncHandler(async (req, res) => {
   });
 });
 
+// Public provider sign-up (no OTP). Account stays pending until an admin approves it.
+exports.providerJoin = asyncHandler(async (req, res) => {
+  const { name, phone, email, businessName } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ message: 'name is required' });
+  if (!/^\d{10}$/.test(String(phone || ''))) return res.status(400).json({ message: 'A valid 10-digit mobile number is required' });
+
+  const Provider = otpRoles.provider;
+  if (await Provider.findOne({ phone })) {
+    return res.status(409).json({ message: 'This mobile number is already registered' });
+  }
+
+  const built = await buildProviderProfile({ ...req.body, name, email, businessName });
+  if (built.error) return res.status(400).json({ message: built.error });
+  const u = built.update;
+  if (!u.country || !u.state || !u.city) return res.status(400).json({ message: 'Country, state and city are required' });
+  if (!u.profileTypes || u.profileTypes.length === 0) return res.status(400).json({ message: 'Select your profile' });
+  if (!u.horseCount) return res.status(400).json({ message: 'Select number of horses' });
+  if (!u.declarationAccepted) return res.status(400).json({ message: 'Please accept the declaration' });
+
+  await Provider.create({ phone, ...u, status: 'pending' });
+  res.status(201).json({ message: 'Thank you for joining Ashwaindia!', status: 'pending' });
+});
+
 exports.refresh = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ message: 'refreshToken is required' });

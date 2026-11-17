@@ -61,6 +61,7 @@ export default function ServiceLogin() {
       })
       if (data.requiresRegistration) {
         setRegistrationToken(data.registrationToken)
+        setReg((prev) => ({ ...prev, phone }))
         setStep("register")
         return
       }
@@ -180,7 +181,7 @@ export default function ServiceLogin() {
                 <h2 className="text-base font-bold text-[#0F2238]">Join Ashwaindia - India's Horse Community</h2>
                 <p className="text-xs text-neutral-500">Fields marked * are required.</p>
               </div>
-              <ProviderRegistrationForm phone={phone} value={reg} onChange={(patch) => setReg((prev) => ({ ...prev, ...patch }))} />
+              <ProviderRegistrationForm value={reg} onChange={(patch) => setReg((prev) => ({ ...prev, ...patch }))} />
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Submitting..." : "Submit Application"}

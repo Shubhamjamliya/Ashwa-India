@@ -18,6 +18,7 @@ import AdminLogin from "@/modules/adminAuth/pages/AdminLogin"
 import UserLogin from "@/modules/user/pages/UserLogin"
 import TransporterLogin from "@/modules/transporter/pages/TransporterLogin"
 import ServiceLogin from "@/modules/service/pages/ServiceLogin"
+import ProviderJoin from "@/modules/service/pages/ProviderJoin"
 import { CartProvider } from "@/modules/user/context/CartContext"
 import { WishlistProvider } from "@/modules/user/context/WishlistContext"
 import { AddressProvider } from "@/modules/user/context/AddressContext"
@@ -36,6 +37,7 @@ function App() {
             <Route path="/user/login" element={<UserLogin />} />
             <Route path="/transporter/login" element={<TransporterLogin />} />
             <Route path="/service/login" element={<ServiceLogin />} />
+            <Route path="/join" element={<ProviderJoin />} />
 
             <Route
               path="/admin"

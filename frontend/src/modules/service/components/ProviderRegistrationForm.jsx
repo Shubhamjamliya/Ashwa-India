@@ -19,6 +19,7 @@ export const HORSE_BREEDS = ["I don't have any", "Marwari", "Kathiawari", "Thoro
 
 export const emptyRegistration = {
   name: "",
+  phone: "",
   whatsapp: "",
   email: "",
   country: "INDIA", // "INDIA" | "OTHER"
@@ -62,7 +63,7 @@ function Choice({ type, checked, onChange, label }) {
 
 const toggle = (list, item) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
 
-export default function ProviderRegistrationForm({ phone, value, onChange }) {
+export default function ProviderRegistrationForm({ value, onChange }) {
   const set = (key) => (e) => onChange({ [key]: e.target.value })
   const profileOtherOn = value.profileTypes.includes("Other")
   const breedOtherOn = value.horseBreeds.includes("Other")
@@ -74,7 +75,14 @@ export default function ProviderRegistrationForm({ phone, value, onChange }) {
       </Field>
 
       <Field label="Mobile Number" required>
-        <input className={`${inputClass} bg-neutral-50`} value={phone} readOnly />
+        <input
+          type="tel"
+          inputMode="numeric"
+          className={inputClass}
+          value={value.phone}
+          onChange={(e) => onChange({ phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+          placeholder="10-digit mobile number"
+        />
       </Field>
 
       <Field label="Whatsapp Number">
@@ -176,6 +184,7 @@ export default function ProviderRegistrationForm({ phone, value, onChange }) {
 // Validates the draft; returns an error message or "".
 export function validateRegistration(v) {
   if (!v.name.trim()) return "Enter your full name"
+  if (!/^\d{10}$/.test(v.phone)) return "Enter a valid 10-digit mobile number"
   if (v.country === "OTHER" && !v.countryOther.trim()) return "Enter your country"
   if (!v.state) return "Select your state"
   if (v.state === "OTHER" && !v.stateOther.trim()) return "Enter your state"
@@ -194,6 +203,7 @@ export function registrationPayload(v) {
   const swapOther = (list, other) => list.map((x) => (x === "Other" ? `Other: ${other.trim()}` : x))
   return {
     name: v.name.trim(),
+    phone: v.phone,
     whatsapp: v.whatsapp.trim(),
     email: v.email.trim(),
     country: v.country === "OTHER" ? v.countryOther.trim() : "India",
