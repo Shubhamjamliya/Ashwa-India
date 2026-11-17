@@ -1,5 +1,4 @@
 node_modules/
-.env
 *.log
 dist/
 build/
@@ -11,9 +10,9 @@ Apps/*/ios/build/
 Apps/*/.expo/
 
 # Editor
-.vscode/
 .idea/
 .DS_Store
 branch_structure.json
 temp_auto_push.bat
 temp_interactive_push.bat
+config.bat
