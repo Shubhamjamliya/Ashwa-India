@@ -113,7 +113,11 @@ exports.register = asyncHandler(async (req, res) => {
   if (decoded.role === 'provider') {
     const built = await buildProviderProfile({ ...req.body, name, email, businessName });
     if (built.error) return res.status(400).json({ message: built.error });
-    if (!built.update.serviceTypes) return res.status(400).json({ message: 'Select at least one service you offer' });
+    const u = built.update;
+    if (!u.country || !u.state || !u.city) return res.status(400).json({ message: 'Country, state and city are required' });
+    if (!u.profileTypes || u.profileTypes.length === 0) return res.status(400).json({ message: 'Select your profile' });
+    if (!u.horseCount) return res.status(400).json({ message: 'Select number of horses' });
+    if (!u.declarationAccepted) return res.status(400).json({ message: 'Please accept the declaration' });
     providerFields = built.update;
   }
 

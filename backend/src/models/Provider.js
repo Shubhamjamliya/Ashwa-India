@@ -18,6 +18,17 @@ const providerSchema = new mongoose.Schema(
     phone: { type: String, required: true, unique: true, trim: true },
     email: { type: String, trim: true, lowercase: true },
 
+    // Registration form details
+    whatsapp: { type: String, trim: true },
+    country: { type: String, trim: true },
+    state: { type: String, trim: true },
+    city: { type: String, trim: true },
+    profileTypes: [{ type: String, trim: true }],
+    horseCount: { type: String, trim: true },
+    horseBreeds: [{ type: String, trim: true }],
+    additionalInfo: { type: String, trim: true },
+    declarationAccepted: { type: Boolean, default: false },
+
     // Business profile
     businessName: { type: String, trim: true },
     description: { type: String, trim: true, default: '' },
@@ -55,10 +66,12 @@ providerSchema.methods.toSafeObject = function toSafeObject() {
   const {
     _id, name, phone, email, businessName, description, experienceYears, certifications, gallery,
     serviceTypes, pricing, serviceZones, location, coords, isOnline, rating, status, createdAt,
+    whatsapp, country, state, city, profileTypes, horseCount, horseBreeds, additionalInfo,
   } = this;
   return {
     id: _id, name, phone, email, businessName, description, experienceYears, certifications, gallery,
     serviceTypes, pricing, serviceZones, location, coords, isOnline, rating, status, createdAt, role: 'provider',
+    whatsapp, country, state, city, profileTypes, horseCount, horseBreeds, additionalInfo,
   };
 };
 

@@ -17,6 +17,17 @@ async function buildProviderProfile(body, current = { serviceTypes: [], pricing:
   if (description !== undefined) update.description = String(description).trim();
   if (certifications !== undefined) update.certifications = String(certifications).trim();
 
+  for (const key of ['whatsapp', 'country', 'state', 'city', 'horseCount', 'additionalInfo']) {
+    if (body[key] !== undefined) update[key] = String(body[key]).trim();
+  }
+  for (const key of ['profileTypes', 'horseBreeds']) {
+    if (body[key] !== undefined) {
+      if (!Array.isArray(body[key])) return fail('Invalid selection');
+      update[key] = body[key].map((v) => String(v).trim()).filter(Boolean).slice(0, 30);
+    }
+  }
+  if (body.declarationAccepted !== undefined) update.declarationAccepted = body.declarationAccepted === true;
+
   if (experienceYears !== undefined) {
     const years = Number(experienceYears);
     if (!(years >= 0)) return fail('Experience must be 0 or more years');

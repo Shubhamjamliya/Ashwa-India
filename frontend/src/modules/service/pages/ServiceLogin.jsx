@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Phone, KeyRound, User, CheckCircle2 } from "lucide-react"
-import ProviderProfileFields, { profilePayload } from "../components/ProviderProfileFields"
+import { Phone, KeyRound, CheckCircle2 } from "lucide-react"
+import ProviderRegistrationForm, { emptyRegistration, validateRegistration, registrationPayload } from "../components/ProviderRegistrationForm"
 import { Input } from "@/shared/components/ui/input"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/shared/context/AuthContext"
@@ -17,8 +17,7 @@ export default function ServiceLogin() {
   const [otp, setOtp] = useState("")
   const [devOtp, setDevOtp] = useState("")
   const [registrationToken, setRegistrationToken] = useState("")
-  const [name, setName] = useState("")
-  const [profile, setProfile] = useState({ serviceTypes: [], pricing: [], serviceZones: [] })
+  const [reg, setReg] = useState(emptyRegistration)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -76,12 +75,9 @@ export default function ServiceLogin() {
 
   const handleRegister = async (e) => {
     e.preventDefault()
-    if (!name.trim()) {
-      setError("Enter your name")
-      return
-    }
-    if (!profile.serviceTypes || profile.serviceTypes.length === 0) {
-      setError("Select at least one service you offer")
+    const problem = validateRegistration(reg)
+    if (problem) {
+      setError(problem)
       return
     }
     setError("")
@@ -90,7 +86,7 @@ export default function ServiceLogin() {
       const data = await apiFetch("/auth/register", {
         method: "POST",
         auth: false,
-        body: { registrationToken, name, ...profilePayload(profile) },
+        body: { registrationToken, ...registrationPayload(reg) },
       })
       if (data.accessToken) {
         login(data)
@@ -114,7 +110,7 @@ export default function ServiceLogin() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#FAF7F1] px-4 py-10">
-      <div className="w-full max-w-md">
+      <div className={`w-full ${step === "register" ? "max-w-xl" : "max-w-md"}`}>
         <div className="mb-6 flex flex-col items-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#C28D2E] text-lg font-bold text-white">
             A
@@ -180,15 +176,11 @@ export default function ServiceLogin() {
 
           {step === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
-              <p className="mb-1 text-sm text-neutral-500">Set up your service business profile. You can add photos later.</p>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">Your name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="pl-9" />
-                </div>
+              <div className="mb-1">
+                <h2 className="text-base font-bold text-[#0F2238]">Join Ashwaindia - India's Horse Community</h2>
+                <p className="text-xs text-neutral-500">Fields marked * are required.</p>
               </div>
-              <ProviderProfileFields value={profile} onChange={(patch) => setProfile((prev) => ({ ...prev, ...patch }))} />
+              <ProviderRegistrationForm phone={phone} value={reg} onChange={(patch) => setReg((prev) => ({ ...prev, ...patch }))} />
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Submitting..." : "Submit Application"}
