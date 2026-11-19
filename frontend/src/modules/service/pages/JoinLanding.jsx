@@ -18,6 +18,7 @@ export default function JoinLanding() {
       title: "Verified Horse Marketplace",
       tag: "Buy & Sell",
       image: "/images/user/horses-buy.png",
+      bg: "#FBEFD6",
       description:
         "Browse verified listings of purebred horses — Marwari, Kathiawari, Thoroughbred, Arabian, and Warmblood. Review lineage, health documents, and contact sellers directly.",
       highlights: ["Direct seller inquiries", "Verified pedigree & health info", "Clean listing management"],
@@ -26,14 +27,16 @@ export default function JoinLanding() {
       title: "Horse Transport & Shared Rides",
       tag: "Logistics",
       image: "/images/user/transport.png",
+      bg: "#E0F4E7",
       description:
-        "Safe, stress-free equine transport across Indian states. Book dedicated horse floats and ambulances, or save up to 40% on travel costs by joining shared route runs.",
+        "Safe equine transport across Indian states. Book dedicated horse floats or save up to 40% on travel costs by joining shared route runs.",
       highlights: ["Shared-ride cost savings", "Custom horse floats & ambulances", "Real-time trip coordination"],
     },
     {
       title: "Equine Professionals On-Demand",
       tag: "Healthcare & Care",
       image: "/images/user/service-providers.png",
+      bg: "#E1ECFC",
       description:
         "Connect with experienced horse veterinarians, certified farriers, trainers, riding schools, and stable caretakers right at your location.",
       highlights: ["Doorstep vet & farrier visits", "Verified credentials & ratings", "Easy booking schedules"],
@@ -42,6 +45,7 @@ export default function JoinLanding() {
       title: "Equestrian Store & Tack",
       tag: "Gear & Feed",
       image: "/images/user/accessories.png",
+      bg: "#F0E4FB",
       description:
         "A specialized marketplace for authentic saddles, bridles, grooming kits, equine nutrition, feed, and stable equipment from trusted suppliers.",
       highlights: ["Equestrian gear & tack", "Equine nutrition & supplements", "Direct manufacturer prices"],
@@ -59,118 +63,116 @@ export default function JoinLanding() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F1] text-[#0F2238] antialiased">
-      {/* Top Navigation */}
+      {/* Top Navigation — Compact & Fixed */}
       <header className="sticky top-0 z-30 border-b border-[#E7DFD1] bg-white/95 backdrop-blur-md shadow-2xs">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-3.5 py-2 sm:px-6 sm:py-2.5">
+          <div className="flex items-center gap-2.5">
             <img
               src={displayLogo}
               alt={companyName || "Ashwa India"}
-              className="h-10 w-auto max-w-[130px] object-contain"
+              className="h-8 w-auto max-w-[110px] object-contain sm:h-9"
               onError={(e) => {
                 e.currentTarget.style.display = "none"
               }}
             />
-            <span className="text-lg font-bold tracking-tight text-[#0F2238]">
+            <span className="text-base font-bold tracking-tight text-[#0F2238] sm:text-lg">
               {companyName || "Ashwa India"}
             </span>
           </div>
 
           <Link
             to="/register"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F2238] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1a385c] active:scale-95 sm:text-sm"
+            className="inline-flex items-center gap-1 rounded-lg bg-[#0F2238] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#1a385c] active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
           >
             <span>Register</span>
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pt-10 pb-12 sm:px-6 sm:pt-16 sm:pb-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D9CEBA] bg-[#F2EDE4] px-3 py-1 text-xs font-semibold text-[#7C5A1E]">
-            <Sparkles className="h-3.5 w-3.5" />
+      {/* Hero Section — Compact Spacing */}
+      <section className="px-4 pt-5 pb-5 sm:px-6 sm:pt-8 sm:pb-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#D9CEBA] bg-[#F2EDE4] px-2.5 py-0.5 text-[11px] font-semibold text-[#7C5A1E]">
+            <Sparkles className="h-3 w-3" />
             <span>India's Dedicated Equine Platform</span>
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#0F2238] sm:text-5xl sm:leading-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#0F2238] sm:text-4xl sm:leading-tight">
             Everything for Horses & Equestrians in One Place
           </h1>
 
-          <p className="mt-4 text-base text-neutral-600 sm:text-lg sm:leading-relaxed">
+          <p className="mt-2 text-xs leading-relaxed text-neutral-600 sm:text-sm sm:leading-normal">
             Ashwa India connects horse owners, breeders, veterinarians, farriers, transporters, and
             equestrian businesses on a single trusted, modern platform.
           </p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-4 flex items-center justify-center gap-3">
             <Link
               to="/register"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C28D2E] px-7 py-3.5 text-base font-semibold text-white shadow-md transition hover:bg-[#a87722] active:scale-98 sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C28D2E] px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#a87722] active:scale-98 sm:text-sm sm:py-3 sm:px-7"
             >
               <span>Register / Join Ashwa India</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#services"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#D9CEBA] bg-white px-6 py-3.5 text-sm font-semibold text-[#0F2238] shadow-xs transition hover:bg-neutral-50 sm:w-auto"
-            >
-              <span>Explore Services</span>
-            </a>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-6 text-xs text-neutral-500">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-[#C28D2E]" /> Verified Community
+          <div className="mt-3.5 flex items-center justify-center gap-4 text-[11px] text-neutral-500 sm:gap-6">
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#C28D2E]" /> Verified
             </span>
-            <span className="flex items-center gap-1.5">
-              <Users className="h-4 w-4 text-[#C28D2E]" /> Pan-India Network
+            <span className="flex items-center gap-1">
+              <Users className="h-3.5 w-3.5 text-[#C28D2E]" /> Pan-India
             </span>
-            <span className="flex items-center gap-1.5">
-              <Compass className="h-4 w-4 text-[#C28D2E]" /> Direct Bookings
+            <span className="flex items-center gap-1">
+              <Compass className="h-3.5 w-3.5 text-[#C28D2E]" /> Direct Bookings
             </span>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="services" className="border-t border-[#E7DFD1] bg-white px-4 py-12 sm:px-6 sm:py-16">
+      {/* Services Section — Clear, Fully Visible Images & Tight Gaps */}
+      <section id="services" className="border-t border-[#E7DFD1] bg-white px-3.5 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#C28D2E]">What Ashwa India Offers</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0F2238] sm:text-3xl">
-              Comprehensive Services for the Horse Community
+          <div className="mb-4 text-center sm:mb-6">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#C28D2E]">What Ashwa India Offers</p>
+            <h2 className="mt-0.5 text-xl font-bold tracking-tight text-[#0F2238] sm:text-2xl">
+              Core Services & Features
             </h2>
-            <p className="mt-2 text-sm text-neutral-600 sm:text-base">
-              Designed from the ground up for breeders, riders, equine professionals, and transport operators.
+            <p className="mt-1 text-xs text-neutral-600">
+              Designed for breeders, riders, equine professionals, and transport operators.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-5">
             {services.map((item) => (
               <div
                 key={item.title}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-[#E7DFD1] bg-[#FAF8F5] transition duration-200 hover:border-[#C28D2E]/60 hover:shadow-md"
+                className="group flex flex-col overflow-hidden rounded-xl border border-[#E7DFD1] bg-[#FAF8F5] transition duration-200 hover:border-[#C28D2E]/60 hover:shadow-xs"
               >
-                <div className="relative h-44 w-full overflow-hidden bg-neutral-100 sm:h-52">
+                {/* Image Frame — Fully Visible using object-contain with styled pastel background */}
+                <div
+                  className="relative flex h-40 w-full items-center justify-center overflow-hidden sm:h-48"
+                  style={{ backgroundColor: item.bg }}
+                >
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <span className="absolute top-3 left-3 rounded-md bg-[#0F2238]/85 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-xs">
+                  <span className="absolute top-2.5 left-2.5 rounded-md bg-[#0F2238]/85 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
                     {item.tag}
                   </span>
                 </div>
 
-                <div className="flex flex-1 flex-col p-5 sm:p-6">
-                  <h3 className="text-lg font-bold text-[#0F2238]">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">{item.description}</p>
+                <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+                  <h3 className="text-base font-bold text-[#0F2238]">{item.title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">{item.description}</p>
 
-                  <ul className="mt-4 space-y-2 border-t border-[#E7DFD1]/60 pt-4 text-xs text-neutral-700">
+                  <ul className="mt-3 space-y-1.5 border-t border-[#E7DFD1]/70 pt-2.5 text-[11px] text-neutral-700">
                     {item.highlights.map((h) => (
-                      <li key={h} className="flex items-center gap-2">
+                      <li key={h} className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#C28D2E]" />
                         <span>{h}</span>
                       </li>
@@ -183,43 +185,43 @@ export default function JoinLanding() {
         </div>
       </section>
 
-      {/* Who Can Join Section */}
-      <section className="border-t border-[#E7DFD1] bg-[#FAF7F1] px-4 py-12 sm:px-6 sm:py-16">
+      {/* Who Can Join Section — Compact */}
+      <section className="border-t border-[#E7DFD1] bg-[#FAF7F1] px-3.5 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#C28D2E]">Community & Roles</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0F2238] sm:text-3xl">
+          <div className="mb-4 text-center sm:mb-6">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#C28D2E]">Community & Roles</p>
+            <h2 className="mt-0.5 text-xl font-bold tracking-tight text-[#0F2238] sm:text-2xl">
               Who Can Join Ashwa India?
             </h2>
-            <p className="mt-2 text-sm text-neutral-600 sm:text-base">
-              Whether you own horses, provide specialized care, or run an equine business, there is a place for you.
+            <p className="mt-1 text-xs text-neutral-600">
+              Whether you own horses, provide care, or run an equine business.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {profiles.map((p) => (
               <div
                 key={p.title}
-                className="rounded-xl border border-[#E7DFD1] bg-white p-5 shadow-2xs transition hover:border-[#C28D2E]"
+                className="rounded-xl border border-[#E7DFD1] bg-white p-3 shadow-2xs transition hover:border-[#C28D2E]"
               >
-                <h4 className="font-bold text-[#0F2238]">{p.title}</h4>
-                <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">{p.desc}</p>
+                <h4 className="text-xs font-bold text-[#0F2238] sm:text-sm">{p.title}</h4>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-neutral-600">{p.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Registration CTA Banner */}
-          <div className="mt-12 overflow-hidden rounded-2xl bg-[#0F2238] p-6 text-white shadow-lg sm:p-10">
-            <div className="flex flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
+          {/* Registration CTA Banner — Compact */}
+          <div className="mt-6 overflow-hidden rounded-xl bg-[#0F2238] p-4 text-white shadow-sm sm:mt-8 sm:p-6">
+            <div className="flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
               <div>
-                <h3 className="text-xl font-bold sm:text-2xl">Ready to be part of Ashwa India?</h3>
-                <p className="mt-1 text-sm text-neutral-300">
+                <h3 className="text-base font-bold sm:text-lg">Ready to join Ashwa India?</h3>
+                <p className="mt-0.5 text-xs text-neutral-300">
                   Register your stable, profile, or business in less than 2 minutes.
                 </p>
               </div>
               <Link
                 to="/register"
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#C28D2E] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a87722] active:scale-98"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#C28D2E] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#a87722] active:scale-98 sm:text-sm"
               >
                 <span>Register Now</span>
                 <ArrowRight className="h-4 w-4" />
@@ -229,11 +231,11 @@ export default function JoinLanding() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#E7DFD1] bg-white px-4 py-8 text-center text-xs text-neutral-500 sm:px-6">
+      {/* Footer — Extra bottom padding on mobile so sticky bar never covers content */}
+      <footer className="border-t border-[#E7DFD1] bg-white px-4 pt-5 pb-20 text-center text-[11px] text-neutral-500 sm:px-6 sm:pb-6">
         <p className="font-semibold text-neutral-700">Ashwa India — India's Horse Community & Platform</p>
-        <p className="mt-1">AshwaIndia.com • All rights reserved</p>
-        <div className="mt-3 flex justify-center gap-4 text-xs font-medium text-[#C28D2E]">
+        <p className="mt-0.5 text-[10px]">AshwaIndia.com • All rights reserved</p>
+        <div className="mt-2 flex justify-center gap-3 text-xs font-medium text-[#C28D2E]">
           <Link to="/register" className="hover:underline">Register</Link>
           <span>•</span>
           <Link to="/user/login" className="hover:underline">User Login</Link>
@@ -244,14 +246,14 @@ export default function JoinLanding() {
         </div>
       </footer>
 
-      {/* Mobile Sticky CTA Bar */}
-      <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E7DFD1] bg-[#FAF7F1]/95 p-3 backdrop-blur-md sm:hidden">
+      {/* Mobile Sticky CTA Bar — Slim & Clean */}
+      <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E7DFD1] bg-white/95 p-2 backdrop-blur-md sm:hidden">
         <Link
           to="/register"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F2238] py-3 text-sm font-semibold text-white shadow-md active:scale-98"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#0F2238] py-2.5 text-xs font-semibold text-white shadow-sm active:scale-98"
         >
           <span>Register / Join Ashwa India</span>
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>

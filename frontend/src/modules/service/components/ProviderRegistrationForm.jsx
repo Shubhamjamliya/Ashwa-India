@@ -39,18 +39,18 @@ export const emptyRegistration = {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[#E4E1D8] bg-white px-3.5 py-2.5 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition"
+  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition"
 const textareaClass =
-  "w-full rounded-xl border border-[#E4E1D8] bg-white px-3.5 py-2.5 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition resize-none"
+  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition resize-none"
 
 function Section({ title, description, children }) {
   return (
-    <div className="rounded-2xl border border-[#E7DFD1] bg-white p-5 shadow-2xs sm:p-6">
-      <div className="mb-4">
-        <h3 className="text-base font-bold text-[#0F2238]">{title}</h3>
-        {description && <p className="mt-0.5 text-xs text-neutral-500">{description}</p>}
+    <div className="rounded-xl border border-[#E7DFD1] bg-white p-4 shadow-2xs sm:p-5">
+      <div className="mb-3">
+        <h3 className="text-sm font-bold text-[#0F2238] sm:text-base">{title}</h3>
+        {description && <p className="mt-0.5 text-[11px] text-neutral-500">{description}</p>}
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-3">{children}</div>
     </div>
   )
 }
@@ -58,11 +58,11 @@ function Section({ title, description, children }) {
 function Field({ label, required, hint, children }) {
   return (
     <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
+      <div className="mb-1 flex items-baseline justify-between">
         <label className="block text-xs font-semibold text-neutral-800">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
-        {hint && <span className="text-[11px] text-neutral-400">{hint}</span>}
+        {hint && <span className="text-[10px] text-neutral-400">{hint}</span>}
       </div>
       {children}
     </div>
@@ -77,7 +77,7 @@ export default function ProviderRegistrationForm({ value, onChange }) {
   const breedOtherOn = value.horseBreeds.includes("Other")
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3.5">
       {/* 1. Personal & Contact Details */}
       <Section title="1. Personal & Contact Details" description="How the Ashwa India community and team can reach you.">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -217,16 +217,14 @@ export default function ProviderRegistrationForm({ value, onChange }) {
                   type="button"
                   key={p}
                   onClick={() => onChange({ profileTypes: toggle(value.profileTypes, p) })}
-                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                    active
-                      ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] shadow-2xs font-semibold"
-                      : "border-[#E4E1D8] bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${active
+                    ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] shadow-2xs font-semibold"
+                    : "border-[#E4E1D8] bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
+                    }`}
                 >
                   <span
-                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${
-                      active ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
-                    }`}
+                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${active ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
+                      }`}
                   >
                     {active && <Check className="h-3 w-3" />}
                   </span>
@@ -237,16 +235,14 @@ export default function ProviderRegistrationForm({ value, onChange }) {
             <button
               type="button"
               onClick={() => onChange({ profileTypes: toggle(value.profileTypes, "Other") })}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                profileOtherOn
-                  ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold"
-                  : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${profileOtherOn
+                ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold"
+                : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
+                }`}
             >
               <span
-                className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${
-                  profileOtherOn ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
-                }`}
+                className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${profileOtherOn ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
+                  }`}
               >
                 {profileOtherOn && <Check className="h-3 w-3" />}
               </span>
@@ -295,16 +291,14 @@ export default function ProviderRegistrationForm({ value, onChange }) {
                   type="button"
                   key={b}
                   onClick={() => onChange({ horseBreeds: toggle(value.horseBreeds, b) })}
-                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                    active
-                      ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold shadow-2xs"
-                      : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${active
+                    ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold shadow-2xs"
+                    : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
+                    }`}
                 >
                   <span
-                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${
-                      active ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
-                    }`}
+                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${active ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
+                      }`}
                   >
                     {active && <Check className="h-3 w-3" />}
                   </span>
@@ -315,16 +309,14 @@ export default function ProviderRegistrationForm({ value, onChange }) {
             <button
               type="button"
               onClick={() => onChange({ horseBreeds: toggle(value.horseBreeds, "Other") })}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                breedOtherOn
-                  ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold"
-                  : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${breedOtherOn
+                ? "border-[#C28D2E] bg-[#FBF6EC] text-[#7C5A1E] font-semibold"
+                : "border-[#E4E1D8] bg-white text-neutral-700 hover:bg-neutral-50"
+                }`}
             >
               <span
-                className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${
-                  breedOtherOn ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
-                }`}
+                className={`flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${breedOtherOn ? "border-[#C28D2E] bg-[#C28D2E] text-white" : "border-neutral-300"
+                  }`}
               >
                 {breedOtherOn && <Check className="h-3 w-3" />}
               </span>
