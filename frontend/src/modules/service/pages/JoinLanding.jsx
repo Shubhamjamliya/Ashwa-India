@@ -126,28 +126,26 @@ export default function JoinLanding() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F1] text-[#0F2238] antialiased">
-      {/* Top Navigation — Royal Navy & Gold Fixed Header */}
-      <header className="sticky top-0 z-30 border-b border-[#1A3353] bg-[#0B1C33]/95 backdrop-blur-md shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-3.5 py-2 sm:px-6 sm:py-2.5">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <div className="flex h-9 items-center justify-center rounded-xl bg-white px-2.5 py-1 shadow-xs sm:h-10 sm:px-3">
-              <img
-                src={displayLogo}
-                alt={companyName || "Ashwa India"}
-                className="h-full w-auto max-w-[115px] object-contain sm:max-w-[140px]"
-                onError={(e) => {
-                  e.currentTarget.parentElement.style.display = "none"
-                }}
-              />
-            </div>
-            <span className="text-base font-extrabold tracking-tight text-white whitespace-nowrap sm:text-lg">
+      {/* Top Navigation — Crisp White Fixed Header */}
+      <header className="sticky top-0 z-30 border-b border-[#E7DFD1] bg-white/95 backdrop-blur-md shadow-2xs">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-3.5 py-2.5 sm:px-6">
+          <Link to="/join" className="flex items-center gap-2 sm:gap-2.5 transition active:scale-98">
+            <img
+              src={displayLogo}
+              alt={companyName || "Ashwa India"}
+              className="h-8 w-auto object-contain sm:h-9"
+              onError={(e) => {
+                e.currentTarget.style.display = "none"
+              }}
+            />
+            <span className="text-base font-extrabold tracking-tight text-[#0F2238] whitespace-nowrap sm:text-lg">
               Ashwa <span className="text-[#C28D2E]">India</span>
             </span>
-          </div>
+          </Link>
 
           <Link
             to="/register"
-            className="inline-flex items-center gap-1 rounded-lg bg-[#C28D2E] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#a87722] active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#C28D2E] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#a87722] active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
           >
             <span>Register</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -334,13 +332,13 @@ export default function JoinLanding() {
         </div>
       </footer>
 
-      {/* Mobile Sticky CTA Bar — Slim & Clean */}
-      <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#1A3353] bg-[#0B1C33]/95 p-2 backdrop-blur-md sm:hidden">
+      {/* Mobile Sticky CTA Bar — Frosted Glass (Apple iOS Style) */}
+      <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E7DFD1] bg-white/85 px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.06)] sm:hidden">
         <Link
           to="/register"
-          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#C28D2E] py-2.5 text-xs font-bold text-white shadow-sm active:scale-98"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C28D2E] py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#a87722] active:scale-98"
         >
-          <span>Register / Join Ashwa India</span>
+          <span>Register Now</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
