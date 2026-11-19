@@ -159,13 +159,25 @@ export default function JoinLanding() {
         <div className="pointer-events-none absolute -top-16 right-1/4 h-64 w-64 rounded-full bg-[#C28D2E]/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 left-10 h-52 w-52 rounded-full bg-[#1A4578]/35 blur-2xl" />
 
-        {/* Integrated Horse Visual — Grounded on bottom right with zero dead gaps */}
-        <div className="pointer-events-none absolute right-[-8px] bottom-0 sm:right-4 md:right-8">
-          <img
-            src="/images/user/heroimage.png"
-            alt="Ashwa India"
-            className="h-[165px] w-auto object-contain opacity-95 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] sm:h-[220px] md:h-[250px]"
-          />
+        {/* Right Side Visual Pillar — Royal Arch covering the full vertical height behind the horse */}
+        <div className="pointer-events-none absolute right-1 top-2 bottom-0 z-0 flex flex-col items-center justify-end sm:right-6 md:right-10">
+          {/* Full-height Royal Arch Frame */}
+          <div className="absolute top-0 bottom-0 w-28 sm:w-40 rounded-t-3xl border-t border-x border-[#C28D2E]/35 bg-gradient-to-b from-[#C28D2E]/20 via-[#0F2847]/45 to-transparent backdrop-blur-2xs shadow-[0_0_25px_rgba(194,141,46,0.12)]">
+            <div className="pt-2.5 text-center">
+              <span className="text-[9px] font-extrabold tracking-widest text-[#E9BE65]/80 uppercase">✦ Ashwa ✦</span>
+            </div>
+          </div>
+
+          {/* Horse Visual layered inside the arch */}
+          <div className="relative z-10">
+            <img
+              src="/images/user/heroimage.png"
+              alt="Ashwa India"
+              className="h-[210px] w-auto object-contain object-bottom opacity-95 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] sm:h-[245px] md:h-[275px]"
+            />
+            {/* Seamless bottom fade into hero base */}
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0D2442] via-[#0D2442]/60 to-transparent" />
+          </div>
         </div>
 
         <div className="relative z-10 mx-auto max-w-6xl">
