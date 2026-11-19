@@ -20,16 +20,16 @@ export default function JoinLanding() {
       image: "/images/user/horses-buy.png",
       bg: "#FBEFD6",
       description:
-        "Browse verified listings of purebred horses — Marwari, Kathiawari, Thoroughbred, Arabian, and Warmblood. Review lineage, health documents, and contact sellers directly.",
-      highlights: ["Direct seller inquiries", "Verified pedigree & health info", "Clean listing management"],
+        "Browse verified listings of purebred horses — Marwari, Kathiawari, Thoroughbred, Arabian, and Warmblood. Review lineage, health documents, and schedule farm visits.",
+      highlights: ["Direct seller inquiries", "Verified pedigree & health info", "Schedule in-person farm visits"],
     },
     {
       title: "Horse Transport & Shared Rides",
-      tag: "Logistics",
+      tag: "Logistics & GPS",
       image: "/images/user/transport.png",
       bg: "#E0F4E7",
       description:
-        "Safe equine transport across Indian states. Book dedicated horse floats or save up to 40% on travel costs by joining shared route runs.",
+        "Safe equine transport across Indian states. Book dedicated horse floats or save up to 40% on travel costs by joining shared route runs with live GPS tracking.",
       highlights: ["Shared-ride cost savings", "Custom horse floats & ambulances", "Real-time trip coordination"],
     },
     {
@@ -50,6 +50,24 @@ export default function JoinLanding() {
         "A specialized marketplace for authentic saddles, bridles, grooming kits, equine nutrition, feed, and stable equipment from trusted suppliers.",
       highlights: ["Equestrian gear & tack", "Equine nutrition & supplements", "Direct manufacturer prices"],
     },
+    {
+      title: "Horse Events, Shows & Auctions",
+      tag: "Shows & Fairs",
+      image: "/images/user/events.png",
+      bg: "#FDE7E7",
+      description:
+        "Discover upcoming horse shows, breed championships, livestock fairs, auctions, and equestrian training camps across India.",
+      highlights: ["Breed shows & competitions", "Livestock fairs & auction dates", "Training clinics & camps"],
+    },
+    {
+      title: "Equine Jobs & Employment",
+      tag: "Careers & Hiring",
+      image: "/images/user/jobs.png",
+      bg: "#E8E6F9",
+      description:
+        "A dedicated job board connecting stud farms, training stables, and equestrian clubs with qualified trainers, farriers, syces, and riders.",
+      highlights: ["Hiring stable managers & trainers", "Grooms, farriers & rider vacancies", "Direct applications to farms"],
+    },
   ]
 
   const profiles = [
@@ -58,14 +76,14 @@ export default function JoinLanding() {
     { title: "Equine Transporters", desc: "List your routes, fill empty trailer capacity, and increase trips." },
     { title: "Tack & Feed Businesses", desc: "Sell equestrian accessories and nutrition to a focused audience." },
     { title: "Riding Schools & Trainers", desc: "Attract new riders and manage student training programs." },
-    { title: "Riders & Enthusiasts", desc: "Find horses, learn riding, and connect with India's equine network." },
+    { title: "Riders & Job Seekers", desc: "Find horses, apply for equine jobs, and connect with India's network." },
   ]
 
   return (
     <div className="min-h-screen bg-[#FAF7F1] text-[#0F2238] antialiased">
       {/* Top Navigation — Compact & Fixed */}
       <header className="sticky top-0 z-30 border-b border-[#E7DFD1] bg-white/95 backdrop-blur-md shadow-2xs">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-3.5 py-2 sm:px-6 sm:py-2.5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-3.5 py-2 sm:px-6 sm:py-2.5">
           <div className="flex items-center gap-2.5">
             <img
               src={displayLogo}
@@ -131,9 +149,9 @@ export default function JoinLanding() {
         </div>
       </section>
 
-      {/* Services Section — Clear, Fully Visible Images & Tight Gaps */}
+      {/* Services Section — 6 Core Pillars (Clearly Visible & Compact) */}
       <section id="services" className="border-t border-[#E7DFD1] bg-white px-3.5 py-6 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           <div className="mb-4 text-center sm:mb-6">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#C28D2E]">What Ashwa India Offers</p>
             <h2 className="mt-0.5 text-xl font-bold tracking-tight text-[#0F2238] sm:text-2xl">
@@ -144,30 +162,36 @@ export default function JoinLanding() {
             </p>
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-5">
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
             {services.map((item) => (
               <div
                 key={item.title}
                 className="group flex flex-col overflow-hidden rounded-xl border border-[#E7DFD1] bg-[#FAF8F5] transition duration-200 hover:border-[#C28D2E]/60 hover:shadow-xs"
               >
-                {/* Image Frame — Fully Visible using object-contain with styled pastel background */}
+                {/* Visual Header — Image or Graphic Badge */}
                 <div
-                  className="relative flex h-40 w-full items-center justify-center overflow-hidden sm:h-48"
+                  className="relative flex h-38 w-full items-center justify-center overflow-hidden sm:h-44"
                   style={{ backgroundColor: item.bg }}
                 >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/85 shadow-2xs transition duration-300 group-hover:scale-110 sm:h-18 sm:w-18">
+                      <item.icon className="h-8 w-8 sm:h-9 sm:w-9" style={{ color: item.iconColor }} />
+                    </div>
+                  )}
                   <span className="absolute top-2.5 left-2.5 rounded-md bg-[#0F2238]/85 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
                     {item.tag}
                   </span>
                 </div>
 
                 <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-                  <h3 className="text-base font-bold text-[#0F2238]">{item.title}</h3>
+                  <h3 className="text-sm font-bold text-[#0F2238] sm:text-base">{item.title}</h3>
                   <p className="mt-1 text-xs leading-relaxed text-neutral-600">{item.description}</p>
 
                   <ul className="mt-3 space-y-1.5 border-t border-[#E7DFD1]/70 pt-2.5 text-[11px] text-neutral-700">
@@ -187,14 +211,14 @@ export default function JoinLanding() {
 
       {/* Who Can Join Section — Compact */}
       <section className="border-t border-[#E7DFD1] bg-[#FAF7F1] px-3.5 py-6 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           <div className="mb-4 text-center sm:mb-6">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#C28D2E]">Community & Roles</p>
             <h2 className="mt-0.5 text-xl font-bold tracking-tight text-[#0F2238] sm:text-2xl">
               Who Can Join Ashwa India?
             </h2>
             <p className="mt-1 text-xs text-neutral-600">
-              Whether you own horses, provide care, or run an equine business.
+              Whether you own horses, provide care, seek equine jobs, or run an equine business.
             </p>
           </div>
 
