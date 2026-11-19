@@ -39,9 +39,9 @@ export const emptyRegistration = {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition"
+  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-[16px] sm:text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition"
 const textareaClass =
-  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition resize-none"
+  "w-full rounded-lg border border-[#E4E1D8] bg-white px-3 py-2 text-[16px] sm:text-sm text-[#0F2238] placeholder:text-neutral-400 focus:border-[#C28D2E] focus:ring-1 focus:ring-[#C28D2E] focus:outline-none transition resize-none"
 
 function Section({ title, description, children }) {
   return (

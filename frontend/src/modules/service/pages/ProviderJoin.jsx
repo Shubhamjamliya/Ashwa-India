@@ -52,33 +52,41 @@ export default function ProviderJoin() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F1] text-[#0F2238] antialiased">
-      {/* Top Header — Fixed & Stationary */}
+      {/* Top Header — Clean White Fixed Brand Bar */}
       <header className="sticky top-0 z-30 border-b border-[#E7DFD1] bg-white/95 backdrop-blur-md shadow-2xs">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link
-            to="/join"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 transition hover:text-[#0F2238] sm:text-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Services</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-3.5 py-2.5 sm:px-6">
+          <Link to="/join" className="flex items-center gap-2.5 transition active:scale-98">
             <img
               src={displayLogo}
               alt={companyName || "Ashwa India"}
-              className="h-8 w-auto object-contain"
+              className="h-8 w-auto max-w-[110px] object-contain sm:h-9"
               onError={(e) => {
                 e.currentTarget.style.display = "none"
               }}
             />
-            <span className="font-bold text-[#0F2238]">{companyName || "Ashwa India"}</span>
-          </div>
+            <span className="text-base font-extrabold tracking-tight text-[#0F2238] sm:text-lg">
+              Ashwa <span className="text-[#C28D2E]">India</span>
+            </span>
+          </Link>
+
+          <span className="rounded-full border border-[#D9CEBA] bg-[#FAF7F1] px-2.5 py-0.5 text-[10px] font-semibold text-[#7C5A1E]">
+            Registration
+          </span>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="mx-auto w-full max-w-2xl px-3.5 py-4 sm:px-6 sm:py-6">
+      <main className="mx-auto w-full max-w-2xl px-3.5 py-3 sm:px-6 sm:py-5">
+        {/* Contextual Back Navigation */}
+        <div className="mb-2.5">
+          <Link
+            to="/join"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 transition hover:text-[#0F2238]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to Services Overview</span>
+          </Link>
+        </div>
         {done ? (
           <div className="rounded-xl border border-[#E7DFD1] bg-white p-6 text-center shadow-xs sm:p-8">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
